@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent, useState } from "react"; // React hooks for managing state and handling form events
 import { CheckoutSummary } from "../integrated/payment/CheckoutSummary"; // Component for displaying checkout summary
-import { stripeOptions } from "../providers"; // Stripe options for payment processing
+import { stripeOptions } from "../options"; // Stripe options for payment processing
 import Script from "next/script"; // Next.js component for loading external scripts
 import { useRouter } from "next/navigation"; // Hook for programmatic navigation
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types"; // Type definitions for Accelerate API

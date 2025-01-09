@@ -1,6 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
-import { stripeOptions } from "../../providers";
+import { stripeOptions } from "../../options";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";

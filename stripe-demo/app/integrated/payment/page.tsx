@@ -3,7 +3,7 @@
 import { FormEvent, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
-import { stripeOptions } from "../../providers";
+import { stripeOptions } from "../../options";
 import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";

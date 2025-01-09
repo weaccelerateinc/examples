@@ -3,10 +3,10 @@
 import { FormEvent, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
-import { stripeOptions } from "../../providers";
+import { stripeOptions } from "../../options";
 import { CheckoutSummary } from "../../modal/payment/CheckoutSummary";
 import Image from "next/image";
-import { AccelerateWallet } from "./AccelerateWallet";
+import { AccelerateWallet } from "../../../components/AccelerateWallet";
 import { AccelerateWindowAPI } from "accelerate-js-types";
 
 declare global {
@@ -64,7 +64,7 @@ function PaymentContent() {
           `shipping=${encodeURIComponent(selectedShipping)}&` +
           //`cardBrand=${encodeURIComponent(card?.details?.cardIssuer || "")}&` +
           `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
-          `totalPrice=${encodeURIComponent(totalPrice)}`,
+          `totalPrice=${encodeURIComponent(totalPrice)}`
       );
     } else {
       return;
