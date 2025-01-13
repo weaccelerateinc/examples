@@ -34,7 +34,7 @@ This function may be called again - only the last set of options it was called w
 
 ## Starting the login
 
-After initi was called we can then listen for various user inputs and decide when to start the Accelerate login flow. This is completely up to the checkout page to decide. In general, your page should wait for the user to finish entering details into the phone number, email, first name, and last name fields and then call login:
+After init is called we can then listen for various user inputs and decide when to start the Accelerate login flow. This is completely up to the checkout page to decide. In general, your page should wait for the user to finish entering details into the phone number, email, first name, and last name fields and then call login:
 
 ```
 window.accelerate.login({
