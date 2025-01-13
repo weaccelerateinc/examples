@@ -30,7 +30,7 @@ Choosing a frontend style for the Accelerate integration is a bit simpler: you s
 
 See [Example](https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/integrated/page.tsx)
 
-The inline flow will involve starting the AccelerateJS system to log the user in and then showing their wallet of cards within the elements of your existing checkout page. On a technical side, this is done by adding a div:
+The inline flow will involve starting the AccelerateJS system to log the user in and then showing their wallet of cards within the elements of your existing checkout page. On the technical side, this is done by adding a div:
 
 ```
 <div id="accelerate-wallet"/>
@@ -38,7 +38,7 @@ The inline flow will involve starting the AccelerateJS system to log the user in
 
 Once the user has logged in their wallet will be shown in an iframe on this div. For React users, please see AccelerateWallet.tsx in our React samples at: [Examples Repo](https://github.com/weaccelerateinc/examples).
 
-This mode makes the user experience as seamless as possible while still providing all of the benefits of Accelerate. The callback `onPaymentInitiated` will be called with the credential you need to begin checkout -- typically this is a payment processor token.
+This mode makes the user experience as seamless as possible while still providing all of the benefits of Accelerate. The callback `onPaymentInitiated` will be called with the credentials you need to begin checkout -- typically this is a payment processor token.
 
 Your UI is responsible for the final "Pay Now" button presentation and handling.
 
@@ -52,6 +52,6 @@ This mode is similar to `Inline` mode except our UI will present a "Pay Now" but
 
 See [Example](https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/modal/page.tsx)
 
-The modal integration is for sites that don't wish to add any elements to their existing content to support the Accelerate wallet flow. The entire user experience will exist as an iframe that appears above your content until the user has selected a card. If they need to choose a new one the modal will need to re-appear.
+The modal integration is for sites that don't wish to add any elements to their existing content to support the Accelerate wallet flow. The entire user experience will exist as an iframe that appears above your content until the user has selected a card. If they need to choose a new one, the modal will need to re-appear.
 
-In handoff mode the call to `onPaymentInitiated` will be made when the modal is closed (user is done selecting a card) and this will include presentiational details as well if you wish to show them a preview of the card they have selected. Alternatively you may use the Accelerate wallet to show their selected card.
+In handoff mode the call to `onPaymentInitiated` will be made when the modal is closed (user is done selecting a card) and this will include presentational details as well if you wish to show them a preview of the card they have selected. Alternatively, you may use the Accelerate wallet to show their selected card.

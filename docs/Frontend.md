@@ -73,7 +73,7 @@ div handle
 
 ## Typescript
 
-For TypeScript users we publish a type definition to npm as part of the TODO_NPM_PACKAGE package. Simply install this at the version of the script you are including and use the included types as needed. It is recommended to attach the window API to the global via:
+For TypeScript users, we publish a type definition to npm as part of the TODO_NPM_PACKAGE package. Simply install this at the version of the script you are including and use the included types as needed. It is recommended to attach the window API to the global via:
 
 ```jsx
 declare global {
