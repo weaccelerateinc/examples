@@ -1,4 +1,4 @@
-# Introductin
+# Introduction
 
 How Accelerate integrates at a high level:
 
@@ -12,6 +12,6 @@ How Accelerate integrates at a high level:
 
 # Technical Documentation
 
-[How to integrated Accelerate on the frontend](./Frontend.md)
+[How to integrate Accelerate on the frontend](./Frontend.md)
 
-[How to integrated Accelerate on the backend](./Backend.md)
+[How to integrate Accelerate on the backend](./Backend.md)

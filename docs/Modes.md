@@ -2,7 +2,7 @@
 
 ## Choosing a payment model
 
-Accelerate offers two modes to execute payments: the handoff mode and the gateway mode. For the handoff mode our frontend will pass a token or instrument credentials to your frontend. In gateway mode your backend will call our backend as a proxy to your payment processor.
+Accelerate offers two modes to execute payments: the handoff mode and the gateway mode. For the handoff mode, our frontend will pass a token or instrument credentials to your frontend. In gateway mode, your backend will call our backend as a proxy to your payment processor.
 
 Handoff mode is the preferred and most common mode of integration with Accelerate. If you are unsure which mode is the best fit please reach out to your account manager to help decide.
 

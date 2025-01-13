@@ -20,7 +20,7 @@ In plain HTML:
 
 ## Initializing Accelerate
 
-To initialize the Accelerate flow a call must be made to the object our script attaches to the global window:
+To initialize the Accelerate flow, a call must be made to the object our script attaches to the global window:
 
 ```
 window.accelerate.init({
@@ -30,7 +30,7 @@ window.accelerate.init({
 });
 ```
 
-This function may be called again -- only the last set of options it was called with will be used.
+This function may be called again - only the last set of options it was called with will be used.
 
 ## Starting the login
 
