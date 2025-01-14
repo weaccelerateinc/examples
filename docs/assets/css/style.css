@@ -4,5 +4,5 @@
 @import "{{ site.theme }}";
 
 section {
-  border: none;
+  border: none !important;
 }
