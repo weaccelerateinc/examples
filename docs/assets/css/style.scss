@@ -1,8 +1,7 @@
 ---
 ---
 
+@import "{{ site.theme }}";
 section {
   border: none !important;
 }
-
-@import "{{ site.theme }}";
