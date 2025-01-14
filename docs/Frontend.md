@@ -69,13 +69,21 @@ This callback is called whenever the user has selected a new payment instrument.
 
 ## Adding the Wallet iframe element
 
-div handle
+The Accelerate wallet will render as an iframe on your page if you have chosen an inline flow. To control where Accelerate renders simply add a div to your layout at the appropriate place:
+
+```
+<div id="accelerate-wallet"/>
+```
+
+The iframe will render as a child to this div.
 
 ## Typescript
 
-For TypeScript users, we publish a type definition to npm as part of the TODO_NPM_PACKAGE package. Simply install this at the version of the script you are including and use the included types as needed. It is recommended to attach the window API to the global via:
+For TypeScript users, we publish a type definition to npm as part of the `accelerate-js-types` package. Simply install this and use the included types as needed. It is recommended to attach the Accelerate API handle to the global window type via:
 
 ```jsx
+import type { AccelerateWindowAPI } from "accelerate-js-types";
+
 declare global {
   interface Window {
     accelerate: AccelerateWindowAPI;
