@@ -15,3 +15,9 @@ For the gateway flow your frontend will only receive a payment card id from our 
 ## Choosing a mode
 
 Most users integrate with Accelerate using a form of handoff flow. The gateway mode is intended for users that were already PCI SAQ-D compliant and have been handling raw card data. The gateway mode may also be required if your payment processor does not expose a convenient tokenized reference we can use as a handoff.
+
+## Sending the reporting webhook
+
+_This section of the documentation is incomplete and pending final drafts_
+
+For integrations where Accelerate cannot observe the result of the authorization to the user's card we ask that you emit a webhook to our services when a transaction is attempted.
