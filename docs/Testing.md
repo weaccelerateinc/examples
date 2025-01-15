@@ -1,5 +1,27 @@
-# Environments
+# Testing
 
-## TODO
+To test the Accelerate integration you will use our sandbox environment. We will provide you with a test phone number to use as part of the modal login flow and the account this resolves to will have cards to test transactions with. Your merchant id will be the same for sandbox and production.
 
-This document is under construction.
+## Changed endpoints
+
+There are a few changes to access our sandbox environment that are needed:
+
+Include the script from our sandbox hosting:
+
+```
+<script TODO_HOSTING_URL>
+```
+
+Change any API or proxy calls you are making to Accelerate to
+
+```
+sbx.api.weaccelerate.com
+```
+
+## Test phone numbers
+
+TODO_test_numbers
+
+## Test card numbers
+
+TODO_test_cards
