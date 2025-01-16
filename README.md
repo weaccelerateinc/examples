@@ -1,8 +1,8 @@
-# examples
+# Examples
 
 Public integration examples for Accelerate
 
-# Stripe
+## Stripe
 
 [Inline Flow](stripe-demo/app/integrated/page.tsx)
 
