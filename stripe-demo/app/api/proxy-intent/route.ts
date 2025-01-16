@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { Stripe } from "stripe";
 
-const stripeClient = new Stripe(process.env.STRIPE_PRIVATE_KEY!, {
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   // Proxy to Accelerate here
   protocol: "http",
   host: "localhost",
