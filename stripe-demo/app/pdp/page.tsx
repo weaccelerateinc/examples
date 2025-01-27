@@ -136,8 +136,7 @@ export default function ProductDetailsPage() {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             subtotal={59.99}
-            initialShipping={0}
-            shipping={9.99}
+            
           />
 
           <div className="prose prose-sm">
