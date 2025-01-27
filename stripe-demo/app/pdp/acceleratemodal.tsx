@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { AccelerateUser, AccelerateWindowAPI } from "accelerate-js-types";
 import { stripeOptions } from "../options";
@@ -36,7 +36,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, sh
   const [addrCity, setAddrCity] = useState("");
   const [addrState, setAddrState] = useState("");
   const [addrZip, setAddrZip] = useState("");
-  const [selectedCardDetails, setSelectedCardDetails] = useState<{ mask: string } | null>(null);
+ 
 
   const shippingCost = selectedShipping === "priority" ? 9.99 : 0;
   const total = subtotal + shippingCost;
@@ -101,17 +101,6 @@ export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, sh
     });
   };
   
-  const handleSubmit = async (e: FormEvent) => {
-    console.log("EVENT", e);
-    e.preventDefault();
-    if (selectedCard) {
-      const card = await window.accelerate.requestSource(selectedCard);
-      console.log({ card: JSON.stringify(card) });
-    } else {
-        return;
-      }
-  };
-
   // Initialize Accelerate when component mounts
   useEffect(() => {
     if (!accelLoaded && isOpen && typeof window.accelerate !== 'undefined') {
@@ -127,9 +116,8 @@ export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, sh
             setShowAccelWallet(true);
             maybeUseAccelUser(user);
           },
-          onCardSelected: (cardId) => {
+          onCardSelected: async (cardId) => {
             setSelectedCard(cardId);
-
           },
         });
         setAccelLoaded(true);
@@ -151,7 +139,11 @@ export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, sh
     });
   }, [addrLine1, addrCity, addrState, addrZip, firstName, lastName]);
 
-  const handlePayment = () => {
+  const handlePayment = async() => {
+    if (selectedCard) {
+      const card = await window.accelerate.requestSource(selectedCard);
+      
+    
     setCheckoutData({
       firstName,
       lastName,
@@ -161,11 +153,9 @@ export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, sh
       zip: addrZip,
       shipping: selectedShipping,
       subtotal,
-      cardLast4: selectedCardDetails?.mask || "****",
+      cardLast4: card?.details?.mask || "****",
     });
-    
-    console.log(selectedCardDetails?.mask || "****");
-
+  }
     router.push('/pdp/confirmation');
     onClose();
   };
@@ -342,7 +332,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, sh
                     className="rounded-full"
                   />
                 </div>
-                {accelLoaded && (
+                {accelLoaded && showAccelWallet && (
                   <div className="w-full">
                     <AccelerateWallet />
                   </div>
