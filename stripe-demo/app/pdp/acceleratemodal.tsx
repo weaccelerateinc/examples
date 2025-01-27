@@ -11,8 +11,7 @@ interface AccelerateModalProps {
   isOpen: boolean;
   onClose: () => void;
   subtotal: number;
-  initialShipping: number;
-  shipping: number;
+  
 }
 
 declare global {
@@ -21,7 +20,7 @@ declare global {
   }
 }
 
-export function AccelerateModal({ isOpen, onClose, subtotal, initialShipping, shipping }: AccelerateModalProps) {
+export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalProps) {
   const router = useRouter();
   const { setCheckoutData } = useCheckout();
   const [selectedShipping, setSelectedShipping] = useState("standard");
