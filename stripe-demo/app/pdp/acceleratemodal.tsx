@@ -36,7 +36,6 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
   const [addrState, setAddrState] = useState("");
   const [addrZip, setAddrZip] = useState("");
   const [step, setStep] = useState(1);
-  const [isVerified, setIsVerified] = useState(false);
 
   const shippingCost = selectedShipping === "priority" ? 9.99 : 0;
   const total = subtotal + shippingCost;
@@ -115,7 +114,6 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
             console.log("Login success, user:", user);
             setShowAccelWallet(true);
             maybeUseAccelUser(user);
-            setIsVerified(true);
             setStep(2);
           },
           onCardSelected: async (cardId) => {
