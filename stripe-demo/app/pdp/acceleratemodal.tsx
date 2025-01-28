@@ -35,7 +35,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
   const [addrCity, setAddrCity] = useState("");
   const [addrState, setAddrState] = useState("");
   const [addrZip, setAddrZip] = useState("");
- 
+  const [step, setStep] = useState(1);
 
   const shippingCost = selectedShipping === "priority" ? 9.99 : 0;
   const total = subtotal + shippingCost;
@@ -114,6 +114,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
             console.log("Login success, user:", user);
             setShowAccelWallet(true);
             maybeUseAccelUser(user);
+            setStep(2);
           },
           onCardSelected: async (cardId) => {
             setSelectedCard(cardId);
@@ -184,196 +185,213 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-1">
           <div className="space-y-4">
-            {/* Billing Information Section */}
-            <div className="p-4 space-y-3">
-              <div className="text-sm text-gray-600">BILLING INFORMATION</div>
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="text"
-                  placeholder="First name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  onBlur={() => maybeLogin(phoneNumber)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Last name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  onBlur={() => maybeLogin(phoneNumber)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
-              <input
-                type="tel"
-                placeholder="Phone number"
-                value={phoneNumber}
-                onChange={(e) => {
-                  const formatted = tryFormatPhone(e.target.value);
-                  setPhoneNumber(formatted);
-                  maybeLogin(formatted);
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-              />
-            </div>
-
-            {/* Shipping Information Section */}
-            <div className="border-t">
-              <div className="p-4">
-                <div className="text-sm text-gray-600 mb-4">SHIPPING INFORMATION</div>
-                <div className="space-y-3.5">
+            {/* Step 1: Initial Information */}
+            {step === 1 && (
+              <div className="p-4 space-y-3">
+                <div className="text-sm text-gray-600">ACCOUNT INFORMATION</div>
+                <div className="grid grid-cols-2 gap-3">
                   <input
-                    placeholder="Address"
-                    value={addrLine1}
-                    onChange={(e) => setAddrLine1(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                    type="text"
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    onBlur={() => maybeLogin(phoneNumber)}
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                   <input
-                    placeholder="Apartments, suite, etc (optional)"
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
-                    <input
-                      placeholder="City"
-                      value={addrCity}
-                      onChange={(e) => setAddrCity(e.target.value)}
-                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    />
-                    <input
-                      placeholder="State"
-                      value={addrState}
-                      onChange={(e) => setAddrState(e.target.value)}
-                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    />
-                    <input
-                      placeholder="Zip code"
-                      value={addrZip}
-                      onChange={(e) => setAddrZip(e.target.value)}
-                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Method Section */}
-            <div className="border-t">
-              <div className="p-4">
-                <div className="text-sm text-gray-600 mb-2">METHOD</div>
-                <div className="border border-gray-200 rounded-md overflow-hidden">
-                  <label className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="standard"
-                      checked={selectedShipping === "standard"}
-                      onChange={(e) => setSelectedShipping(e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center gap-3">
-                      <div className={`w-4 h-4 rounded-full border ${
-                        selectedShipping === "standard" 
-                          ? "border-4 border-sky-700" 
-                          : "border-gray-300"
-                      }`} />
-                      <div>
-                        <div className="font-medium">Standard Shipping</div>
-                        <div className="text-sm text-gray-500">4-10 business days</div>
-                      </div>
-                    </div>
-                    <span className="text-sm">Free</span>
-                  </label>
-                  
-                  <label className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      name="shipping"
-                      value="priority"
-                      checked={selectedShipping === "priority"}
-                      onChange={(e) => setSelectedShipping(e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center gap-3">
-                      <div className={`w-4 h-4 rounded-full border ${
-                        selectedShipping === "priority" 
-                          ? "border-4 border-sky-700" 
-                          : "border-gray-300"
-                      }`} />
-                      <div>
-                        <div className="font-medium">Priority Shipping</div>
-                        <div className="text-sm text-gray-500">2-3 business days</div>
-                      </div>
-                    </div>
-                    <span className="text-sm">$9.99</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Card & Billing Section */}
-            <div className="border-t">
-              <div className="p-4">
-                <div className="flex items-center justify-between sticky top-0 bg-white pb-4">
-                  <div className="text-sm text-gray-600">CARD & BILLING</div>
-                  <Image
-                    src="/favicon-transparent-light.png"
-                    alt="Icon"
-                    width={24}
-                    height={24}
-                    className="rounded-full"
+                    type="text"
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    onBlur={() => maybeLogin(phoneNumber)}
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
-                {accelLoaded && showAccelWallet && (
-                  <div className="w-full">
-                    <AccelerateWallet />
-                  </div>
-                )}
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone number"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    const formatted = tryFormatPhone(e.target.value);
+                    setPhoneNumber(formatted);
+                    maybeLogin(formatted);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                />
               </div>
-            </div>
+            )}
 
-            {/* Price Summary */}
-            <div className="border-t">
-              <div className="p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+            {/* Step 2: Rest of the form */}
+            {step === 2 && (
+              <>
+                {/* Shipping Information Section */}
+                <div className="border-t">
+                  <div className="p-4">
+                    <div className="text-sm text-gray-600 mb-4">SHIPPING INFORMATION</div>
+                    <div className="space-y-3.5">
+                      <input
+                        placeholder="Address"
+                        value={addrLine1}
+                        onChange={(e) => setAddrLine1(e.target.value)}
+                        className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                      />
+                      <input
+                        placeholder="Apartments, suite, etc (optional)"
+                        className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
+                        <input
+                          placeholder="City"
+                          value={addrCity}
+                          onChange={(e) => setAddrCity(e.target.value)}
+                          className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                        />
+                        <input
+                          placeholder="State"
+                          value={addrState}
+                          onChange={(e) => setAddrState(e.target.value)}
+                          className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                        />
+                        <input
+                          placeholder="Zip code"
+                          value={addrZip}
+                          onChange={(e) => setAddrZip(e.target.value)}
+                          className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span>Shipping</span>
-                  <span>${shippingCost.toFixed(2)}</span>
+
+                {/* Method Section */}
+                <div className="border-t">
+                  <div className="p-4">
+                    <div className="text-sm text-gray-600 mb-2">METHOD</div>
+                    <div className="border border-gray-200 rounded-md overflow-hidden">
+                      <label className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 border-b">
+                        <input
+                          type="radio"
+                          name="shipping"
+                          value="standard"
+                          checked={selectedShipping === "standard"}
+                          onChange={(e) => setSelectedShipping(e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 rounded-full border ${
+                            selectedShipping === "standard" 
+                              ? "border-4 border-sky-700" 
+                              : "border-gray-300"
+                          }`} />
+                          <div>
+                            <div className="font-medium">Standard Shipping</div>
+                            <div className="text-sm text-gray-500">4-10 business days</div>
+                          </div>
+                        </div>
+                        <span className="text-sm">Free</span>
+                      </label>
+                      
+                      <label className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50">
+                        <input
+                          type="radio"
+                          name="shipping"
+                          value="priority"
+                          checked={selectedShipping === "priority"}
+                          onChange={(e) => setSelectedShipping(e.target.value)}
+                          className="sr-only"
+                        />
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 rounded-full border ${
+                            selectedShipping === "priority" 
+                              ? "border-4 border-sky-700" 
+                              : "border-gray-300"
+                          }`} />
+                          <div>
+                            <div className="font-medium">Priority Shipping</div>
+                            <div className="text-sm text-gray-500">2-3 business days</div>
+                          </div>
+                        </div>
+                        <span className="text-sm">$9.99</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-base font-medium pt-2 border-t">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+
+                {/* Card & Billing Section */}
+                <div className="border-t">
+                  <div className="p-4">
+                    <div className="flex items-center justify-between sticky top-0 bg-white pb-4">
+                      <div className="text-sm text-gray-600">CARD & BILLING</div>
+                      <Image
+                        src="/favicon-transparent-light.png"
+                        alt="Icon"
+                        width={24}
+                        height={24}
+                        className="rounded-full"
+                      />
+                    </div>
+                    {accelLoaded && showAccelWallet && (
+                      <div className="w-full">
+                        <AccelerateWallet />
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
+
+                {/* Price Summary */}
+                <div className="border-t">
+                  <div className="p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Shipping</span>
+                      <span>${shippingCost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-base font-medium pt-2 border-t">
+                      <span>Total</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
         {/* Pay Button - Fixed */}
         <div className="p-4 border-t mt-auto">
-          <button 
-            onClick={handlePayment}
-            className="w-full bg-black text-white rounded-full py-4 flex items-center justify-center gap-2"
-          >
-            <Image 
-              src="/favicon-transparent-light.png"
-              alt="Icon"
-              width={24}
-              height={24}
-              className="rounded-full"
-            />
-            Pay with Accelerate
-          </button>
+          {step === 2 ? (
+            <button 
+              onClick={handlePayment}
+              className="w-full bg-black text-white rounded-full py-4 flex items-center justify-center gap-2"
+            >
+              <Image 
+                src="/favicon-transparent-light.png"
+                alt="Icon"
+                width={24}
+                height={24}
+                className="rounded-full"
+              />
+              Pay with Accelerate
+            </button>
+          ) : (
+            <button 
+              onClick={() => maybeLogin(phoneNumber)}
+              disabled={!firstName || !lastName || !phoneNumber || !email}
+              className="w-full bg-black text-white rounded-full py-4 flex items-center justify-center gap-2 disabled:bg-gray-300"
+            >
+              Continue with Accelerate
+            </button>
+          )}
         </div>
       </div>
     </div>
