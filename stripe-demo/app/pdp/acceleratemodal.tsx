@@ -5,13 +5,12 @@ import { stripeOptions } from "../options";
 import Script from "next/script";
 import { AccelerateWallet } from "../../components/AccelerateWallet";
 import { useRouter } from "next/navigation";
-import { useCheckout } from './context/CheckoutContext';
+import { useCheckout } from "./context/CheckoutContext";
 
 interface AccelerateModalProps {
   isOpen: boolean;
   onClose: () => void;
   subtotal: number;
-  
 }
 
 declare global {
@@ -20,7 +19,7 @@ declare global {
   }
 }
 
-export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalProps) {
+export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalProps) {
   const router = useRouter();
   const { setCheckoutData } = useCheckout();
   const [selectedShipping, setSelectedShipping] = useState("standard");
@@ -53,16 +52,16 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
   // Function to update shipping address from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
     console.log("maybeUseAccelUser called with user data:", user);
-    
+
     if (user?.addresses?.[0]) {
       const address = user.addresses[0];
       console.log("Found address in user data:", address);
-      
-      setAddrLine1(address.line1 || '');
-      setAddrCity(address.city || '');
-      setAddrState(address.state || '');
-      setAddrZip(address.postalCode || '');
-      
+
+      setAddrLine1(address.line1 || "");
+      setAddrCity(address.city || "");
+      setAddrState(address.state || "");
+      setAddrZip(address.postalCode || "");
+
       if (user.firstName) {
         console.log("Setting firstName:", user.firstName);
         setFirstName(user.firstName);
@@ -99,10 +98,10 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
       phoneNumber: finalPhone,
     });
   };
-  
+
   // Initialize Accelerate when component mounts
   useEffect(() => {
-    if (!accelLoaded && isOpen && typeof window.accelerate !== 'undefined') {
+    if (!accelLoaded && isOpen && typeof window.accelerate !== "undefined") {
       console.log("Initializing Accelerate...");
       try {
         window.accelerate.init({
@@ -135,28 +134,27 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
       state: addrState,
       zip: addrZip,
       firstName,
-      lastName
+      lastName,
     });
   }, [addrLine1, addrCity, addrState, addrZip, firstName, lastName]);
 
-  const handlePayment = async() => {
+  const handlePayment = async () => {
     if (selectedCard) {
       const card = await window.accelerate.requestSource(selectedCard);
-      
-    
-    setCheckoutData({
-      firstName,
-      lastName,
-      address: addrLine1,
-      city: addrCity,
-      state: addrState,
-      zip: addrZip,
-      shipping: selectedShipping,
-      subtotal,
-      cardLast4: card?.details?.mask || "****",
-    });
-  }
-    router.push('/pdp/confirmation');
+
+      setCheckoutData({
+        firstName,
+        lastName,
+        address: addrLine1,
+        city: addrCity,
+        state: addrState,
+        zip: addrZip,
+        shipping: selectedShipping,
+        subtotal,
+        cardLast4: card?.details?.mask || "****",
+      });
+    }
+    router.push("/pdp/confirmation");
     onClose();
   };
 
@@ -169,11 +167,11 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
         type="module"
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
         strategy="afterInteractive"
-        onLoad={() => {
+        onReady={() => {
           console.log("Accelerate script loaded");
         }}
       />
-      
+
       <div className="bg-white w-full max-w-md mt-8 rounded-t-xl flex flex-col max-h-[90vh]">
         {/* Header - Fixed */}
         <div className="flex justify-end items-center p-4 border-b">
@@ -285,11 +283,11 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
                           className="sr-only"
                         />
                         <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full border ${
-                            selectedShipping === "standard" 
-                              ? "border-4 border-sky-700" 
-                              : "border-gray-300"
-                          }`} />
+                          <div
+                            className={`w-4 h-4 rounded-full border ${
+                              selectedShipping === "standard" ? "border-4 border-sky-700" : "border-gray-300"
+                            }`}
+                          />
                           <div>
                             <div className="font-medium">Standard Shipping</div>
                             <div className="text-sm text-gray-500">4-10 business days</div>
@@ -297,7 +295,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
                         </div>
                         <span className="text-sm">Free</span>
                       </label>
-                      
+
                       <label className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50">
                         <input
                           type="radio"
@@ -308,11 +306,11 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
                           className="sr-only"
                         />
                         <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 rounded-full border ${
-                            selectedShipping === "priority" 
-                              ? "border-4 border-sky-700" 
-                              : "border-gray-300"
-                          }`} />
+                          <div
+                            className={`w-4 h-4 rounded-full border ${
+                              selectedShipping === "priority" ? "border-4 border-sky-700" : "border-gray-300"
+                            }`}
+                          />
                           <div>
                             <div className="font-medium">Priority Shipping</div>
                             <div className="text-sm text-gray-500">2-3 business days</div>
@@ -370,21 +368,15 @@ export function AccelerateModal({ isOpen, onClose, subtotal}: AccelerateModalPro
         {/* Pay Button - Fixed */}
         <div className="p-4 border-t mt-auto">
           {step === 2 ? (
-            <button 
+            <button
               onClick={handlePayment}
               className="w-full bg-black text-white rounded-full py-4 flex items-center justify-center gap-2"
             >
-              <Image 
-                src="/favicon-transparent-light.png"
-                alt="Icon"
-                width={24}
-                height={24}
-                className="rounded-full"
-              />
+              <Image src="/favicon-transparent-light.png" alt="Icon" width={24} height={24} className="rounded-full" />
               Pay with Accelerate
             </button>
           ) : (
-            <button 
+            <button
               onClick={() => maybeLogin(phoneNumber)}
               disabled={!firstName || !lastName || !phoneNumber || !email}
               className="w-full bg-black text-white rounded-full py-4 flex items-center justify-center gap-2 disabled:bg-gray-300"

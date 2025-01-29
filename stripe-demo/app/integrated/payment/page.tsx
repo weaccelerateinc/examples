@@ -300,9 +300,6 @@ function PaymentContent() {
         type="module"
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
         strategy="afterInteractive"
-        onLoad={() => {
-          console.log("p2.onLoad");
-        }}
         onReady={() => {
           console.log("p2.onReady");
           window.accelerate.init({

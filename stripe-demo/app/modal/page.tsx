@@ -240,7 +240,7 @@ export default function CheckoutPage() {
         type="module"
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT} // Load external script for Accelerate
         strategy="afterInteractive" // Load script after the page is interactive
-        onLoad={() => {
+        onReady={() => {
           window.accelerate.init({
             // Initialize Accelerate API
             amount: stripeOptions.amount, // Set payment amount
