@@ -135,7 +135,7 @@ export default function CheckoutPage() {
         type="module"
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
         strategy="afterInteractive"
-        onLoad={() => {
+        onReady={() => {
           window.accelerate.init({
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,

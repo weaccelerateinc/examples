@@ -243,9 +243,6 @@ export default function CheckoutPage() {
         type="module"
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT} // Load external script for Accelerate
         strategy="afterInteractive" // Load script after the page is interactive
-        onLoad={() => {
-          console.log("p1.onLoad");
-        }}
         onReady={() => {
           console.log("p1.onReady");
           window.accelerate.init({
