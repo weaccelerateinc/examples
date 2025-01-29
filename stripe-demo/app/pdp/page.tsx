@@ -136,7 +136,7 @@ export default function ProductDetailsPage() {
           <AccelerateModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            subtotal={59.99}
+            subtotal={34.99}
             
           />
 
