@@ -156,7 +156,7 @@ export default function CheckoutPage() {
               });
               const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
               if (res.status === "succeeded") {
-                router.push("/completion?status=succeeded&token=token");
+                router.push(`/completion?status=succeeded&token=${res.token}`);
               } else {
                 setErrorMessage(res.message || "Unknown error");
               }
