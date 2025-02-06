@@ -29,5 +29,5 @@ export async function POST(request: NextRequest) {
   });
   const json = (await res.json()) as { id: string };
   console.log(json);
-  return Response.json(json.id);
+  return Response.json({ status: "succeeded", token: json.id });
 }

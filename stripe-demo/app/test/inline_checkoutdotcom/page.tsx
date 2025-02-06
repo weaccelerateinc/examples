@@ -154,9 +154,9 @@ export default function CheckoutPage() {
                   cartId: "some-cart",
                 }),
               });
-              const res = (await confirmIntent.json()) as { status: string; message?: string };
+              const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
               if (res.status === "succeeded") {
-                router.push("/completion?status=succeeded");
+                router.push("/completion?status=succeeded&token=token");
               } else {
                 setErrorMessage(res.message || "Unknown error");
               }
