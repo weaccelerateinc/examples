@@ -1,6 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
-import { stripeOptions } from "../../options";
+import { stripeOptions } from "../../../options";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
@@ -146,7 +146,7 @@ export default function CheckoutPage() {
               maybeUseAccelUser(user);
             },
             onPaymentInitiated: async (src) => {
-              const confirmIntent = await fetch("/api/confirm", {
+              const confirmIntent = await fetch("/api/stripe/confirm", {
                 method: "POST",
                 body: JSON.stringify({
                   paymentIntentId: src.stripeTokenId,

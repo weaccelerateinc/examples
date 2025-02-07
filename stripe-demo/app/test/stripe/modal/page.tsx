@@ -1,9 +1,9 @@
 "use client";
 import { FormEvent, useState } from "react";
-import { stripeOptions } from "../../options";
+import { stripeOptions } from "../../../options";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
+import type { AccelerateWindowAPI, AccelerateUser, PaymentSource } from "accelerate-js-types";
 
 declare global {
   interface Window {
@@ -28,8 +28,7 @@ export default function CheckoutPage() {
   );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [cardId, setCardId] = useState<string | null>(null);
-
+  const [card, setCard] = useState<null | PaymentSource>(null);
   const [addrLine1, setAddrLine1] = useState("");
   const [addrState, setAddrState] = useState("");
   const [addrCity, setAddrCity] = useState("");
@@ -38,10 +37,6 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const maybeUseAccelUser = (user: AccelerateUser) => {
-    if (user) {
-      window.accelerate.openWallet();
-    }
-
     // Use the Accelerate user details to auto-fill your checkout
     if (user?.addresses[0]) {
       if (addrLine1 == "") {
@@ -111,34 +106,7 @@ export default function CheckoutPage() {
       <div id="payment-message" className="font-bold text-red-600">
         {errorMessage}
       </div>
-      <div style={{ backgroundColor: "#F5F5F5" }} id="accelerate-wallet"></div>
-      <div>CardId: {cardId}</div>
-      <div className="flex flex-col gap-2">
-        <button
-          disabled={cardId == null}
-          id="submit"
-          className="btn btn-blue disabled:bg-blue-400/50"
-          onClick={async () => {
-            const src = await window.accelerate.requestSource(cardId!);
-            console.log({ src });
-            const confirmIntent = await fetch("/api/confirm", {
-              method: "POST",
-              body: JSON.stringify({
-                paymentIntentId: src.stripeTokenId,
-                cartId: "some-cart",
-              }),
-            });
-            const res = (await confirmIntent.json()) as { status: string; message?: string };
-            if (res.status === "succeeded") {
-              router.push("/completion?status=succeeded");
-            } else {
-              setErrorMessage(res.message || "Unknown error");
-            }
-          }}
-        >
-          <span id="button-text">{"Pay now"}</span>
-        </button>
-      </div>
+      <pre>{JSON.stringify(card, null, 2)}</pre>
       <button
         onClick={() => {
           window.accelerate.login({
@@ -151,13 +119,28 @@ export default function CheckoutPage() {
         Force Accelerate Start
       </button>
       <button
-        onClick={() => {
-          window.accelerate.openWallet();
+        id="pay-now-btn"
+        className="btn btn-blue"
+        disabled={card === null}
+        onClick={async () => {
+          if (!card) return;
+          const confirmIntent = await fetch("/api/stripe/confirm", {
+            method: "POST",
+            body: JSON.stringify({
+              paymentIntentId: card.stripeTokenId,
+              cartId: "some-cart",
+            }),
+          });
+          const res = (await confirmIntent.json()) as { status: string; message?: string };
+          if (res.status === "succeeded") {
+            router.push("/completion?status=succeeded");
+          } else {
+            setErrorMessage(res.message || "Unknown error");
+          }
         }}
       >
-        Force Accelerate Open Wallet
+        Pay Now
       </button>
-
       <Script
         crossOrigin="anonymous"
         type="module"
@@ -167,14 +150,14 @@ export default function CheckoutPage() {
           window.accelerate.init({
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
-            checkoutFlow: "Inline",
+            checkoutFlow: "Modal",
             checkoutMode: "StripeToken",
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);
             },
-            onCardSelected: (id) => {
-              setCardId(id);
+            onPaymentInitiated: async (source) => {
+              setCard(source);
             },
           });
         }}

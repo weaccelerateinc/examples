@@ -1,6 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
-import { stripeOptions } from "../../options";
+import { stripeOptions } from "../../../options";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
@@ -28,6 +28,7 @@ export default function CheckoutPage() {
   );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [cardId, setCardId] = useState<string | null>(null);
 
   const [addrLine1, setAddrLine1] = useState("");
   const [addrState, setAddrState] = useState("");
@@ -110,6 +111,34 @@ export default function CheckoutPage() {
       <div id="payment-message" className="font-bold text-red-600">
         {errorMessage}
       </div>
+      <div style={{ backgroundColor: "#F5F5F5" }} id="accelerate-wallet"></div>
+      <div>CardId: {cardId}</div>
+      <div className="flex flex-col gap-2">
+        <button
+          disabled={cardId == null}
+          id="submit"
+          className="btn btn-blue disabled:bg-blue-400/50"
+          onClick={async () => {
+            const src = await window.accelerate.requestSource(cardId!);
+            console.log({ src });
+            const confirmIntent = await fetch("/api/stripe/confirm", {
+              method: "POST",
+              body: JSON.stringify({
+                paymentIntentId: src.stripeTokenId,
+                cartId: "some-cart",
+              }),
+            });
+            const res = (await confirmIntent.json()) as { status: string; message?: string };
+            if (res.status === "succeeded") {
+              router.push("/completion?status=succeeded");
+            } else {
+              setErrorMessage(res.message || "Unknown error");
+            }
+          }}
+        >
+          <span id="button-text">{"Pay now"}</span>
+        </button>
+      </div>
       <button
         onClick={() => {
           window.accelerate.login({
@@ -128,7 +157,6 @@ export default function CheckoutPage() {
       >
         Force Accelerate Open Wallet
       </button>
-      <div style={{ backgroundColor: "#F5F5F5" }} id="accelerate-wallet"></div>
 
       <Script
         crossOrigin="anonymous"
@@ -139,27 +167,14 @@ export default function CheckoutPage() {
           window.accelerate.init({
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
-            checkoutFlow: "InlinePayment",
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            checkoutMode: "CheckoutDotComToken" as any, // TODO: Fix typing
+            checkoutFlow: "Inline",
+            checkoutMode: "StripeToken",
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);
             },
-            onPaymentInitiated: async (src) => {
-              const confirmIntent = await fetch("/api/confirm-cdc", {
-                method: "POST",
-                body: JSON.stringify({
-                  paymentIntentId: src.stripeTokenId,
-                  cartId: "some-cart",
-                }),
-              });
-              const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
-              if (res.status === "succeeded") {
-                router.push(`/completion?status=succeeded&token=${res.token}`);
-              } else {
-                setErrorMessage(res.message || "Unknown error");
-              }
+            onCardSelected: (id) => {
+              setCardId(id);
             },
           });
         }}

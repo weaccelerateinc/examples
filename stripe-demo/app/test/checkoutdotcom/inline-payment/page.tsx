@@ -1,9 +1,9 @@
 "use client";
 import { FormEvent, useState } from "react";
-import { stripeOptions } from "../../options";
+import { stripeOptions } from "../../../options";
 import Script from "next/script";
 import { useRouter } from "next/navigation";
-import type { AccelerateWindowAPI, AccelerateUser, PaymentSource } from "accelerate-js-types";
+import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
 
 declare global {
   interface Window {
@@ -28,7 +28,7 @@ export default function CheckoutPage() {
   );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [card, setCard] = useState<null | PaymentSource>(null);
+
   const [addrLine1, setAddrLine1] = useState("");
   const [addrState, setAddrState] = useState("");
   const [addrCity, setAddrCity] = useState("");
@@ -37,6 +37,10 @@ export default function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const maybeUseAccelUser = (user: AccelerateUser) => {
+    if (user) {
+      window.accelerate.openWallet();
+    }
+
     // Use the Accelerate user details to auto-fill your checkout
     if (user?.addresses[0]) {
       if (addrLine1 == "") {
@@ -106,7 +110,6 @@ export default function CheckoutPage() {
       <div id="payment-message" className="font-bold text-red-600">
         {errorMessage}
       </div>
-      <pre>{JSON.stringify(card, null, 2)}</pre>
       <button
         onClick={() => {
           window.accelerate.login({
@@ -119,28 +122,14 @@ export default function CheckoutPage() {
         Force Accelerate Start
       </button>
       <button
-        id="pay-now-btn"
-        className="btn btn-blue"
-        disabled={card === null}
-        onClick={async () => {
-          if (!card) return;
-          const confirmIntent = await fetch("/api/confirm", {
-            method: "POST",
-            body: JSON.stringify({
-              paymentIntentId: card.stripeTokenId,
-              cartId: "some-cart",
-            }),
-          });
-          const res = (await confirmIntent.json()) as { status: string; message?: string };
-          if (res.status === "succeeded") {
-            router.push("/completion?status=succeeded");
-          } else {
-            setErrorMessage(res.message || "Unknown error");
-          }
+        onClick={() => {
+          window.accelerate.openWallet();
         }}
       >
-        Pay Now
+        Force Accelerate Open Wallet
       </button>
+      <div style={{ backgroundColor: "#F5F5F5" }} id="accelerate-wallet"></div>
+
       <Script
         crossOrigin="anonymous"
         type="module"
@@ -150,14 +139,27 @@ export default function CheckoutPage() {
           window.accelerate.init({
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
-            checkoutFlow: "Modal",
-            checkoutMode: "StripeToken",
+            checkoutFlow: "InlinePayment",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            checkoutMode: "CheckoutDotComToken" as any, // TODO: Fix typing
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);
             },
-            onPaymentInitiated: async (source) => {
-              setCard(source);
+            onPaymentInitiated: async (src) => {
+              const confirmIntent = await fetch("/api/checkoutdotcom/confirm", {
+                method: "POST",
+                body: JSON.stringify({
+                  paymentIntentId: src.stripeTokenId,
+                  cartId: "some-cart",
+                }),
+              });
+              const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
+              if (res.status === "succeeded") {
+                router.push(`/completion?status=succeeded&token=${res.token}`);
+              } else {
+                setErrorMessage(res.message || "Unknown error");
+              }
             },
           });
         }}
