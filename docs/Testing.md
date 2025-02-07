@@ -20,8 +20,8 @@ sbx.api.weaccelerate.com
 
 ## Test phone numbers
 
-TODO_test_numbers
+Test phone numbers are coming soon.
 
 ## Test card numbers
 
-TODO_test_cards
+Test card numbers vary by processor, generally you will use the same card numbers that you would use for directly testing your payment processor.
