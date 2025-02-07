@@ -244,9 +244,7 @@ export default function CheckoutPage() {
       </main>
 
       {/* Hidden AccelerateWallet */}
-      <div className="hidden">
-        {accelLoaded && userLoggedIn && <AccelerateWallet />}
-      </div>
+      <div className="hidden">{accelLoaded && userLoggedIn && <AccelerateWallet />}</div>
 
       <Script
         crossOrigin="anonymous"
@@ -263,13 +261,13 @@ export default function CheckoutPage() {
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);
-              setUserLoggedIn(true);  // Set user logged in state
+              setUserLoggedIn(true); // Set user logged in state
             },
             onCardSelected: (cid) => {
               console.log(cid);
             },
             onPaymentInitiated: async (source) => {
-              const confirmIntent = await fetch("/api/confirm", {
+              const confirmIntent = await fetch("/api/stripe/confirm", {
                 method: "POST",
                 body: JSON.stringify({
                   paymentIntentId: source.stripeTokenId,

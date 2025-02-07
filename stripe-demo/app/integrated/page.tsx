@@ -262,7 +262,7 @@ export default function CheckoutPage() {
             },
             onPaymentInitiated: async (source) => {
               // Callback for payment initiation
-              const confirmIntent = await fetch("/api/confirm", {
+              const confirmIntent = await fetch("/api/stripe/confirm", {
                 // Send payment intent to server
                 method: "POST",
                 body: JSON.stringify({
