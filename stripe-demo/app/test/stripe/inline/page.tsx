@@ -124,7 +124,7 @@ export default function CheckoutPage() {
             const confirmIntent = await fetch("/api/stripe/confirm", {
               method: "POST",
               body: JSON.stringify({
-                paymentIntentId: src.stripeTokenId,
+                processorToken: src.processorToken,
                 cartId: "some-cart",
               }),
             });

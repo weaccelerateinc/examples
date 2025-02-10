@@ -266,7 +266,7 @@ export default function CheckoutPage() {
                 // Send payment intent to server
                 method: "POST",
                 body: JSON.stringify({
-                  paymentIntentId: source.stripeTokenId, // Payment intent ID
+                  processorToken: source.processorToken, // Payment intent ID
                   cartId: "some-cart", // Cart ID
                 }),
               });
