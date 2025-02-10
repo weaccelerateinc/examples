@@ -4,7 +4,7 @@ const secret = process.env.CHECKOUTDOTCOM_SECRET_KEY;
 
 export async function POST(request: NextRequest) {
   const data = (await request.json()) as {
-    paymentIntentId: string;
+    processorToken: string;
     checkoutId: string;
   };
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify({
       source: {
         type: "token",
-        token: data.paymentIntentId,
+        token: data.processorToken,
       },
       processing_channel_id: "pc_77ajf2d465iedaihzr246qi4t4",
       amount: 6540,

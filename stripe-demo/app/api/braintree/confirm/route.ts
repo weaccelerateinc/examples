@@ -10,7 +10,7 @@ const gateway = new braintree.BraintreeGateway({
 
 export async function POST(request: NextRequest) {
   const data = (await request.json()) as {
-    paymentIntentId: string;
+    processorToken: string;
     checkoutId: string;
   };
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   const result = await gateway.transaction.sale({
     amount: "10.00",
-    paymentMethodNonce: data.paymentIntentId,
+    paymentMethodNonce: data.processorToken,
     options: {
       submitForSettlement: true,
     },
