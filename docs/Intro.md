@@ -25,3 +25,5 @@ The following steps are provided as a way to organize integrating with Accelerat
 [Stripe](./Stripe.md)
 
 [Braintree](./Braintree.md)
+
+[Checkout.com](./CheckoutDotCom.md)
