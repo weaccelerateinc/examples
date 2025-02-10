@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   const result = await gateway.transaction.sale({
     amount: "10.00",
-    paymentMethodToken: data.processorToken,
+    paymentMethodNonce: data.processorToken,
     options: {
       submitForSettlement: true,
     },
