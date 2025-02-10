@@ -2,7 +2,11 @@
 
 ## Handoff Flow
 
-The handoff flow is the most common integration flow with Accelerate and will likely be the most convenient.
+The handoff flow is the most common integration flow with Accelerate and will likely be the most convenient. When initializing the frontend library for Accelerate, use:
+
+```
+checkoutMode: "BraintreeNonce"
+```
 
 Our service utilizes Braintree's payment method nonce values to pass as tokens to be authorized. We create these using your api keys so they may be used directly. See the <a href="https://developer.paypal.com/braintree/docs/reference/request/transaction/sale" target="_parent">Transaction.sale docs</a> for more information on using them.
 

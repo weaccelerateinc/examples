@@ -27,3 +27,5 @@ The following steps are provided as a way to organize integrating with Accelerat
 [Braintree](./Braintree.md)
 
 [Checkout.com](./CheckoutDotCom.md)
+
+[Direct handoff](./HandoffDirect.md)

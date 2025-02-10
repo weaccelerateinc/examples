@@ -2,7 +2,11 @@
 
 ## Handoff Flow
 
-The handoff flow is the most common integration flow with Accelerate and will likely be the most convenient. If you are using Stripe Elements or some stripe-js that is creating a payment intent then Accelerate should plug into your system very easily.
+The handoff flow is the most common integration flow with Accelerate and will likely be the most convenient. If you are using Stripe Elements or some stripe-js that is creating a payment intent then Accelerate should plug into your system very easily. When initializing the frontend library for Accelerate, use:
+
+```
+checkoutMode: "StripeToken"
+```
 
 For the Stripe handoff flow we are integrated into the payment intent api service. Our frontend will create an unconfirmed payment intent and pass the id of this object out to your frontend. Your frontend will then submit that payment intent id to your server to confirm. This is very similar to how Stripe Elements operates.
 

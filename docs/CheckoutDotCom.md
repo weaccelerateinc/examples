@@ -2,7 +2,11 @@
 
 ## Handoff Flow
 
-The handoff flow is the most common integration flow with Accelerate and will likely be the most convenient.
+The handoff flow is the most common integration flow with Accelerate and will likely be the most convenient. When initializing the frontend library for Accelerate, use:
+
+```
+checkoutMode: "CheckoutDotComToken"
+```
 
 Our service utilizes Checkout.coms's payment method tokens as vehicles for sensitive information. We create these using your api keys so they may be used directly. See the <a href="https://api-reference.checkout.com/#operation/requestAPaymentOrPayout" target="_parent">Payment request documentation</a> for more information on using them.
 
