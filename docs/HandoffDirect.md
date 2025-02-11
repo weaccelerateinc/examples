@@ -26,7 +26,7 @@ onCardSelected: (id) => {
 Then using the card id to request credentials when the user is checking out:
 
 ```
-const credentials = await window.accelerate.requestSource(cardId);
+const credentials = await window.accelerate.requestSource(cardId, cartTotal);
 
 const cardAuthorization = await fetch("{{ YOUR BACKEND HERE }}", {
     method: "POST",
