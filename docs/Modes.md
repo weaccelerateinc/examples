@@ -28,7 +28,7 @@ Choosing a frontend style for the Accelerate integration is a bit simpler: you s
 
 ### Inline
 
-See [Example](https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/integrated/page.tsx)
+See [Example](https://github.com/weaccelerateinc/examples/blob/main/demos/app/integrated/page.tsx)
 
 The inline flow will involve starting the AccelerateJS system to log the user in and then showing their wallet of cards within the elements of your existing checkout page. On the technical side, this is done by adding a div:
 
@@ -44,13 +44,13 @@ Your UI is responsible for the final "Pay Now" button presentation and handling.
 
 ### InlinePayment
 
-See [Example](https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/test/inline-payment/page.tsx)
+See [Example](https://github.com/weaccelerateinc/examples/blob/main/demos/app/test/inline-payment/page.tsx)
 
 This mode is similar to `Inline` mode except our UI will present a "Pay Now" button and allow the user to click it. The checkout page must then handle `onPaymentInitiated` as if it was the final step of the checkout and begin processing the payment.
 
 ### Modal
 
-See [Example](https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/modal/page.tsx)
+See [Example](https://github.com/weaccelerateinc/examples/blob/main/demos/app/modal/page.tsx)
 
 The modal integration is for sites that don't wish to add any elements to their existing content to support the Accelerate wallet flow. The entire user experience will exist as an iframe that appears above your content until the user has selected a card. If they need to choose a new one, the modal will need to re-appear.
 

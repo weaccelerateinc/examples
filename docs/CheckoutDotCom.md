@@ -12,8 +12,8 @@ Our service utilizes Checkout.coms's payment method tokens as vehicles for sensi
 
 ![Checkout.com handoff diagram](checkoutdotcom_handoff.png)
 
-<a href="https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/test/checkoutdotcom/inline-payment/page.tsx" target="_parent">Checkout.com basic example frontend code</a><br>
-<a href="https://github.com/weaccelerateinc/examples/blob/main/stripe-demo/app/api/checkoutdotcom/confirm/route.ts" target="_parent">Checkout.com basic example backend code</a>
+<a href="https://github.com/weaccelerateinc/examples/blob/main/demos/app/test/checkoutdotcom/inline-payment/page.tsx" target="_parent">Checkout.com basic example frontend code</a><br>
+<a href="https://github.com/weaccelerateinc/examples/blob/main/demos/app/api/checkoutdotcom/confirm/route.ts" target="_parent">Checkout.com basic example backend code</a>
 
 During the backend call to confirm you should perform all of the normal cart and stock verification that you would do — none of this will have happened yet. The call to transact using the token is also when the user’s instrument will be charged so failure cases will need to be handled appropriately by your services.
 
