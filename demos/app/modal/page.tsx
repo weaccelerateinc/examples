@@ -78,6 +78,7 @@ export default function CheckoutPage() {
 
     if (firstName == "") return;
     if (lastName == "") return;
+    if (email == "") return;
 
     // Remove all non-digit characters to normalize the input
     const cleanedPhone = phoneValue.replace(/\D/g, "");

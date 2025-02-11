@@ -83,6 +83,11 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
       return;
     }
 
+    if (email === "") {
+      console.log("Email is empty, skipping login");
+      return;
+    }
+
     const cleanedPhone = phoneValue.replace(/\D/g, "");
     const phoneRegex = /^(1\d{10}|[2-9]\d{9})$/;
     if (!phoneRegex.test(cleanedPhone)) {
