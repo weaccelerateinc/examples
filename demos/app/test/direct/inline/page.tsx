@@ -119,21 +119,21 @@ export default function CheckoutPage() {
           id="submit"
           className="btn btn-blue disabled:bg-blue-400/50"
           onClick={async () => {
-            const src = await window.accelerate.requestSource(cardId!);
+            const credentials = await window.accelerate.requestSource(cardId!);
 
             // Use card credentials as needed
             const cardAuthorization = await fetch("{{ YOUR BACKEND HERE }}", {
               method: "POST",
               body: JSON.stringify({
                 card: {
-                  number: src.number,
-                  cvv: src.cvv,
+                  number: credentials.number,
+                  cvv: credentials.cvv,
                 },
                 // Alternatively, use network tokenization:
                 // networkToken: {
-                //   token: src.number,
-                //   eci: src.eci,
-                //   cryptogram: src.cryptogram,
+                //   token: credentials.number,
+                //   eci: credentials.eci,
+                //   cryptogram: credentials.cryptogram,
                 // },
                 cartId: "some-cart",
               }),
