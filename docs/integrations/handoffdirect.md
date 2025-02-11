@@ -1,3 +1,7 @@
+---
+icon: handshake-simple
+---
+
 # Handoff flow for direct processing
 
 If you are already PCI compliant and are able to accept raw credentials, Accelerate can offer you direct credentials as part of the handoff. This will mean that after a user selects their payment device you will be passed the full account number or a network token if we have one on file. When initializing the frontend library for Accelerate, use:

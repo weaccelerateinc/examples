@@ -1,3 +1,7 @@
+---
+icon: cart-xmark
+---
+
 # Checkout.com
 
 ## Handoff Flow

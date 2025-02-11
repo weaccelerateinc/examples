@@ -1,3 +1,7 @@
+---
+icon: stripe
+---
+
 # Stripe
 
 ## Handoff Flow

@@ -1,3 +1,7 @@
+---
+icon: coin-front
+---
+
 # Frontend
 
 Accelerate will act as JavaScript added to your checkout pages and if you are using an inline flow, we will also display the list of payment cards in an iframe at a location of your choosing.

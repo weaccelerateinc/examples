@@ -1,3 +1,7 @@
+---
+icon: vial-virus
+---
+
 # Testing
 
 To test the Accelerate integration you will use our sandbox environment. We will provide you with a test phone number to use as part of the modal login flow and the account this resolves to will have cards to test transactions with. Your merchant id will be the same for sandbox and production.

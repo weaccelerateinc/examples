@@ -17,4 +17,7 @@
 * [Braintree](integrations/braintree.md)
 * [Checkout.com](integrations/checkoutdotcom.md)
 * [Handoff flow for direct processing](integrations/handoffdirect.md)
-* [Example Repos](integrations/examples.md)
+
+***
+
+* [Example Repos](examples.md)
