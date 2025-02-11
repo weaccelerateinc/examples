@@ -6,7 +6,7 @@ The following steps are provided as a way to organize integrating with Accelerat
 
 1. Choose a backend integration flow:
 
-[Backend integration](./Backend.md)
+[Backend integration](setup/backend.md)
 
 ## Handoff flow
 
@@ -16,16 +16,15 @@ The following steps are provided as a way to organize integrating with Accelerat
 
 ![Gateway diagram](gateway.png)
 
-2. Choose a frontend style, either inline or modal: [Modes](./Modes.md) and [Frontend](./Frontend.md)
-
-3. Test transactions in our sandbox environment: [Testing](./Testing.md)
+2. Choose a frontend style, either inline or modal: [Modes](setup/modes.md) and [Frontend](setup/frontend.md)
+3. Test transactions in our sandbox environment: [Testing](setup/testing.md)
 
 ## Processor specific documentation
 
-[Stripe](./Stripe.md)
+[Stripe](integrations/stripe.md)
 
-[Braintree](./Braintree.md)
+[Braintree](integrations/braintree.md)
 
-[Checkout.com](./CheckoutDotCom.md)
+[Checkout.com](integrations/checkoutdotcom.md)
 
-[Direct handoff](./HandoffDirect.md)
+[Direct handoff](integrations/handoffdirect.md)

@@ -65,7 +65,7 @@ This callback is called whenever the user has selected a new payment instrument.
 
 ## Other options in the init call
 
-`checkoutMode` and `checkoutFlow` should both be provided - see [Modes](./Modes.md)
+`checkoutMode` and `checkoutFlow` should both be provided - see [Modes](modes.md)
 
 ## Adding the Wallet iframe element
 
