@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   const [addrState, setAddrState] = useState("");
   const [addrCity, setAddrCity] = useState("");
   const [addrZip, setAddrZip] = useState("");
+  const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   // Function to populate address fields from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
@@ -95,6 +96,7 @@ export default function CheckoutPage() {
       firstName,
       lastName,
       phoneNumber: finalPhone,
+      email,
     });
   };
 
@@ -159,6 +161,8 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
                   className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
                 />

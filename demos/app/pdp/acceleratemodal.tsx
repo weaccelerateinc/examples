@@ -96,6 +96,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
       firstName,
       lastName,
       phoneNumber: finalPhone,
+      email,
     });
   };
 

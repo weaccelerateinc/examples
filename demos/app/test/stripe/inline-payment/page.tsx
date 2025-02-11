@@ -44,16 +44,16 @@ export default function CheckoutPage() {
     // Use the Accelerate user details to auto-fill your checkout
     if (user?.addresses[0]) {
       if (addrLine1 == "") {
-        setAddrLine1(user.addresses[0].line1);
+        setAddrLine1(user.addresses[0].line1 || "");
       }
       if (addrCity == "") {
-        setAddrCity(user.addresses[0].city);
+        setAddrCity(user.addresses[0].city || "");
       }
       if (addrState == "") {
-        setAddrState(user.addresses[0].state);
+        setAddrState(user.addresses[0].state || "");
       }
       if (addrZip == "") {
-        setAddrZip(user.addresses[0].postalCode);
+        setAddrZip(user.addresses[0].postalCode || "");
       }
     }
   };
@@ -116,6 +116,7 @@ export default function CheckoutPage() {
             firstName,
             lastName,
             phoneNumber,
+            email: "test@weaccelerate.com",
           });
         }}
       >
