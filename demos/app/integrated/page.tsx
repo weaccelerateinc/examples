@@ -179,7 +179,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="mb-6">
-              <h3 className="font-semibold mb-4">Shipping Information</h3>
+              <h3 className="font-semibold mb-4">Billing Information</h3>
               <div className="space-y-3.5">
                 <input
                   placeholder="Address"
