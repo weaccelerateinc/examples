@@ -160,15 +160,12 @@ function ConfirmationContent() {
 
           <footer className="mt-8 pt-6 border-t border-gray-200">
             <div className="flex gap-4 text-sm text-blue-600">
-              <Link href="/return-policy" className="hover:underline">
-                Return policy
-              </Link>
-              <Link href="/privacy-policy" className="hover:underline">
-                Privacy policy
-              </Link>
-              <Link href="/terms" className="hover:underline">
-                Terms of service
-              </Link>
+            <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
+              Privacy policy
+            </a>
+            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
+              Terms of service
+            </a>
             </div>
           </footer>
         </section>

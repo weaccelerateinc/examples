@@ -282,13 +282,10 @@ function PaymentContent() {
           </form>
 
           <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-            <a href="#" className="hover:underline">
-              Return policy
-            </a>
-            <a href="#" className="hover:underline">
+          <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
               Privacy policy
             </a>
-            <a href="#" className="hover:underline">
+            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
               Terms of service
             </a>
           </footer>

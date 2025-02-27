@@ -443,18 +443,12 @@ export default function CheckoutPage() {
           </form>
 
           <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-            <a href="#" className="hover:underline">
-              Return policy
-            </a>{" "}
-            {/* Link to return policy */}
-            <a href="#" className="hover:underline">
+          <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
               Privacy policy
-            </a>{" "}
-            {/* Link to privacy policy */}
-            <a href="#" className="hover:underline">
+            </a>
+            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
               Terms of service
-            </a>{" "}
-            {/* Link to terms of service */}
+            </a>
           </footer>
         </section>
       </main>
