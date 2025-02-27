@@ -54,6 +54,8 @@ export default function CheckoutPage() {
   const [accelLoaded, setAccelerateLoaded] = useState(false);
   // Add new state for tracking login status
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Add state for different shipping address
+  const [useDifferentShipping, setUseDifferentShipping] = useState(false);
 
   // Separate billing and shipping address states
   const [billingAddrLine1, setBillingAddrLine1] = useState("");
@@ -259,47 +261,60 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </div>
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Shipping Information</h3>
-              <div className="space-y-3.5">
+            <div className="mt-4">
+              <label className="flex items-center gap-3">
                 <input
-                  placeholder="Name (optional)"
-                  value={shippingName}
-                  onChange={(e) => setShippingName(e.target.value)}
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                  type="checkbox"
+                  checked={useDifferentShipping}
+                  onChange={(e) => setUseDifferentShipping(e.target.checked)}
+                  className="w-4 h-4 text-sky-700 border-neutral-200 rounded focus:ring-sky-700"
                 />
-                <input
-                  placeholder="Address"
-                  value={shippingAddrLine1}
-                  onChange={(e) => setShippingAddrLine1(e.target.value)}
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  placeholder="Apartments, suite, etc (optional)"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
+                <span className="text-sm">Use a different shipping address</span>
+              </label>
+            </div>
+            {useDifferentShipping && (
+              <div className="mb-6">
+                <h3 className="font-semibold mb-4">Shipping Information</h3>
+                <div className="space-y-3.5">
                   <input
-                    placeholder="City"
-                    value={shippingAddrCity}
-                    onChange={(e) => setShippingAddrCity(e.target.value)}
+                    placeholder="Name (optional)"
+                    value={shippingName}
+                    onChange={(e) => setShippingName(e.target.value)}
                     className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
                   />
                   <input
-                    placeholder="State"
-                    value={shippingAddrState}
-                    onChange={(e) => setShippingAddrState(e.target.value)}
+                    placeholder="Address"
+                    value={shippingAddrLine1}
+                    onChange={(e) => setShippingAddrLine1(e.target.value)}
                     className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
                   />
                   <input
-                    placeholder="Zip code"
-                    value={shippingAddrZip}
-                    onChange={(e) => setShippingAddrZip(e.target.value)}
+                    placeholder="Apartments, suite, etc (optional)"
                     className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
                   />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
+                    <input
+                      placeholder="City"
+                      value={shippingAddrCity}
+                      onChange={(e) => setShippingAddrCity(e.target.value)}
+                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                    <input
+                      placeholder="State"
+                      value={shippingAddrState}
+                      onChange={(e) => setShippingAddrState(e.target.value)}
+                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                    <input
+                      placeholder="Zip code"
+                      value={shippingAddrZip}
+                      onChange={(e) => setShippingAddrZip(e.target.value)}
+                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             <div className="mb-6">
               <h3 className="font-semibold mb-4">Shipping Method</h3>
               <div className="border border-neutral-200 rounded-md overflow-hidden">
