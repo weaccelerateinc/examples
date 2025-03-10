@@ -48,7 +48,46 @@ window.accelerate.login({
       phoneNumber,
 });
 ```
-
+Example of calling accelerate.login on input blur event to ensure that the 2FA pop-up is displayed based on the user's input status. 
+```
+                  <input
+                    data-testid="first-name-input"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    onBlur={() => {
+                      maybeLogin(phoneNumber);
+                    }}
+                    placeholder="First name"
+                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                  />
+                  <input
+                    data-testid="last-name-input"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    onBlur={() => {
+                      maybeLogin(phoneNumber);
+                    }}
+                    placeholder="Last name"
+                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                  />
+                </div>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
+                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                />
+                <input
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    setPhone(tryFormatPhone(e.target.value));
+                    maybeLogin(e?.target.value);
+                  }}
+                  placeholder="Phone number"
+                  type="tel"
+                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+                />
+```
 This will cause the Accelerate login modal to appear and the user will go through the Accelerate flow. The Accelerate engineering team can help implement this correctly if it is not clear where this should occur.
 
 ## Handling the callbacks
