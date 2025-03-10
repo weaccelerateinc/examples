@@ -47,7 +47,6 @@ export default function CheckoutPage() {
   const [addrCity, setAddrCity] = useState("");
   const [addrZip, setAddrZip] = useState("");
   const [email, setEmail] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   // Function to populate address fields from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user?.addresses[0]) {
@@ -213,7 +212,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </div>
-            {errorMessage && <div className="text-red-600 font-medium text-center mb-4">{errorMessage}</div>}{" "}
             {/* Display error message if exists */}
             <div className="flex flex-col gap-3">
               <button
