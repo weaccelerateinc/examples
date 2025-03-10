@@ -47,7 +47,6 @@ export default function CheckoutPage() {
   const [addrCity, setAddrCity] = useState("");
   const [addrZip, setAddrZip] = useState("");
   const [email, setEmail] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   // Function to populate address fields from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user?.addresses[0]) {
@@ -213,7 +212,6 @@ export default function CheckoutPage() {
                 </div>
               </div>
             </div>
-            {errorMessage && <div className="text-red-600 font-medium text-center mb-4">{errorMessage}</div>}{" "}
             {/* Display error message if exists */}
             <div className="flex flex-col gap-3">
               <button
@@ -257,23 +255,6 @@ export default function CheckoutPage() {
             onCardSelected: (cid) => {
               // Callback for card selection
               console.log(cid); // Log selected card ID
-            },
-            onPaymentInitiated: async (source) => {
-              // Callback for payment initiation
-              const confirmIntent = await fetch("/api/stripe/confirm", {
-                // Send payment intent to server
-                method: "POST",
-                body: JSON.stringify({
-                  processorToken: source.processorToken, // Payment intent ID
-                  cartId: "some-cart", // Cart ID
-                }),
-              });
-              const res = (await confirmIntent.json()) as { status: string; message?: string }; // Parse response
-              if (res.status === "succeeded") {
-                router.push("/completion?status=succeeded"); // Navigate to completion page on success
-              } else {
-                setErrorMessage(res.message || "Unknown error"); // Set error message on failure
-              }
             },
           });
         }}
