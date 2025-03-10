@@ -264,23 +264,6 @@ export default function CheckoutPage() {
               // Callback for card selection
               console.log(cid); // Log selected card ID
             },
-            onPaymentInitiated: async (source) => {
-              // Callback for payment initiation
-              const confirmIntent = await fetch("/api/stripe/confirm", {
-                // Send payment intent to server
-                method: "POST",
-                body: JSON.stringify({
-                  processorToken: source.processorToken, // Payment intent ID
-                  cartId: "some-cart", // Cart ID
-                }),
-              });
-              const res = (await confirmIntent.json()) as { status: string; message?: string }; // Parse response
-              if (res.status === "succeeded") {
-                router.push("/completion?status=succeeded"); // Navigate to completion page on success
-              } else {
-                setErrorMessage(res.message || "Unknown error"); // Set error message on failure
-              }
-            },
           });
         }}
       />
