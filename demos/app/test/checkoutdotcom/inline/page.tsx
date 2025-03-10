@@ -11,6 +11,8 @@ declare global {
   }
 }
 
+const buttonStyle = "p-1 m-1 border-gray-200 border-2";
+
 function tryFormatPhone(pn: string): string {
   if (pn.match(/\+1[0-9]{10}/)) {
     return pn.slice(2, 5) + "-" + pn.slice(5, 8) + "-" + pn.slice(8);
@@ -112,6 +114,7 @@ export default function CheckoutPage() {
         {errorMessage}
       </div>
       <button
+        className={buttonStyle}
         onClick={() => {
           window.accelerate.login({
             firstName,
@@ -124,6 +127,7 @@ export default function CheckoutPage() {
         Force Accelerate Start
       </button>
       <button
+        className={buttonStyle}
         onClick={() => {
           window.accelerate.openWallet();
         }}
@@ -133,6 +137,7 @@ export default function CheckoutPage() {
       <div style={{ backgroundColor: "#F5F5F5" }} id="accelerate-wallet"></div>
       <button
         disabled={cardId == null}
+        className={buttonStyle}
         onClick={async () => {
           if (!cardId) return;
           const source = await window.accelerate.requestSource(cardId);
@@ -154,6 +159,14 @@ export default function CheckoutPage() {
       >
         Pay Now
       </button>
+      <button
+        className={buttonStyle}
+        onClick={async () => {
+          window.accelerate.logout();
+        }}
+      >
+        Accelerate Force Logout
+      </button>
       <Script
         crossOrigin="anonymous"
         type="module"
@@ -172,6 +185,9 @@ export default function CheckoutPage() {
             },
             onCardSelected: (cardId) => {
               setCardId(cardId);
+            },
+            onLogout: () => {
+              console.log("Accelerate user logged out");
             },
           });
         }}
