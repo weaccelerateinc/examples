@@ -142,6 +142,17 @@ export default function CheckoutPage() {
           if (!cardId) return;
           const source = await window.accelerate.requestSource(cardId);
           console.log("Source", { source });
+          if (source.status === 401) {
+            console.log("User session expired!");
+            window.accelerate.closeWallet();
+            window.accelerate.login({
+              firstName,
+              lastName,
+              phoneNumber,
+              email: "test@weaccelerate.com",
+            });
+            return;
+          }
           const confirmIntent = await fetch("/api/checkoutdotcom/confirm", {
             method: "POST",
             body: JSON.stringify({
