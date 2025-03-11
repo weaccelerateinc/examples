@@ -120,6 +120,10 @@ export default function CheckoutPage() {
           className="btn btn-blue disabled:bg-blue-400/50"
           onClick={async () => {
             const src = await window.accelerate.requestSource(cardId!);
+            if ("status" in src) {
+              console.log("Error", { src });
+              return;
+            }
             console.log({ src });
             const confirmIntent = await fetch("/api/stripe/confirm", {
               method: "POST",

@@ -51,6 +51,10 @@ function PaymentContent() {
     e.preventDefault();
     if (selectedCard) {
       const card = await window.accelerate.requestSource(selectedCard);
+      if ("status" in card) {
+        console.log("Error", { card });
+        return;
+      }
       console.log({ card: JSON.stringify(card) });
       router.push(
         `/modal/payment/confirmation?` +

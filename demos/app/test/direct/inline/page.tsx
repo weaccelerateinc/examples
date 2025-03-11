@@ -120,7 +120,10 @@ export default function CheckoutPage() {
           className="btn btn-blue disabled:bg-blue-400/50"
           onClick={async () => {
             const credentials = await window.accelerate.requestSource(cardId!);
-
+            if ("status" in credentials) {
+              console.log("Error", { credentials });
+              return;
+            }
             // Use card credentials as needed
             const cardAuthorization = await fetch("{{ YOUR BACKEND HERE }}", {
               method: "POST",
