@@ -94,6 +94,10 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (selectedCard) {
       const card = await window.accelerate.requestSource(selectedCard);
+      if ("status" in card) {
+        console.log("Error", { card });
+        return;
+      }
       console.log({ card: JSON.stringify(card) });
       router.push(
         `/full/payment/confirmation?` +
@@ -458,7 +462,7 @@ export default function CheckoutPage() {
           </form>
 
           <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-          <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
+            <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
               Privacy policy
             </a>
             <a href="https://www.weaccelerate.com/terms" className="hover:underline">

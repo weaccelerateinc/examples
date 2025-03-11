@@ -147,7 +147,10 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
   const handlePayment = async () => {
     if (selectedCard) {
       const card = await window.accelerate.requestSource(selectedCard);
-
+      if ("status" in card) {
+        console.log("Error", { card });
+        return;
+      }
       setCheckoutData({
         firstName,
         lastName,
