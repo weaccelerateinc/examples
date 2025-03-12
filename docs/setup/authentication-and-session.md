@@ -33,8 +33,8 @@ It is recommended have basic validation logic before calling the API. See [Examp
 
 Upon calling `accelerate.login`, Accelerate will determine if the user requires 2FA. The conditions for displaying the 2FA pop-up are as follows:
 
-* If the user's account exists, Accelerate will prompt for 2FA.
-* If the account doesn't exist, Accelerate will create a new account and then prompt for 2FA.
+- If the user's account exists, Accelerate will prompt for 2FA.
+- If the account doesn't exist, Accelerate will create a new account and then prompt for 2FA.
 
 #### Optional `accelerate.checkPhone` Function
 
@@ -66,11 +66,12 @@ To handle session timeouts and re-authentication:
 ```
 // Example of re-authentication
 const handleSessionExpiry = async () => {
+  accelerate.closeWallet(); // Close Wallet if it was open
   await accelerate.login({ firstName, lastName, email, phone });
   // Proceed with the original request after re-authentication
 };
 ```
 
-3. **Resume Operations**: After successful re-authentication, retry the original request or operation that failed due to session expiry. The `userLoggedIn` callback will be triggered by the library, allowing you to reattempt the `accelerate.requestSource` call.
+3. **Resume Operations**: After successful re-authentication, retry the original request or operation that failed due to session expiry. The `userLoggedIn` callback will be triggered by the library, allowing you to reattempt the `accelerate.requestSource` call. If the user had their wallet opened before, you may now call `accelerate.openWallet` again.
 
 This approach ensures a seamless user experience, allowing users to continue their tasks without significant interruptions.
