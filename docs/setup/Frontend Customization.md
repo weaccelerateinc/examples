@@ -52,7 +52,7 @@ To apply a custom theme when initializing Accelerate, include the `customTheme` 
 ## Customization Options
 
 ### Font Family
-Set a custom font family by specifying the `fontFamily` property under `customTheme`. At the moment, we only support the font family Inter and Lato. If you would like to request to use additional font families please contact your account manager. 
+Set a custom font family by specifying the `fontFamily` property under `customTheme`. At the moment, we only support the font families "Inter" and "Lato". If you would like to request to use additional font families please contact your account manager. 
 
 ```json
 {
