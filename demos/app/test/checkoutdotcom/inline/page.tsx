@@ -202,6 +202,21 @@ export default function CheckoutPage() {
             onLogout: () => {
               console.log("Accelerate user logged out");
             },
+            customTheme: {
+              fontFamily: "Lato",
+              typography: {
+                allVariants: {
+                  color: "rgba(0,0,0,0.85)",
+                  fontSize: "12px",
+                },
+                h2: {
+                  fontSize: "24px",
+                },
+                caption: {
+                  fontSize: "16px",
+                },
+              },
+            },
           });
         }}
       />
