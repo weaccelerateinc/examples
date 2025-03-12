@@ -25,16 +25,16 @@ const handleBlur = async () => {
 };
 ```
 
-For a detailed implementation, refer to the integrated demo [page](../../demos/app/integrated/page.tsx#L146).
+For a detailed implementation, refer to the integrated demo [page](../../../demos/app/integrated/page.tsx#L146).
 
-It is recommended have basic validation logic before calling the API. See [Example](../../demos/app/integrated/page.tsx#L76).
+It is recommended have basic validation logic before calling the API. See [Example](../../../demos/app/integrated/page.tsx#L76).
 
 #### Two-Factor Authentication (2FA) Prompt
 
 Upon calling `accelerate.login`, Accelerate will determine if the user requires 2FA. The conditions for displaying the 2FA pop-up are as follows:
 
-- If the user's account exists, Accelerate will prompt for 2FA.
-- If the account doesn't exist, Accelerate will create a new account and then prompt for 2FA.
+* If the user's account exists, Accelerate will prompt for 2FA.
+* If the account doesn't exist, Accelerate will create a new account and then prompt for 2FA.
 
 #### Optional `accelerate.checkPhone` Function
 
@@ -52,7 +52,7 @@ Implementing `accelerate.checkPhone` is optional; generally, invoking `accelerat
 
 ### Session Duration
 
-After a successful 2FA, the Accelerate login session lasts for 30 minutes. For an example of handling session duration, see the [example](../../demos/app/test/checkoutdotcom/inline/page.tsx#L145).
+After a successful 2FA, the Accelerate login session lasts for 30 minutes. For an example of handling session duration, see the [example](../../../demos/app/test/checkoutdotcom/inline/page.tsx#L145).
 
 ### Handling Session Timeout and Re-authentication
 

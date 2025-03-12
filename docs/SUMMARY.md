@@ -9,9 +9,9 @@
 ## Setup
 
 * [Frontend](setup/frontend/README.md)
+  * [Authentication and Session](setup/frontend/authentication-and-session.md)
   * [Frontend Customization](setup/frontend/frontend-customization.md)
 * [Backend](setup/backend.md)
-* [Authentication and Session](setup/authentication-and-session.md)
 * [Integration Modes](setup/modes.md)
 * [Testing](setup/testing.md)
 
