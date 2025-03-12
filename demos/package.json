@@ -22,7 +22,7 @@
     "@types/node": "22.10.2",
     "@types/react": "19.0.1",
     "@types/react-dom": "^19",
-    "accelerate-js-types": "^0.1.1",
+    "accelerate-js-types": "^0.1.3",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",
