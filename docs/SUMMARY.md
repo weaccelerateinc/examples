@@ -2,11 +2,14 @@
 
 ## Getting Started
 
+***
+
 * [Introduction](README.md)
 
 ## Setup
 
-* [Frontend](setup/frontend.md)
+* [Frontend](setup/frontend/README.md)
+  * [Frontend Customization](setup/frontend/frontend-customization.md)
 * [Backend](setup/backend.md)
 * [Authentication and Session](setup/authentication-and-session.md)
 * [Integration Modes](setup/modes.md)

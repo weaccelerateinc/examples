@@ -48,7 +48,9 @@ window.accelerate.login({
       phoneNumber,
 });
 ```
-Example of calling accelerate.login on input blur event to ensure that the 2FA pop-up is displayed based on the user's input status. 
+
+Example of calling accelerate.login on input blur event to ensure that the 2FA pop-up is displayed based on the user's input status.
+
 ```
                   <input
                     data-testid="first-name-input"
@@ -88,6 +90,7 @@ Example of calling accelerate.login on input blur event to ensure that the 2FA p
                   className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
                 />
 ```
+
 This will cause the Accelerate login modal to appear and the user will go through the Accelerate flow. The Accelerate engineering team can help implement this correctly if it is not clear where this should occur.
 
 ## Handling the callbacks
@@ -108,7 +111,7 @@ This callback is called whenever the user has selected a new payment instrument.
 
 ## Other options in the init call
 
-`checkoutMode` and `checkoutFlow` should both be provided - see [Modes](modes.md)
+`checkoutMode` and `checkoutFlow` should both be provided - see [Modes](../modes.md)
 
 ## Adding the Wallet iframe element
 

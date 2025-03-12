@@ -20,7 +20,7 @@ The following steps are provided as a way to organize integrating with Accelerat
 
 ![Gateway diagram](gateway.png)
 
-2. Choose a frontend style, either inline or modal: [Modes](setup/modes.md) and [Frontend](setup/frontend.md)
+2. Choose a frontend style, either inline or modal: [Modes](setup/modes.md) and [Frontend](setup/frontend/)
 3. Test transactions in our sandbox environment: [Testing](setup/testing.md)
 
 ## Processor specific documentation
