@@ -8,6 +8,7 @@
 
 * [Frontend](setup/frontend.md)
 * [Backend](setup/backend.md)
+* [Authentication and Session](setup/authentication-and-session.md)
 * [Integration Modes](setup/modes.md)
 * [Testing](setup/testing.md)
 
