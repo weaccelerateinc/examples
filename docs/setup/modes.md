@@ -48,7 +48,7 @@ Your UI is responsible for the final "Pay Now" button presentation and handling.
 
 ### InlinePayment
 
-See [Example](../../demos/app/test/inline-payment/page.tsx)
+See [Example](https://github.com/weaccelerateinc/examples/blob/main/demos/app/test/braintree/inline-payment/page.tsx)
 
 This mode is similar to `Inline` mode except our UI will present a "Pay Now" button and allow the user to click it. The checkout page must then handle `onPaymentInitiated` as if it was the final step of the checkout and begin processing the payment.
 
