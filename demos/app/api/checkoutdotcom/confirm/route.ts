@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       amount: 6540,
       currency: "USD",
       metadata: {
-        AccelerateId: "asdf-1234-asdf-1234-asdf",
+        AccelerateToken: data.processorToken,
       },
     }),
   });
