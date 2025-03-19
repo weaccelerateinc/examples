@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     method: "POST",
     headers: {
       Authorization: `Bearer ${secret}`,
-      "Cko-Idempotency-Key": "somevalue",
+      "Cko-Idempotency-Key": `rng-${Math.random()}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
       processing_channel_id: "pc_77ajf2d465iedaihzr246qi4t4",
       amount: 6540,
       currency: "USD",
+      metadata: {
+        AccelerateId: "asdf-1234-asdf-1234-asdf",
+      },
     }),
   });
   const json = (await res.json()) as { id: string };
