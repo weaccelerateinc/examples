@@ -19,10 +19,8 @@ export async function POST(request: NextRequest) {
   const result = await gateway.transaction.sale({
     amount: "10.00",
     paymentMethodNonce: data.processorToken,
-    options: {
-      submitForSettlement: true,
-    },
   });
 
+  console.log(JSON.stringify(result, null, 2));
   return Response.json({ status: result.transaction.status, token: result.transaction.id });
 }
