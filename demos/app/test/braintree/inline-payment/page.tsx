@@ -148,6 +148,7 @@ export default function CheckoutPage() {
               maybeUseAccelUser(user);
             },
             onPaymentInitiated: async (src) => {
+              console.log({ last4: src.last4, bin: src.bin });
               const confirmIntent = await fetch("/api/braintree/confirm", {
                 method: "POST",
                 body: JSON.stringify({
