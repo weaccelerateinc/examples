@@ -124,7 +124,26 @@ export default function CheckoutPage() {
           });
         }}
       >
-        Force Accelerate Start
+        Force Accelerate Login
+      </button>
+      <button
+        className={buttonStyle}
+        onClick={() => {
+          window.accelerate.login({
+            firstName,
+            lastName,
+            phoneNumber,
+            email: "test@weaccelerate.com",
+          });
+          window.accelerate.login({
+            firstName,
+            lastName,
+            phoneNumber,
+            email: "test@weaccelerate.com",
+          });
+        }}
+      >
+        Force Accelerate Login Twice
       </button>
       <button
         className={buttonStyle}
