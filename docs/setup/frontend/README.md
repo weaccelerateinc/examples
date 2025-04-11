@@ -13,14 +13,16 @@ A script tag can be used to include our JavaScript:
 In NextJS:
 
 ```jsx
-<Script type="module" src={"https://js.weaccelerate.com/accelerate.js"} strategy="afterInteractive" />
+<Script type="module" src={"https://sbx.js.weaccelerate.com/accelerate.js"} strategy="afterInteractive" />
 ```
 
 In plain HTML:
 
 ```jsx
-<script src="https://js.weaccelerate.com/accelerate.js" crossorigin="anonymous" type="module" />
+<script src="https://sbx.js.weaccelerate.com/accelerate.js" crossorigin="anonymous" type="module" />
 ```
+
+In production, use `https://js.weaccelerate.com/accelerate.js` for the script.
 
 ## Initializing Accelerate
 
