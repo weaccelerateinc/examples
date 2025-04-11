@@ -21,7 +21,15 @@ Our service utilizes Checkout.coms's payment method tokens as vehicles for sensi
 
 During the backend call to confirm you should perform all of the normal cart and stock verification that you would do — none of this will have happened yet. The call to transact using the token is also when the user’s instrument will be charged so failure cases will need to be handled appropriately by your services.
 
-Upon successful charging of the user’s card a webhook should be emitted to Accelerate to provide us direct first hand feedback that the transaction was successful.
+### Confirmation Call
+
+In the handoff flow, it's important to include the processor toekn in the metadata for your backend's confirmation call. This ensures that the webhook events sent to Accelerate can be accurately matched. Ensure that you add the token as follows:&#x20;
+
+```
+metadata: {
+        AccelerateToken: data.processorToken,
+      },
+```
 
 ## Gateway Flow
 

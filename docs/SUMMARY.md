@@ -2,8 +2,6 @@
 
 ## Getting Started
 
-***
-
 * [Introduction](README.md)
 
 ## Setup
