@@ -192,6 +192,51 @@ export default function CheckoutPage() {
         Pay Now
       </button>
       <button
+        disabled={cardId == null}
+        className={buttonStyle}
+        onClick={async () => {
+          if (!cardId) return;
+          const source = await window.accelerate.requestSource(cardId, {
+            billingAddress: {
+              addressLine1: "123 any street",
+              // addressLine2: "optional",
+              city: "Miami",
+              stateProvince: "FL",
+              postalCode: "10760",
+            },
+          });
+          console.log("Source", { source });
+          if ("status" in source) {
+            if (source.status == 401) {
+              console.log("User session expired!");
+              window.accelerate.closeWallet();
+              window.accelerate.login({
+                firstName,
+                lastName,
+                phoneNumber,
+                email: "test@weaccelerate.com",
+              });
+            }
+            return;
+          }
+          const confirmIntent = await fetch("/api/checkoutdotcom/confirm", {
+            method: "POST",
+            body: JSON.stringify({
+              processorToken: source.processorToken,
+              cartId: "some-cart",
+            }),
+          });
+          const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
+          if (res.status === "succeeded") {
+            router.push(`/completion?status=succeeded&token=${res.token}`);
+          } else {
+            setErrorMessage(res.message || "Unknown error");
+          }
+        }}
+      >
+        Pay Now with address override
+      </button>
+      <button
         className={buttonStyle}
         onClick={async () => {
           window.accelerate.logout();
