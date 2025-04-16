@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
       },
     }),
   });
-  const json = (await res.json()) as { id: string };
+  console.log(`[checkoutdotcom] confirm ${res.status}`);
+  const txt = await res.text();
+  console.log({ txt });
+  const json = JSON.parse(txt) as { id: string };
   console.log(json);
   return Response.json({ status: "succeeded", token: json.id });
 }
