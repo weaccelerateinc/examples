@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: process.env.ACCELERATE_WH_KEY!,
     },
     body: JSON.stringify(reportBody),
   });
