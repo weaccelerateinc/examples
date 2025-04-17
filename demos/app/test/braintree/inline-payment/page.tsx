@@ -154,6 +154,7 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                   processorToken: src.processorToken,
                   cartId: "some-cart",
+                  amount: "11.25",
                 }),
               });
               const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
