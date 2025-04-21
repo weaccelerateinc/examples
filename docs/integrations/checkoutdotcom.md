@@ -34,3 +34,16 @@ metadata: {
 ## Gateway Flow
 
 Gateway flow for Checkout.com is not yet available. If this is required for an integration please contact our sales team.
+
+## Reporting transaction status
+
+Checkout.com supports webhook configurations strong enough to implement all fo the reporting Accelerate requires.
+
+The two endpoints for this webhook are:
+
+```
+https://sbx.api.weaccelerate.com/webhooks/checkoutdotcom (sandbox)
+https://prd.api.weaccelerate.com/webhooks/checkoutdotcom (production)
+```
+
+Accelerate only requires 2 event types to be selected, Gateway - Payment approved and Gateway - Payment declined. Both the authorization header key and signature key should be added to your Accelerate account to ensure the safety of the webhook data. Your account manager will assist in ensuring this data is all correct before going live.
