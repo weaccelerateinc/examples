@@ -87,9 +87,21 @@ export default function CheckoutPage() {
           <div className="flex flex-row gap-1">
             <input
               value={phoneNumber}
-              onChange={(e) => {
+              onChange={async (e) => {
                 setPhone(tryFormatPhone(e.target.value));
-                window.accelerate.checkPhone(tryFormatPhone(e.target.value));
+                const isLoggedIn = await window.accelerate.isLoggedIn({
+                  firstName,
+                  lastName,
+                  phoneNumber: tryFormatPhone(e.target.value),
+                  email: "test@weaccelerate.com",
+                });
+                console.log("IsLoggedIn", { isLoggedIn });
+                if (isLoggedIn) {
+                  window.accelerate.openWallet();
+                } else {
+                  // can call checkPhone or login() depending on your flow
+                  window.accelerate.checkPhone(tryFormatPhone(e.target.value));
+                }
               }}
               placeholder="Phone Number"
               type="tel"
@@ -144,6 +156,28 @@ export default function CheckoutPage() {
         </button>
       </div>
       <button
+        onClick={async () => {
+          const isLoggedIn = await window.accelerate.isLoggedIn({
+            firstName,
+            lastName,
+            phoneNumber,
+            email: "test@weaccelerate.com",
+          });
+          if (isLoggedIn) {
+            window.accelerate.openWallet();
+          } else {
+            window.accelerate.login({
+              firstName,
+              lastName,
+              phoneNumber,
+              email: "test@weaccelerate.com",
+            });
+          }
+        }}
+      >
+        Conditional Login
+      </button>
+      <button
         onClick={() => {
           window.accelerate.login({
             firstName,
@@ -154,6 +188,19 @@ export default function CheckoutPage() {
         }}
       >
         Force Accelerate Start
+      </button>
+      <button
+        onClick={async () => {
+          const isLoggedIn = await window.accelerate.isLoggedIn({
+            firstName,
+            lastName,
+            phoneNumber,
+            email: "test@weaccelerate.com",
+          });
+          console.log("IsLoggedIn", { isLoggedIn });
+        }}
+      >
+        Call IsLoggedIn
       </button>
       <button
         onClick={() => {
