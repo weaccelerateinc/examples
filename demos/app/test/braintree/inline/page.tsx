@@ -159,7 +159,11 @@ export default function CheckoutPage() {
         className={buttonStyle}
         onClick={async () => {
           if (!cardId) return;
-          const source = await window.accelerate.requestSource(cardId);
+          const source = await window.accelerate.requestSource(cardId, {
+            braintree: {
+              clientToken: "test-token",
+            },
+          });
           console.log("Source", { source });
           if ("status" in source) {
             if (source.status == 401) {
