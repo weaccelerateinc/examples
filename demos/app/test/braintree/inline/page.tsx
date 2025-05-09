@@ -159,9 +159,15 @@ export default function CheckoutPage() {
         className={buttonStyle}
         onClick={async () => {
           if (!cardId) return;
+
+          // Your implementation should fetch a client token from your server, this is
+          // a mock!
+          const clientToken = await fetch("/api/braintree/get-client-token");
+          const clientTokenJson = (await clientToken.json()) as { token: string };
+
           const source = await window.accelerate.requestSource(cardId, {
             braintree: {
-              clientToken: "test-token",
+              clientToken: clientTokenJson.token,
             },
           });
           console.log("Source", { source });
