@@ -167,7 +167,7 @@ export default function CheckoutPage() {
 
           const source = await window.accelerate.requestSource(cardId, {
             braintree: {
-              clientToken: YOUR_CLIENT_TOKEN,
+              clientToken: clientTokenJson.token,
             },
           });
 
