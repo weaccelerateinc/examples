@@ -26,3 +26,43 @@ Upon successful charging of the user’s card a webhook should be emitted to Acc
 ## Gateway Flow
 
 Gateway flow for Braintree is not yet available. If this is required for an integration please contact our sales team.
+
+## Reporting transaction status
+
+Braintree does not support webhooks to report transaction status directly and as such the merchant service that executes the transaction will need to report the result directly back to Accelerate.
+
+This involves sending a POST with details back to the Accelerate server.
+
+```
+POST https://sbx.api.weaccelerate.com/reporting/braintree
+POST https://prd.api.weaccelerate.com/reporting/braintree
+```
+
+An authorization header must be included with an Accelerate-issued key:
+
+```
+headers: {
+      Authorization: "accelerate-issued-key",
+},
+```
+
+An open api specification file is available for this endpoint [here](https://sbx.api.weaccelerate.com/swagger/reporting/swagger.json)
+
+A minimal example of executing this is shown in [the examples repo](https://github.com/weaccelerateinc/examples/blob/main/demos/app/api/braintree/confirm/route.ts)
+
+Details of the payload body:
+
+```
+{
+// This is the nonce value used to execute the transaction and is used by Accelerate to associate the result with the original request
+  "accelerateToken": "string",
+
+// The fields in the transaction block should be copied from the result of the transaction.sale call
+  "transaction": {
+    "id": "string",
+    "amount": "string",
+    "status": "string",
+    "processorResponseText": "string"
+  }
+}
+```
