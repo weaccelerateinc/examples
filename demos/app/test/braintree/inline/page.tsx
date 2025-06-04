@@ -28,8 +28,8 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhone] = useState(
     typeof window !== "undefined" && window.location.protocol === "http:" ? "512-123-1111" : ""
   );
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("Tester");
+  const [lastName, setLastName] = useState("Accelerate");
 
   const [addrLine1, setAddrLine1] = useState("");
   const [addrState, setAddrState] = useState("");
@@ -98,7 +98,7 @@ export default function CheckoutPage() {
             />
           </div>
           <div>Optional</div>
-          <input placeholder="Email" />
+          <input placeholder="Email" defaultValue="test@weaccelerate.com" />
           <input placeholder="Address Line 1" value={addrLine1} onChange={(e) => setAddrLine1(e.target.value)} />
           <div className="flex flex-row gap-1">
             <input placeholder="Address Line 2" />
