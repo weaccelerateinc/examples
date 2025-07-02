@@ -36,6 +36,7 @@ export default function CheckoutPage() {
   const [addrZip, setAddrZip] = useState("");
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [result, setResult] = useState<string | null>(null);
 
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user) {
@@ -124,6 +125,7 @@ export default function CheckoutPage() {
               console.log("Error", { credentials });
               return;
             }
+            setResult(JSON.stringify(credentials, null, 2));
             // Use card credentials as needed
             const cardAuthorization = await fetch("{{ YOUR BACKEND HERE }}", {
               method: "POST",
@@ -194,6 +196,7 @@ export default function CheckoutPage() {
           });
         }}
       />
+      <pre>Result: {result}</pre>
     </form>
   );
 }
