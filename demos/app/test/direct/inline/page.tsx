@@ -183,7 +183,7 @@ export default function CheckoutPage() {
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
-            checkoutMode: "StripeToken",
+            checkoutMode: "Direct",
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);
