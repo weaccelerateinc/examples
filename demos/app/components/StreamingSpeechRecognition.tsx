@@ -74,6 +74,7 @@ export function StreamingSpeechRecognition({
     cvv: false,
   });
   const [restartCount, setRestartCount] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const currentFieldRef = useRef<"cardNumber" | "expiry" | "cvv">("cardNumber");
@@ -319,6 +320,7 @@ export function StreamingSpeechRecognition({
       recognition.onstart = () => {
         console.log("Speech recognition started");
         setIsListening(true);
+        setIsStarting(false);
         setError(null);
         onCurrentFieldChange("listening");
       };
@@ -399,9 +401,19 @@ export function StreamingSpeechRecognition({
         } else if (event.error === "aborted") {
           console.log("Recognition aborted, checking if should restart...");
           // Don't set error for aborted, let onend handle restart
-        } else {
-          setError(`Speech recognition error: ${event.error}`);
+        } else if (event.error === "service-not-allowed" || event.error === "not-allowed") {
+          setError("Microphone access denied. Please allow microphone access when prompted, then try again.");
           setIsListening(false);
+          setIsStarting(false);
+          // Don't set isSupported to false - let user try again after granting permissions
+        } else if (event.error === "network") {
+          setError("Network error. Please check your internet connection and try again.");
+          setIsListening(false);
+          setIsStarting(false);
+        } else {
+          setError(`Speech recognition error: ${event.error}. Please try again or use manual input.`);
+          setIsListening(false);
+          setIsStarting(false);
         }
       };
 
@@ -430,12 +442,21 @@ export function StreamingSpeechRecognition({
   );
 
   useEffect(() => {
+    // Check if running on HTTPS (required for speech recognition)
+    const isHTTPS = window.location.protocol === "https:" || window.location.hostname === "localhost";
+
     // Check if speech recognition is supported
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setIsSupported(false);
-      setError("Speech recognition not supported in this browser");
+      setError("Speech recognition not supported in this browser. Please try Chrome, Edge, or Safari.");
+      return;
+    }
+
+    if (!isHTTPS) {
+      setIsSupported(false);
+      setError("Voice input requires HTTPS. Please use the manual input fields or camera scan instead.");
       return;
     }
 
@@ -455,11 +476,15 @@ export function StreamingSpeechRecognition({
     };
   }, [processStreamingTranscript, onCurrentFieldChange, setupRecognition]);
 
-  const startListening = () => {
+  const startListening = async () => {
     if (!isSupported || !recognitionRef.current) {
       setError("Speech recognition not available");
       return;
     }
+
+    // Clear any previous errors and set starting state
+    setError(null);
+    setIsStarting(true);
 
     // Reset accumulated data
     accumulatedDigitsRef.current = {
@@ -486,11 +511,39 @@ export function StreamingSpeechRecognition({
 
     console.log("🎤 Starting speech recognition with clean state");
 
+    // Check microphone permissions first (if available)
     try {
-      recognitionRef.current.start();
+      if (navigator.permissions && navigator.permissions.query) {
+        const permission = await navigator.permissions.query({ name: "microphone" as PermissionName });
+        console.log("Microphone permission status:", permission.state);
+
+        if (permission.state === "denied") {
+          setError("Microphone access denied. Please enable microphone permissions in your browser settings and try again.");
+          return;
+        }
+      }
+    } catch (permissionError) {
+      console.log("Could not check microphone permissions:", permissionError);
+      // Continue anyway - permissions API might not be available
+    }
+
+    try {
+      // Small delay to ensure permissions are fully processed
+      setTimeout(() => {
+        if (recognitionRef.current && !isListening) {
+          try {
+            recognitionRef.current.start();
+          } catch (delayedErr) {
+            console.error("Error starting recognition after delay:", delayedErr);
+            setError("Failed to start speech recognition. Please try again.");
+            setIsStarting(false);
+          }
+        }
+      }, 100);
     } catch (err) {
       console.error("Error starting recognition:", err);
-      setError("Failed to start speech recognition");
+      setError("Failed to start speech recognition. Please try again.");
+      setIsStarting(false);
     }
   };
 
@@ -521,11 +574,10 @@ export function StreamingSpeechRecognition({
 
   if (!isSupported) {
     return (
-      <div className="p-4 bg-gray-100 rounded-lg text-center">
-        <p className="text-sm text-gray-600">
-          Speech recognition is not supported in this browser.
-          <br />
-          Please use Chrome or Edge for voice input.
+      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+        <p className="text-sm text-blue-700">{error || "Voice input is not available."}</p>
+        <p className="text-xs text-blue-600 mt-2">
+          💡 Use the manual input fields above or try the camera scan feature instead!
         </p>
       </div>
     );
@@ -538,12 +590,15 @@ export function StreamingSpeechRecognition({
         <button
           type="button"
           onClick={toggleListening}
+          disabled={isStarting}
           className={`p-4 rounded-full transition-all ${
             isListening
               ? "bg-red-500 text-white hover:bg-red-600 shadow-lg animate-pulse"
+              : isStarting
+              ? "bg-blue-500 text-white shadow-lg animate-pulse"
               : "bg-green-500 text-white hover:bg-green-600 shadow-lg"
-          }`}
-          title={isListening ? "Stop listening" : "Start listening"}
+          } ${isStarting ? "cursor-not-allowed" : ""}`}
+          title={isListening ? "Stop listening" : isStarting ? "Starting..." : "Start listening"}
         >
           {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
         </button>
@@ -552,6 +607,8 @@ export function StreamingSpeechRecognition({
           <div className="font-medium">
             {isListening
               ? "🎤 Keep Speaking..."
+              : isStarting
+              ? "🎯 Starting... (allow microphone access)"
               : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv
               ? "🎉 All Complete!"
               : "Click to start voice input"}
@@ -587,7 +644,19 @@ export function StreamingSpeechRecognition({
       </div>
 
       {/* Error Display */}
-      {error && <div className="text-sm text-red-500 text-center bg-red-50 p-3 rounded-lg">{error}</div>}
+      {error && (
+        <div className="text-sm text-red-500 text-center bg-red-50 p-3 rounded-lg">
+          <div className="mb-2">{error}</div>
+          {!isListening && isSupported && (
+            <button
+              onClick={startListening}
+              className="px-4 py-2 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+            >
+              Try Again
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
