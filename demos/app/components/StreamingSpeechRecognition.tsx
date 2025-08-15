@@ -308,6 +308,8 @@ export function StreamingSpeechRecognition({
   // Function to setup recognition with all event handlers
   const setupRecognition = useCallback(
     (recognition: ISpeechRecognition) => {
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = "en-US";
@@ -317,8 +319,21 @@ export function StreamingSpeechRecognition({
         (recognition as { maxAlternatives: number }).maxAlternatives = 1;
       }
 
+      console.log(`🔧 Setting up recognition for ${isSafari ? "Safari" : "Other"} browser:`, {
+        continuous: recognition.continuous,
+        interimResults: recognition.interimResults,
+        lang: recognition.lang,
+        maxAlternatives: (recognition as any).maxAlternatives,
+      });
+
       recognition.onstart = () => {
-        console.log("Speech recognition started");
+        const startTime = new Date().toISOString();
+        console.log(`🎤 Speech recognition started at ${startTime}`);
+        console.log("Recognition state:", {
+          continuous: recognition.continuous,
+          interimResults: recognition.interimResults,
+          lang: recognition.lang,
+        });
         setIsListening(true);
         setIsStarting(false);
         setError(null);
@@ -326,34 +341,58 @@ export function StreamingSpeechRecognition({
       };
 
       recognition.onend = () => {
-        console.log("Speech recognition ended, checking if should restart...");
+        const endTime = new Date().toISOString();
+        console.log(`🛑 Speech recognition ended at ${endTime}`);
+
+        // Calculate how long recognition was active
+        const startedTime = Date.now() - 1000; // Rough estimate
+        console.log(`Recognition was active for approximately ${Date.now() - startedTime}ms`);
+
         // Only stop if we have all fields filled or if manually stopped
         const accumulated = accumulatedDigitsRef.current;
         const allFieldsFilled =
           accumulated.cardNumber.length >= 13 && accumulated.expiry.length >= 4 && accumulated.cvv.length >= 3;
 
-        console.log("Current accumulated data:", accumulated);
-        console.log("All fields filled?", allFieldsFilled);
-        console.log("Still listening?", isListening);
+        console.log("🔍 End state check:", {
+          accumulated,
+          allFieldsFilled,
+          isListening,
+          restartCount,
+          userAgent: navigator.userAgent.includes("Safari") ? "Safari" : "Other",
+        });
 
         if (!allFieldsFilled && isListening) {
           const currentRestartCount = restartCount + 1;
           setRestartCount(currentRestartCount);
-          console.log(`🔄 Auto-restarting speech recognition - attempt ${currentRestartCount}`);
+
+          // Detect Safari for different restart strategy
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          const restartDelay = isSafari ? 500 : 200; // Longer delay for Safari
+
+          console.log(
+            `🔄 Auto-restarting speech recognition - attempt ${currentRestartCount} (${
+              isSafari ? "Safari" : "Other"
+            } browser, delay: ${restartDelay}ms)`
+          );
 
           // Prevent infinite restart loops
-          if (currentRestartCount > 10) {
+          if (currentRestartCount > 15) {
+            // Increased limit for Safari
             console.log("❌ Too many restart attempts, stopping");
-            setError("Speech recognition keeps stopping. Please try again.");
+            setError("Speech recognition keeps stopping. Please try manual input or camera instead.");
             setIsListening(false);
             onCurrentFieldChange("listening");
             return;
           }
 
-          // Small delay before restart to avoid rapid restart loops
+          // Longer delay for Safari
           setTimeout(() => {
+            console.log(
+              `⏰ Restart timeout fired - isListening: ${isListening}, hasRecognition: ${!!recognitionRef.current}`
+            );
             if (isListening && recognitionRef.current) {
               try {
+                console.log(`🚀 Attempting restart ${currentRestartCount}...`);
                 recognitionRef.current.start();
                 console.log(`✅ Successfully restarted recognition (attempt ${currentRestartCount})`);
               } catch (err) {
@@ -361,6 +400,7 @@ export function StreamingSpeechRecognition({
                 // Try to create a new recognition instance if restart fails
                 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 if (SpeechRecognition) {
+                  console.log("🔧 Creating new recognition instance...");
                   const newRecognition = new SpeechRecognition();
                   setupRecognition(newRecognition);
                   recognitionRef.current = newRecognition;
@@ -375,8 +415,10 @@ export function StreamingSpeechRecognition({
                   }
                 }
               }
+            } else {
+              console.log("⏹️ Skipping restart - conditions not met");
             }
-          }, 200); // Slightly longer delay
+          }, restartDelay);
         } else {
           console.log("🛑 Stopping recognition - all fields complete or manually stopped");
 
@@ -392,16 +434,26 @@ export function StreamingSpeechRecognition({
       };
 
       recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
-        console.error("Speech recognition error:", event.error);
+        const errorTime = new Date().toISOString();
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+        console.error(`❌ Speech recognition error at ${errorTime}:`, {
+          error: event.error,
+          browser: isSafari ? "Safari" : "Other",
+          isListening,
+          restartCount,
+          event,
+        });
 
         // Handle specific error types
         if (event.error === "no-speech") {
-          console.log("No speech detected, will restart...");
+          console.log("🔇 No speech detected, will restart...");
           // Don't show error for no-speech, just let it restart
         } else if (event.error === "aborted") {
-          console.log("Recognition aborted, checking if should restart...");
+          console.log("⏹️ Recognition aborted, checking if should restart...");
           // Don't set error for aborted, let onend handle restart
         } else if (event.error === "service-not-allowed" || event.error === "not-allowed") {
+          console.error("🚫 Permission error - microphone access denied");
           setError("Microphone access denied. Please allow microphone access when prompted, then try again.");
           setIsListening(false);
           setIsStarting(false);
@@ -445,6 +497,9 @@ export function StreamingSpeechRecognition({
     // Check if running on HTTPS (required for speech recognition)
     const isHTTPS = window.location.protocol === "https:" || window.location.hostname === "localhost";
 
+    // Detect Safari
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
     // Check if speech recognition is supported
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -459,6 +514,8 @@ export function StreamingSpeechRecognition({
       setError("Voice input requires HTTPS. Please use the manual input fields or camera scan instead.");
       return;
     }
+
+    console.log("Browser detected:", isSafari ? "Safari" : "Other", "- User Agent:", navigator.userAgent);
 
     // Initialize speech recognition
     const recognition = new SpeechRecognition();
@@ -509,39 +566,58 @@ export function StreamingSpeechRecognition({
       silenceTimerRef.current = null;
     }
 
-    console.log("🎤 Starting speech recognition with clean state");
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    console.log(`🎤 Starting speech recognition with clean state on ${isSafari ? "Safari" : "Other"} browser`);
+    console.log("Current states:", { isListening, isStarting, isSupported, restartCount });
 
     // Check microphone permissions first (if available)
     try {
       if (navigator.permissions && navigator.permissions.query) {
         const permission = await navigator.permissions.query({ name: "microphone" as PermissionName });
-        console.log("Microphone permission status:", permission.state);
+        console.log("🎯 Microphone permission status:", permission.state);
 
         if (permission.state === "denied") {
           setError("Microphone access denied. Please enable microphone permissions in your browser settings and try again.");
+          setIsStarting(false);
           return;
         }
+      } else {
+        console.log("⚠️ Permissions API not available");
       }
     } catch (permissionError) {
-      console.log("Could not check microphone permissions:", permissionError);
+      console.log("⚠️ Could not check microphone permissions:", permissionError);
       // Continue anyway - permissions API might not be available
     }
 
+    const startDelay = isSafari ? 300 : 100; // Much longer delay for Safari
+
+    console.log(`🚀 Setting up recognition start with ${startDelay}ms delay for ${isSafari ? "Safari" : "Other"} browser`);
+
     try {
-      // Small delay to ensure permissions are fully processed
+      // Longer delay for Safari to ensure permissions are fully processed
       setTimeout(() => {
+        console.log(`⏰ Start timeout fired - isListening: ${isListening}, hasRecognition: ${!!recognitionRef.current}`);
         if (recognitionRef.current && !isListening) {
           try {
+            console.log("🎯 Calling recognition.start()...");
             recognitionRef.current.start();
+            console.log("✅ recognition.start() called successfully");
           } catch (delayedErr) {
-            console.error("Error starting recognition after delay:", delayedErr);
+            console.error("❌ Error starting recognition after delay:", delayedErr);
             setError("Failed to start speech recognition. Please try again.");
             setIsStarting(false);
           }
+        } else {
+          console.log("⏹️ Skipping start - conditions not met", {
+            hasRecognition: !!recognitionRef.current,
+            isListening,
+            isStarting,
+          });
+          setIsStarting(false);
         }
-      }, 100);
+      }, startDelay);
     } catch (err) {
-      console.error("Error starting recognition:", err);
+      console.error("❌ Error setting up recognition start:", err);
       setError("Failed to start speech recognition. Please try again.");
       setIsStarting(false);
     }
