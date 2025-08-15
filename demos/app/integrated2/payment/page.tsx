@@ -335,9 +335,6 @@ function PaymentContent() {
                         onCardNumberChange={handleCardNumberChange}
                         onExpiryChange={handleCardExpiryChange}
                         onCvvChange={handleCardCvvChange}
-                        cardNumber={newCardNumber}
-                        expiry={newCardExpiry}
-                        cvv={newCardCvv}
                       />
                     </div>
                   )}

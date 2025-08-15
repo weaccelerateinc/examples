@@ -8,39 +8,25 @@ interface UnifiedCreditCardSpeechProps {
   onCardNumberChange: (value: string) => void;
   onExpiryChange: (value: string) => void;
   onCvvChange: (value: string) => void;
-  cardNumber: string;
-  expiry: string;
-  cvv: string;
 }
 
-type FieldType = "cardNumber" | "expiry" | "cvv" | "listening";
-
-export function UnifiedCreditCardSpeech({
-  onCardNumberChange,
-  onExpiryChange,
-  onCvvChange,
-  cardNumber,
-  expiry,
-  cvv,
-}: UnifiedCreditCardSpeechProps) {
+export function UnifiedCreditCardSpeech({ onCardNumberChange, onExpiryChange, onCvvChange }: UnifiedCreditCardSpeechProps) {
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentField, setCurrentField] = useState<FieldType>("listening");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // Handler for streaming speech recognition field changes
-  const handleCurrentFieldChange = (field: "cardNumber" | "expiry" | "cvv" | "listening") => {
-    setCurrentField(field);
+  const handleCurrentFieldChange = () => {
+    // No longer tracking current field since we removed field status indicators
   };
 
   const startCamera = async () => {
     try {
       setError(null);
-      setCurrentField("listening");
 
       // Try different camera constraints for better compatibility
       let stream;
@@ -226,7 +212,6 @@ export function UnifiedCreditCardSpeech({
       console.log("Setting card number from OCR:", formattedCardNumber);
       console.log("Calling onCardNumberChange...");
       onCardNumberChange(formattedCardNumber);
-      setCurrentField("cardNumber");
     } else {
       console.log("No card number in OCR data");
     }
@@ -235,7 +220,6 @@ export function UnifiedCreditCardSpeech({
       console.log("Setting expiry from OCR:", cardData.expiry);
       console.log("Calling onExpiryChange...");
       onExpiryChange(cardData.expiry);
-      setCurrentField("expiry");
     } else {
       console.log("No expiry in OCR data");
     }
@@ -244,13 +228,9 @@ export function UnifiedCreditCardSpeech({
       console.log("Setting CVV from OCR:", cardData.cvv);
       console.log("Calling onCvvChange...");
       onCvvChange(cardData.cvv);
-      setCurrentField("cvv");
     } else {
       console.log("No CVV in OCR data");
     }
-
-    // Reset current field after processing
-    setTimeout(() => setCurrentField("listening"), 2000);
   };
 
   const toggleCamera = () => {
@@ -268,8 +248,6 @@ export function UnifiedCreditCardSpeech({
       }
     };
   }, []);
-
-
 
   return (
     <div className="space-y-4">
@@ -358,8 +336,6 @@ export function UnifiedCreditCardSpeech({
           </button>
         </div>
       )}
-
-
 
       {/* Error Display */}
       {error && <div className="text-sm text-red-500 text-center">{error}</div>}
