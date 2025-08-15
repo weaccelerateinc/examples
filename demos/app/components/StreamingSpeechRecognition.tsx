@@ -4,54 +4,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff } from "lucide-react";
 
-// Type definitions for Web Speech API
-interface ISpeechRecognition extends EventTarget {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start(): void;
-  stop(): void;
-  onstart: ((this: ISpeechRecognition, ev: Event) => void) | null;
-  onend: ((this: ISpeechRecognition, ev: Event) => void) | null;
-  onerror: ((this: ISpeechRecognition, ev: ISpeechRecognitionErrorEvent) => void) | null;
-  onresult: ((this: ISpeechRecognition, ev: ISpeechRecognitionEvent) => void) | null;
-}
-
-interface ISpeechRecognitionErrorEvent extends Event {
-  error: string;
-}
-
-interface ISpeechRecognitionEvent extends Event {
-  resultIndex: number;
-  results: ISpeechRecognitionResultList;
-}
-
-interface ISpeechRecognitionResultList {
-  length: number;
-  item(index: number): ISpeechRecognitionResult;
-  [index: number]: ISpeechRecognitionResult;
-}
-
-interface ISpeechRecognitionResult {
-  isFinal: boolean;
-  length: number;
-  item(index: number): ISpeechRecognitionAlternative;
-  [index: number]: ISpeechRecognitionAlternative;
-}
-
-interface ISpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-// Extend Window interface for speech recognition
-declare global {
-  interface Window {
-    SpeechRecognition: new () => ISpeechRecognition;
-    webkitSpeechRecognition: new () => ISpeechRecognition;
-  }
-}
-
 interface StreamingSpeechRecognitionProps {
   onCardNumberChange: (value: string) => void;
   onExpiryChange: (value: string) => void;
@@ -76,6 +28,7 @@ export function StreamingSpeechRecognition({
   });
   const [restartCount, setRestartCount] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const currentFieldRef = useRef<"cardNumber" | "expiry" | "cvv">("cardNumber");
