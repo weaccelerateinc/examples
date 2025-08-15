@@ -339,6 +339,13 @@ export function StreamingSpeechRecognition({
         setIsStarting(false);
         setError(null);
         onCurrentFieldChange("listening");
+
+        // For Safari, immediately prompt user to speak to avoid "no speech" errors
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (isSafari) {
+          console.log("🗣️ Safari detected - prompting immediate speech");
+          // You could add audio prompt here if needed
+        }
       };
 
       recognition.onend = () => {
@@ -368,7 +375,7 @@ export function StreamingSpeechRecognition({
 
           // Detect Safari for different restart strategy
           const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          const restartDelay = isSafari ? 500 : 200; // Longer delay for Safari
+          const restartDelay = isSafari ? 100 : 200; // Shorter delay for Safari since abort is expected
 
           console.log(
             `🔄 Auto-restarting speech recognition - attempt ${currentRestartCount} (${
@@ -452,6 +459,10 @@ export function StreamingSpeechRecognition({
           // Don't show error for no-speech, just let it restart
         } else if (event.error === "aborted") {
           console.log("⏹️ Recognition aborted, checking if should restart...");
+          // Safari frequently aborts due to "no speech detected" - this is normal
+          if (isSafari) {
+            console.log("🍎 Safari aborted (normal behavior) - will auto-restart");
+          }
           // Don't set error for aborted, let onend handle restart
         } else if (event.error === "service-not-allowed" || event.error === "not-allowed") {
           console.error("🚫 Permission error - microphone access denied");
@@ -568,34 +579,47 @@ export function StreamingSpeechRecognition({
     }
 
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    console.log(`🎤 Starting speech recognition with clean state on ${isSafari ? "Safari" : "Other"} browser`);
+    const isIOSChrome = /Chrome.*Mobile|CriOS/i.test(navigator.userAgent);
+    const browserType = isSafari ? "Safari" : isIOSChrome ? "iOS Chrome" : "Other";
+
+    console.log(`🎤 Starting speech recognition with clean state on ${browserType} browser`);
     console.log("Current states:", { isListening, isStarting, isSupported, restartCount });
 
-    // Check microphone permissions first (if available)
+    // For iOS Chrome and other browsers that don't auto-prompt, explicitly request microphone access
+    try {
+      console.log("🎯 Explicitly requesting microphone access...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log("✅ Microphone access granted, stopping test stream");
+
+      // Stop the test stream immediately - we just needed permission
+      stream.getTracks().forEach((track) => track.stop());
+
+      // Small delay to ensure permission is fully established
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    } catch (micError) {
+      console.error("❌ Microphone access denied or failed:", micError);
+      setError("Microphone access required. Please allow microphone access and try again.");
+      setIsStarting(false);
+      return;
+    }
+
+    // Check microphone permissions (if API available)
     try {
       if (navigator.permissions && navigator.permissions.query) {
         const permission = await navigator.permissions.query({ name: "microphone" as PermissionName });
-        console.log("🎯 Microphone permission status:", permission.state);
-
-        if (permission.state === "denied") {
-          setError("Microphone access denied. Please enable microphone permissions in your browser settings and try again.");
-          setIsStarting(false);
-          return;
-        }
-      } else {
-        console.log("⚠️ Permissions API not available");
+        console.log("🎯 Microphone permission status after request:", permission.state);
       }
     } catch (permissionError) {
       console.log("⚠️ Could not check microphone permissions:", permissionError);
-      // Continue anyway - permissions API might not be available
+      // Continue anyway - we already got microphone access above
     }
 
-    const startDelay = isSafari ? 300 : 100; // Much longer delay for Safari
+    const startDelay = isSafari ? 150 : 100; // Shorter delay for Safari to get started quickly
 
     console.log(`🚀 Setting up recognition start with ${startDelay}ms delay for ${isSafari ? "Safari" : "Other"} browser`);
 
     try {
-      // Longer delay for Safari to ensure permissions are fully processed
+      // Short delay to ensure permissions are processed, then start quickly
       setTimeout(() => {
         console.log(`⏰ Start timeout fired - isListening: ${isListening}, hasRecognition: ${!!recognitionRef.current}`);
         if (recognitionRef.current && !isListening) {
@@ -685,7 +709,7 @@ export function StreamingSpeechRecognition({
             {isListening
               ? "🎤 Keep Speaking..."
               : isStarting
-              ? "🎯 Starting... (allow microphone access)"
+              ? "🎯 Requesting microphone access... (please allow)"
               : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv
               ? "🎉 All Complete!"
               : "Click to start voice input"}
@@ -698,6 +722,8 @@ export function StreamingSpeechRecognition({
                     ? "Perfect! All fields captured!"
                     : restartCount > 0
                     ? `Keep speaking! (auto-restarted ${restartCount}x)`
+                    : /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+                    ? "🗣️ START SPEAKING IMMEDIATELY! Safari needs instant speech"
                     : "Continue saying all your card details - don't stop!"}
                 </div>
                 <div className="text-xs">
@@ -713,6 +739,10 @@ export function StreamingSpeechRecognition({
               </>
             ) : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv ? (
               "All card details have been successfully captured!"
+            ) : /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ? (
+              "🍎 Safari tip: Click mic and speak IMMEDIATELY! Say: '4111 1111 1111 1111 12 25 123'"
+            ) : /Chrome.*Mobile|CriOS/i.test(navigator.userAgent) ? (
+              "📱 iOS Chrome: Click mic, allow permissions, then speak your card details"
             ) : (
               "Say: Card number, then expiry, then CVV - all in one go!"
             )}
