@@ -218,7 +218,7 @@ export function UnifiedCreditCardSpeech({ onCardNumberChange, onExpiryChange, on
             {isListening ? "Listening..." : isProcessing ? "Processing..." : "Click to speak"}
           </div>
           <div className="text-sm text-gray-500">
-            First the credit card number: "1234 5678 9012 3456"
+            First the credit card number: &quot;1234 5678 9012 3456&quot;
             <br />
             Followed by exp (you do not say exp, just say the number)
             <br />
