@@ -119,12 +119,6 @@ export default function SpeechTestPage() {
           <div>User Agent: {typeof navigator !== "undefined" ? navigator.userAgent : "N/A"}</div>
           <div>Protocol: {typeof window !== "undefined" ? window.location.protocol : "N/A"}</div>
           <div>Host: {typeof window !== "undefined" ? window.location.host : "N/A"}</div>
-          <div>
-            Speech Recognition Support:{" "}
-            {typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition)
-              ? "✅ Available"
-              : "❌ Not Available"}
-          </div>
         </div>
 
         {/* Instructions */}
