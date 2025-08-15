@@ -244,8 +244,6 @@ Only extract digits, remove all spaces and formatting. Always return valid JSON.
             mimeType: "audio/pcm;rate=16000",
           },
         });
-
-        console.log("🎤 Sent PCM audio to Live API:", { pcmSize: pcmBuffer.byteLength });
       } catch (error) {
         console.error("❌ Error sending audio to Live API:", error);
         // Don't break the flow - just skip this chunk
