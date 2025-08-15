@@ -128,6 +128,9 @@ export function GeminiStreamingSpeech({
     [onCardNumberChange, onExpiryChange, onCvvChange, onCurrentFieldChange]
   );
 
+  // Accumulate partial responses
+  let accumulatedResponse = "";
+
   // Connect to Gemini Live API via official client
   const connectToLiveAPI = useCallback(async () => {
     try {
@@ -154,23 +157,11 @@ export function GeminiStreamingSpeech({
           systemInstruction: {
             parts: [
               {
-                text: `You are a credit card information extraction assistant. Listen to spoken audio and identify what credit card information the user is providing.
-
-IMPORTANT: Respond with JSON only, in this exact format:
-{
-  "cardNumber": "digits if user mentioned card/credit card number, null otherwise",
-  "expiry": "digits if user mentioned expiry/expiration/exp date, null otherwise", 
-  "cvv": "digits if user mentioned CVV/CVC/security code/verification code, null otherwise",
-  "transcript": "full transcript of what was said"
-}
-
-Examples:
-- "My card number is 4111 1111 1111 1111" → {"cardNumber": "4111111111111111", "expiry": null, "cvv": null, "transcript": "My card number is 4111 1111 1111 1111"}
-- "The expiry is 12 25" → {"cardNumber": null, "expiry": "1225", "cvv": null, "transcript": "The expiry is 12 25"}  
-- "CVV 123" → {"cardNumber": null, "expiry": null, "cvv": "123", "transcript": "CVV 123"}
-- "4111 1111 1111 1111 expires 12 25 security code 123" → {"cardNumber": "4111111111111111", "expiry": "1225", "cvv": "123", "transcript": "4111 1111 1111 1111 expires 12 25 security code 123"}
-
-Only extract digits, remove all spaces and formatting. Always return valid JSON.`,
+                text: `
+                You are a credit card information extraction assistant.
+                The user is going to speak their credit card number, expiry, and cvv.
+                When the user begins to speak their card number emit the symbol #. When they begin to speak their expiry emit the symbol $. When they begin their cvv emit the symbol @.
+                Return only these symbols and numbers.`,
               },
             ],
           },
@@ -181,18 +172,39 @@ Only extract digits, remove all spaces and formatting. Always return valid JSON.
             setIsConnecting(false);
           },
           onmessage: (message: any) => {
-            console.log("📨 Live API response:", message);
+            console.log("📨 Raw Live API response:", message);
+            console.log("📨 Detailed Live API response:", JSON.stringify(message, null, 2));
 
             // Extract transcript from Live API response
             if (message.serverContent?.modelTurn?.parts?.[0]?.text) {
               const transcript = message.serverContent.modelTurn.parts[0].text;
-              processGeminiTranscript(transcript);
+              accumulatedResponse += transcript;
+
+              // Check if the accumulated response forms a complete JSON object
+              try {
+                const response = JSON.parse(accumulatedResponse.trim());
+                processGeminiTranscript(JSON.stringify(response));
+                accumulatedResponse = ""; // Reset after successful parse
+              } catch (error) {
+                // If parsing fails, wait for more data
+                console.warn("⚠️ Incomplete JSON response, waiting for more data...");
+              }
             }
 
             // Also check for other message types that might contain text
             if (message.candidates?.[0]?.content?.parts?.[0]?.text) {
               const transcript = message.candidates[0].content.parts[0].text;
-              processGeminiTranscript(transcript);
+              accumulatedResponse += transcript;
+
+              // Check if the accumulated response forms a complete JSON object
+              try {
+                const response = JSON.parse(accumulatedResponse.trim());
+                processGeminiTranscript(JSON.stringify(response));
+                accumulatedResponse = ""; // Reset after successful parse
+              } catch (error) {
+                // If parsing fails, wait for more data
+                console.warn("⚠️ Incomplete JSON response, waiting for more data...");
+              }
             }
           },
           onerror: (error: any) => {
@@ -471,3 +483,25 @@ Only extract digits, remove all spaces and formatting. Always return valid JSON.
     </div>
   );
 }
+
+// Function to extract card information from plain text
+const extractCardInfo = (text: string) => {
+  const cardInfo = {
+    cardNumber: null,
+    expiry: null,
+    cvv: null,
+  };
+
+  const lines = text.split("\n");
+  lines.forEach((line) => {
+    if (line.includes("CHANGE_FORM_FIELD cardNumber:")) {
+      cardInfo.cardNumber = line.split(":")[1].trim();
+    } else if (line.includes("CHANGE_FORM_FIELD expiry:")) {
+      cardInfo.expiry = line.split(":")[1].trim();
+    } else if (line.includes("CHANGE_FORM_FIELD cvv:")) {
+      cardInfo.cvv = line.split(":")[1].trim();
+    }
+  });
+
+  return cardInfo;
+};
