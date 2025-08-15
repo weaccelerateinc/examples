@@ -506,6 +506,11 @@ export function StreamingSpeechRecognition({
   );
 
   useEffect(() => {
+    // Ensure we're running on the client side
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return;
+    }
+
     // Check if running on HTTPS (required for speech recognition)
     const isHTTPS = window.location.protocol === "https:" || window.location.hostname === "localhost";
 
@@ -722,7 +727,7 @@ export function StreamingSpeechRecognition({
                     ? "Perfect! All fields captured!"
                     : restartCount > 0
                     ? `Keep speaking! (auto-restarted ${restartCount}x)`
-                    : /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+                    : typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
                     ? "🗣️ START SPEAKING IMMEDIATELY! Safari needs instant speech"
                     : "Continue saying all your card details - don't stop!"}
                 </div>
@@ -739,9 +744,9 @@ export function StreamingSpeechRecognition({
               </>
             ) : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv ? (
               "All card details have been successfully captured!"
-            ) : /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ? (
+            ) : typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ? (
               "🍎 Safari tip: Click mic and speak IMMEDIATELY! Say: '4111 1111 1111 1111 12 25 123'"
-            ) : /Chrome.*Mobile|CriOS/i.test(navigator.userAgent) ? (
+            ) : typeof navigator !== "undefined" && /Chrome.*Mobile|CriOS/i.test(navigator.userAgent) ? (
               "📱 iOS Chrome: Click mic, allow permissions, then speak your card details"
             ) : (
               "Say: Card number, then expiry, then CVV - all in one go!"
