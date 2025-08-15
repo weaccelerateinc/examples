@@ -119,6 +119,16 @@ export function StreamingSpeechRecognition({
         console.log("🤫 Silence detected with all fields complete - auto-stopping");
         setIsListening(false);
         if (recognitionRef.current) {
+          // Safari workaround: call start() before stop() to force proper stopping
+          const isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+          if (isSafari) {
+            console.log("🍎 Safari workaround: calling start() before stop() for silence auto-stop");
+            try {
+              recognitionRef.current.start();
+            } catch (err) {
+              console.log("Expected error calling start() before stop():", err);
+            }
+          }
           recognitionRef.current.stop();
         }
       } else {
@@ -292,6 +302,17 @@ export function StreamingSpeechRecognition({
             console.log("Auto-stopping - all fields complete");
             setIsListening(false);
             if (recognitionRef.current) {
+              // Safari workaround: call start() before stop() to force proper stopping
+              const isSafari =
+                typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+              if (isSafari) {
+                console.log("🍎 Safari workaround: calling start() before stop() for completion auto-stop");
+                try {
+                  recognitionRef.current.start();
+                } catch (err) {
+                  console.log("Expected error calling start() before stop():", err);
+                }
+              }
               recognitionRef.current.stop();
             }
           }, 1000);
@@ -317,6 +338,17 @@ export function StreamingSpeechRecognition({
       // Try to maximize recognition duration
       if ("maxAlternatives" in recognition) {
         (recognition as { maxAlternatives: number }).maxAlternatives = 1;
+      }
+
+      // Safari-specific optimizations
+      if (isSafari) {
+        // Try to make Safari more responsive
+        if ("grammars" in recognition) {
+          (recognition as any).grammars = null;
+        }
+        if ("serviceURI" in recognition) {
+          (recognition as any).serviceURI = "";
+        }
       }
 
       console.log(`🔧 Setting up recognition for ${isSafari ? "Safari" : "Other"} browser:`, {
@@ -375,7 +407,7 @@ export function StreamingSpeechRecognition({
 
           // Detect Safari for different restart strategy
           const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-          const restartDelay = isSafari ? 100 : 200; // Shorter delay for Safari since abort is expected
+          const restartDelay = isSafari ? 10 : 200; // Almost immediate restart for Safari since abort is expected
 
           console.log(
             `🔄 Auto-restarting speech recognition - attempt ${currentRestartCount} (${
@@ -383,11 +415,13 @@ export function StreamingSpeechRecognition({
             } browser, delay: ${restartDelay}ms)`
           );
 
-          // Prevent infinite restart loops
-          if (currentRestartCount > 15) {
-            // Increased limit for Safari
+          // Prevent infinite restart loops - much higher limit for Safari
+          const maxRestarts = isSafari ? 50 : 15; // Safari needs many more attempts
+          if (currentRestartCount > maxRestarts) {
             console.log("❌ Too many restart attempts, stopping");
-            setError("Speech recognition keeps stopping. Please try manual input or camera instead.");
+            setError(
+              `Speech recognition keeps stopping after ${maxRestarts} attempts. Please try manual input or camera instead.`
+            );
             setIsListening(false);
             onCurrentFieldChange("listening");
             return;
@@ -507,7 +541,7 @@ export function StreamingSpeechRecognition({
 
   useEffect(() => {
     // Ensure we're running on the client side
-    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
       return;
     }
 
@@ -541,6 +575,16 @@ export function StreamingSpeechRecognition({
 
     return () => {
       if (recognitionRef.current) {
+        // Safari workaround: call start() before stop() to force proper stopping
+        const isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if (isSafari) {
+          console.log("🍎 Safari workaround: calling start() before stop() for cleanup");
+          try {
+            recognitionRef.current.start();
+          } catch (err) {
+            console.log("Expected error calling start() before stop() in cleanup:", err);
+          }
+        }
         recognitionRef.current.stop();
       }
       // Clean up silence timer
@@ -619,33 +663,49 @@ export function StreamingSpeechRecognition({
       // Continue anyway - we already got microphone access above
     }
 
-    const startDelay = isSafari ? 150 : 100; // Shorter delay for Safari to get started quickly
+    const startDelay = isSafari ? 50 : 100; // Minimal delay for Safari to get started immediately
 
     console.log(`🚀 Setting up recognition start with ${startDelay}ms delay for ${isSafari ? "Safari" : "Other"} browser`);
 
     try {
-      // Short delay to ensure permissions are processed, then start quickly
-      setTimeout(() => {
-        console.log(`⏰ Start timeout fired - isListening: ${isListening}, hasRecognition: ${!!recognitionRef.current}`);
+      if (isSafari) {
+        // For Safari, start immediately without any delay
+        console.log("🍎 Safari detected - starting recognition IMMEDIATELY");
         if (recognitionRef.current && !isListening) {
           try {
-            console.log("🎯 Calling recognition.start()...");
+            console.log("🎯 Calling recognition.start() immediately for Safari...");
             recognitionRef.current.start();
             console.log("✅ recognition.start() called successfully");
-          } catch (delayedErr) {
-            console.error("❌ Error starting recognition after delay:", delayedErr);
+          } catch (immediateErr) {
+            console.error("❌ Error starting recognition immediately:", immediateErr);
             setError("Failed to start speech recognition. Please try again.");
             setIsStarting(false);
           }
-        } else {
-          console.log("⏹️ Skipping start - conditions not met", {
-            hasRecognition: !!recognitionRef.current,
-            isListening,
-            isStarting,
-          });
-          setIsStarting(false);
         }
-      }, startDelay);
+      } else {
+        // For other browsers, use a small delay
+        setTimeout(() => {
+          console.log(`⏰ Start timeout fired - isListening: ${isListening}, hasRecognition: ${!!recognitionRef.current}`);
+          if (recognitionRef.current && !isListening) {
+            try {
+              console.log("🎯 Calling recognition.start()...");
+              recognitionRef.current.start();
+              console.log("✅ recognition.start() called successfully");
+            } catch (delayedErr) {
+              console.error("❌ Error starting recognition after delay:", delayedErr);
+              setError("Failed to start speech recognition. Please try again.");
+              setIsStarting(false);
+            }
+          } else {
+            console.log("⏹️ Skipping start - conditions not met", {
+              hasRecognition: !!recognitionRef.current,
+              isListening,
+              isStarting,
+            });
+            setIsStarting(false);
+          }
+        }, startDelay);
+      }
     } catch (err) {
       console.error("❌ Error setting up recognition start:", err);
       setError("Failed to start speech recognition. Please try again.");
@@ -666,6 +726,16 @@ export function StreamingSpeechRecognition({
     }
 
     if (recognitionRef.current) {
+      // Safari workaround: call start() before stop() to force proper stopping
+      const isSafari = typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      if (isSafari) {
+        console.log("🍎 Safari workaround: calling start() before stop() to force proper stopping");
+        try {
+          recognitionRef.current.start();
+        } catch (err) {
+          console.log("Expected error calling start() before stop():", err);
+        }
+      }
       recognitionRef.current.stop();
     }
   };
@@ -728,7 +798,7 @@ export function StreamingSpeechRecognition({
                     : restartCount > 0
                     ? `Keep speaking! (auto-restarted ${restartCount}x)`
                     : typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-                    ? "🗣️ START SPEAKING IMMEDIATELY! Safari needs instant speech"
+                    ? "🗣️ SPEAK NOW! Safari will restart multiple times - keep talking!"
                     : "Continue saying all your card details - don't stop!"}
                 </div>
                 <div className="text-xs">
@@ -745,7 +815,7 @@ export function StreamingSpeechRecognition({
             ) : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv ? (
               "All card details have been successfully captured!"
             ) : typeof navigator !== "undefined" && /^((?!chrome|android).)*safari/i.test(navigator.userAgent) ? (
-              "🍎 Safari tip: Click mic and speak IMMEDIATELY! Say: '4111 1111 1111 1111 12 25 123'"
+              "🍎 Safari: Click mic, start talking IMMEDIATELY and keep talking! It will restart many times - this is normal. Say: '4111 1111 1111 1111 12 25 123'"
             ) : typeof navigator !== "undefined" && /Chrome.*Mobile|CriOS/i.test(navigator.userAgent) ? (
               "📱 iOS Chrome: Click mic, allow permissions, then speak your card details"
             ) : (
