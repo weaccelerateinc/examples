@@ -323,6 +323,7 @@ export function StreamingSpeechRecognition({
         continuous: recognition.continuous,
         interimResults: recognition.interimResults,
         lang: recognition.lang,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         maxAlternatives: (recognition as any).maxAlternatives,
       });
 
