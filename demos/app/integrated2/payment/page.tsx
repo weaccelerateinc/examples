@@ -322,7 +322,6 @@ function PaymentContent() {
                             onFocus={() => console.log("Expiry field focused, current value:", newCardExpiry)}
                           />
                           <input
-                            type="password"
                             placeholder="CVV"
                             value={newCardCvv}
                             onChange={(e) => handleCardCvvChange(e.target.value)}
@@ -336,9 +335,6 @@ function PaymentContent() {
                         onCardNumberChange={handleCardNumberChange}
                         onExpiryChange={handleCardExpiryChange}
                         onCvvChange={handleCardCvvChange}
-                        cardNumber={newCardNumber}
-                        expiry={newCardExpiry}
-                        cvv={newCardCvv}
                       />
                     </div>
                   )}
