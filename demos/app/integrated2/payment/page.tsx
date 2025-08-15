@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, useEffect, Suspense, useRef } from "react";
+import { FormEvent, useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { stripeOptions } from "../../options";
@@ -8,6 +8,7 @@ import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
+import { UnifiedCreditCardSpeech } from "../../components/UnifiedCreditCardSpeech";
 
 declare global {
   interface Window {
@@ -49,13 +50,6 @@ function PaymentContent() {
   const [newCardExpiry, setNewCardExpiry] = useState("");
   const [newCardCvv, setNewCardCvv] = useState("");
 
-  // Speech-to-text state
-  const [isListening, setIsListening] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [speechError, setSpeechError] = useState<string | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-
   // Debug logging for state changes
   const handleCardNumberChange = (value: string) => {
     console.log("Payment page - Setting card number:", value);
@@ -71,304 +65,6 @@ function PaymentContent() {
   const handleCardCvvChange = (value: string) => {
     console.log("Payment page - Setting card CVV:", value);
     setNewCardCvv(value);
-  };
-
-  // Speech-to-text functions
-  const startRecording = async () => {
-    try {
-      setSpeechError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm;codecs=opus",
-      });
-
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        setIsProcessing(true);
-        try {
-          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-          await sendAudioToGemini(audioBlob);
-        } catch (err) {
-          setSpeechError(err instanceof Error ? err.message : "Failed to process audio");
-        } finally {
-          setIsProcessing(false);
-        }
-      };
-
-      mediaRecorder.start();
-      setIsListening(true);
-    } catch (err) {
-      setSpeechError("Failed to access microphone");
-      console.error("Error starting recording:", err);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isListening) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
-      setIsListening(false);
-    }
-  };
-
-  const sendAudioToGemini = async (audioBlob: Blob) => {
-    const formData = new FormData();
-    formData.append("audio", audioBlob, "recording.webm");
-
-    const response = await fetch("/api/speech-to-text", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    console.log("Gemini API response:", data);
-
-    if (data.text) {
-      console.log("Processing transcript:", data.text);
-      processTranscript(data.text);
-    } else {
-      throw new Error("No transcript received");
-    }
-  };
-
-  const processTranscript = (transcript: string) => {
-    console.log("Processing transcript:", transcript);
-
-    const words = transcript.toLowerCase().split(/\s+/);
-    let currentField = "";
-    let cardNumberDigits = "";
-    let expiryDigits = "";
-    let cvvDigits = "";
-
-    // Enhanced number mapping with more variations and error handling
-    const numberMap: { [key: string]: string } = {
-      // Single digits
-      zero: "0",
-      one: "1",
-      two: "2",
-      three: "3",
-      four: "4",
-      five: "5",
-      six: "6",
-      seven: "7",
-      eight: "8",
-      nine: "9",
-      // Teens
-      ten: "10",
-      eleven: "11",
-      twelve: "12",
-      thirteen: "13",
-      fourteen: "14",
-      fifteen: "15",
-      sixteen: "16",
-      seventeen: "17",
-      eighteen: "18",
-      nineteen: "19",
-      // Twenties
-      twenty: "20",
-      "twenty-one": "21",
-      "twenty-two": "22",
-      "twenty-three": "23",
-      "twenty-four": "24",
-      "twenty-five": "25",
-      "twenty-six": "26",
-      "twenty-seven": "27",
-      "twenty-eight": "28",
-      "twenty-nine": "29",
-      // Thirties
-      thirty: "30",
-      "thirty-one": "31",
-      // Common variations and mistakes
-      oh: "0",
-      o: "0",
-      double: "",
-      triple: "",
-      // Handle "twenty five" vs "twenty-five"
-      "twenty five": "25",
-      "twenty six": "26",
-      "twenty seven": "27",
-      "twenty eight": "28",
-      "twenty nine": "29",
-      "thirty one": "31",
-    };
-
-    // Process each word to detect field commands and numbers
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-
-      // Skip filler words and corrections
-      if (["um", "uh", "ah", "er", "like", "you", "know", "so", "well", "actually", "basically"].includes(word)) {
-        continue;
-      }
-
-      // Handle corrections and restarts
-      if (["no", "wait", "stop", "cancel", "wrong", "mistake", "correction"].includes(word)) {
-        // Reset current field to allow correction
-        currentField = "";
-        console.log("Detected correction, resetting field");
-        continue;
-      }
-
-      // Enhanced field detection with more variations
-      if (word.includes("card") || word.includes("number") || word.includes("credit") || word.includes("account")) {
-        currentField = "cardNumber";
-        console.log("Detected card number field");
-        continue;
-      }
-
-      if (
-        word.includes("exp") ||
-        word.includes("expiry") ||
-        word.includes("date") ||
-        word.includes("expiration") ||
-        word.includes("month")
-      ) {
-        currentField = "expiry";
-        console.log("Detected expiry field");
-        continue;
-      }
-
-      if (
-        word.includes("cvv") ||
-        word.includes("cvc") ||
-        word.includes("code") ||
-        word.includes("security") ||
-        word.includes("verification")
-      ) {
-        currentField = "cvv";
-        console.log("Detected CVV field");
-        continue;
-      }
-
-      // Extract digits from the word with enhanced error handling
-      let digits = "";
-
-      // First try to extract direct digits
-      const directDigits = word.replace(/\D/g, "");
-      if (directDigits.length > 0) {
-        digits = directDigits;
-      } else {
-        // Try exact match first
-        if (numberMap[word]) {
-          digits = numberMap[word];
-        } else {
-          // Try partial matches for common mistakes
-          for (const [spoken, digit] of Object.entries(numberMap)) {
-            if (spoken.includes(word) || word.includes(spoken)) {
-              digits = digit;
-              break;
-            }
-          }
-        }
-      }
-
-      // Apply digits to the current field with validation
-      if (digits && currentField) {
-        switch (currentField) {
-          case "cardNumber":
-            // Validate card number length and format
-            if (cardNumberDigits.length < 16) {
-              cardNumberDigits += digits;
-              console.log("Added to card number:", digits, "Total:", cardNumberDigits);
-            }
-            break;
-          case "expiry":
-            // Validate expiry format (MM/YY)
-            if (expiryDigits.length < 4) {
-              expiryDigits += digits;
-              console.log("Added to expiry:", digits, "Total:", expiryDigits);
-            }
-            break;
-          case "cvv":
-            // Validate CVV length (3-4 digits)
-            if (cvvDigits.length < 4) {
-              cvvDigits += digits;
-              console.log("Added to CVV:", digits, "Total:", cvvDigits);
-            }
-            break;
-        }
-      }
-    }
-
-    console.log("Final parsed digits:", {
-      cardNumber: cardNumberDigits,
-      expiry: expiryDigits,
-      cvv: cvvDigits,
-    });
-
-    // Enhanced field validation and updates
-    console.log("About to update fields with:", { cardNumberDigits, expiryDigits, cvvDigits });
-
-    // Card number validation and formatting
-    if (cardNumberDigits && cardNumberDigits.length >= 13) {
-      const formattedCardNumber = cardNumberDigits.slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ");
-      console.log("Setting card number:", formattedCardNumber);
-      handleCardNumberChange(formattedCardNumber);
-    } else if (cardNumberDigits && cardNumberDigits.length > 0) {
-      // Partial card number - show what we have
-      const formattedCardNumber = cardNumberDigits.replace(/(\d{4})(?=\d)/g, "$1 ");
-      console.log("Setting partial card number:", formattedCardNumber);
-      handleCardNumberChange(formattedCardNumber);
-    } else {
-      console.log("Card number not set. Digits:", cardNumberDigits, "Length:", cardNumberDigits.length);
-    }
-
-    // Expiry validation and formatting
-    if (expiryDigits && expiryDigits.length === 4) {
-      const month = parseInt(expiryDigits.slice(0, 2));
-      const year = parseInt(expiryDigits.slice(2, 4));
-
-      // Validate month (1-12) and year (reasonable range)
-      if (month >= 1 && month <= 12 && year >= 0 && year <= 99) {
-        const formattedExpiry = expiryDigits.slice(0, 2) + "/" + expiryDigits.slice(2, 4);
-        console.log("Setting expiry:", formattedExpiry);
-        handleCardExpiryChange(formattedExpiry);
-      } else {
-        console.log("Invalid expiry format:", expiryDigits);
-      }
-    } else if (expiryDigits && expiryDigits.length === 2) {
-      // Partial expiry - just month
-      const formattedExpiry = expiryDigits + "/";
-      console.log("Setting partial expiry:", formattedExpiry);
-      handleCardExpiryChange(formattedExpiry);
-    } else {
-      console.log("Expiry not set. Digits:", expiryDigits, "Length:", expiryDigits.length);
-    }
-
-    // CVV validation and formatting
-    if (cvvDigits && cvvDigits.length >= 3) {
-      const formattedCvv = cvvDigits.slice(0, 4);
-      console.log("Setting CVV:", formattedCvv);
-      handleCardCvvChange(formattedCvv);
-    } else if (cvvDigits && cvvDigits.length > 0) {
-      // Partial CVV - show what we have
-      console.log("Setting partial CVV:", cvvDigits);
-      handleCardCvvChange(cvvDigits);
-    } else {
-      console.log("CVV not set. Digits:", cvvDigits, "Length:", cvvDigits.length);
-    }
-  };
-
-  const toggleRecording = () => {
-    if (isListening) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
   };
 
   console.log({
@@ -635,64 +331,15 @@ function PaymentContent() {
                         </div>
                       </div>
 
-                      {/* Unified Speech-to-Text Interface */}
-                      <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
-                        <button
-                          type="button"
-                          onClick={toggleRecording}
-                          disabled={isProcessing}
-                          className={`p-4 rounded-full transition-all ${
-                            isListening
-                              ? "bg-red-500 text-white hover:bg-red-600 shadow-lg"
-                              : "bg-blue-500 text-white hover:bg-blue-600 shadow-lg"
-                          } ${isProcessing ? "opacity-50 cursor-not-allowed" : ""}`}
-                          title={isListening ? "Stop recording" : "Start recording all fields"}
-                        >
-                          {isProcessing ? (
-                            <svg className="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                              />
-                            </svg>
-                          ) : isListening ? (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          ) : (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-                              />
-                            </svg>
-                          )}
-                        </button>
-
-                        <div className="text-center">
-                          <div className="font-medium">
-                            {isListening ? "Listening..." : isProcessing ? "Processing..." : "Click to speak"}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            Say: &quot;Card number 1234 5678 9012 3456&quot;
-                            <br />
-                            Then: &quot;Exp twelve twenty-five&quot;
-                            <br />
-                            Then: &quot;CVV one two three&quot;
-                            <br />
-                            <span className="text-xs text-gray-400">
-                              If you make a mistake, say &quot;no&quot; or &quot;wait&quot; then repeat
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Error Display */}
-                      {speechError && <div className="text-sm text-red-500 text-center">{speechError}</div>}
+                      {/* Unified Voice & Camera Input */}
+                      <UnifiedCreditCardSpeech
+                        onCardNumberChange={handleCardNumberChange}
+                        onExpiryChange={handleCardExpiryChange}
+                        onCvvChange={handleCardCvvChange}
+                        cardNumber={newCardNumber}
+                        expiry={newCardExpiry}
+                        cvv={newCardCvv}
+                      />
                     </div>
                   )}
                 </div>
