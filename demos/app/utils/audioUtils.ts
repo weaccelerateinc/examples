@@ -3,98 +3,52 @@
  */
 
 /**
- * Convert WebM audio to PCM format required by Gemini Live API
- * @param webmBlob - The WebM audio blob from MediaRecorder
- * @returns ArrayBuffer containing 16-bit PCM audio data at 16kHz mono
+ * Create a PCM audio processor that captures raw audio data directly from microphone
+ * @param stream - MediaStream from getUserMedia
+ * @param onAudioData - Callback function to receive PCM data chunks
+ * @returns AudioContext and cleanup function
  */
-export async function convertWebMToPCM(webmBlob: Blob): Promise<ArrayBuffer> {
-  try {
-    // Create audio context for 16kHz output
-    const audioContext = new AudioContext({ sampleRate: 16000 });
+export function createPCMAudioProcessor(
+  stream: MediaStream,
+  onAudioData: (pcmData: ArrayBuffer) => void
+): { audioContext: AudioContext; cleanup: () => void } {
+  // Create audio context at 16kHz (required by Live API)
+  const audioContext = new AudioContext({ sampleRate: 16000 });
 
-    // Decode the WebM audio data with retry mechanism
-    const arrayBuffer = await webmBlob.arrayBuffer();
+  // Create media source from stream
+  const source = audioContext.createMediaStreamSource(stream);
 
-    let audioBuffer;
-    let attempts = 0;
-    const maxAttempts = 3;
+  // Create script processor (deprecated but widely supported)
+  // Buffer size of 4096 samples gives us ~256ms chunks at 16kHz
+  const processor = audioContext.createScriptProcessor(4096, 1, 1);
 
-    while (attempts < maxAttempts) {
-      try {
-        // Create a fresh copy of the array buffer for each attempt
-        const bufferCopy = arrayBuffer.slice(0);
-        audioBuffer = await audioContext.decodeAudioData(bufferCopy);
-        break;
-      } catch (decodeError) {
-        attempts++;
-        console.warn(`⚠️ Audio decode attempt ${attempts}/${maxAttempts} failed:`, decodeError);
+  processor.onaudioprocess = (event) => {
+    const inputBuffer = event.inputBuffer;
+    const inputData = inputBuffer.getChannelData(0); // Get mono channel
 
-        if (attempts >= maxAttempts) {
-          // If all attempts fail, create a silent buffer as fallback
-          console.warn("🔇 Creating silent audio buffer as fallback");
-          const sampleRate = 16000;
-          const duration = 0.1; // 100ms of silence
-          audioBuffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
-          break;
-        }
-
-        // Wait a bit before retrying
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-    }
-
-    if (!audioBuffer) {
-      throw new Error("Failed to create audio buffer");
-    }
-
-    // Get the first channel (mono)
-    const inputData = audioBuffer.getChannelData(0);
-
-    // Resample to 16kHz if needed
-    const targetSampleRate = 16000;
-    const originalSampleRate = audioBuffer.sampleRate;
-
-    let resampledData: Float32Array;
-
-    if (originalSampleRate === targetSampleRate) {
-      resampledData = inputData;
-    } else {
-      // Calculate the new length after resampling
-      const ratio = targetSampleRate / originalSampleRate;
-      const newLength = Math.round(inputData.length * ratio);
-
-      // Resample the audio data
-      resampledData = new Float32Array(newLength);
-      for (let i = 0; i < newLength; i++) {
-        const originalIndex = i / ratio;
-        const index = Math.floor(originalIndex);
-        const fraction = originalIndex - index;
-
-        if (index + 1 < inputData.length) {
-          resampledData[i] = inputData[index] * (1 - fraction) + inputData[index + 1] * fraction;
-        } else {
-          resampledData[i] = inputData[index] || 0;
-        }
-      }
-    }
-
-    // Convert to 16-bit PCM
-    const pcmData = new Int16Array(resampledData.length);
-    for (let i = 0; i < resampledData.length; i++) {
+    // Convert Float32 audio data to 16-bit PCM
+    const pcmData = new Int16Array(inputData.length);
+    for (let i = 0; i < inputData.length; i++) {
       // Clamp to [-1, 1] and convert to 16-bit integer
-      const sample = Math.max(-1, Math.min(1, resampledData[i]));
+      const sample = Math.max(-1, Math.min(1, inputData[i]));
       pcmData[i] = sample * 0x7fff;
     }
 
-    // Close the audio context to free resources
-    await audioContext.close();
+    console.log(`🎵 Generated PCM chunk: ${pcmData.buffer.byteLength} bytes`);
+    onAudioData(pcmData.buffer);
+  };
 
-    console.log(`🎵 Audio converted: ${webmBlob.size} bytes WebM → ${pcmData.buffer.byteLength} bytes PCM (16kHz mono)`);
-    return pcmData.buffer;
-  } catch (error) {
-    console.error("❌ Error converting audio to PCM:", error);
-    throw error;
-  }
+  // Connect the audio graph
+  source.connect(processor);
+  processor.connect(audioContext.destination);
+
+  const cleanup = () => {
+    processor.disconnect();
+    source.disconnect();
+    audioContext.close();
+  };
+
+  return { audioContext, cleanup };
 }
 
 /**

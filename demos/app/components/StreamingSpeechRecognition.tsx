@@ -28,7 +28,6 @@ export function StreamingSpeechRecognition({
   });
   const [restartCount, setRestartCount] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
-  const [permissionGranted, setPermissionGranted] = useState(false);
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const currentFieldRef = useRef<"cardNumber" | "expiry" | "cvv">("cardNumber");

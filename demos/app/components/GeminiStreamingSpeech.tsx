@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { GoogleGenAI } from "@google/genai";
-import { convertWebMToPCM, checkAudioSupport, getBestAudioFormat } from "../utils/audioUtils";
+import { createPCMAudioProcessor, checkAudioSupport } from "../utils/audioUtils";
 
 interface GeminiStreamingSpeechProps {
   onCardNumberChange: (value: string) => void;
@@ -31,8 +31,8 @@ export function GeminiStreamingSpeech({
   const [isConnecting, setIsConnecting] = useState(false);
 
   const liveSessionRef = useRef<any>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioProcessorRef = useRef<{ audioContext: AudioContext; cleanup: () => void } | null>(null);
   const accumulatedDigitsRef = useRef({
     cardNumber: "",
     expiry: "",
@@ -272,30 +272,17 @@ export function GeminiStreamingSpeech({
     }
   }, [processGeminiTranscript, isListening]);
 
-  // Send audio data to Live API
-  const sendAudioToLiveAPI = useCallback(
-    async (webmBlob: Blob) => {
-      // Debug the session state
-      console.log("🔍 Session check:", {
-        hasSession: !!liveSessionRef.current,
-        isListening,
-        isConnecting,
-        sessionType: liveSessionRef.current?.constructor?.name,
-      });
-
+  // Send PCM audio data to Live API
+  const sendPCMToLiveAPI = useCallback(
+    (pcmBuffer: ArrayBuffer) => {
+      // Check if session is available
       if (!liveSessionRef.current) {
         console.warn("⚠️ Live API session not available, skipping audio");
         return;
       }
 
-      if (!isListening) {
-        console.warn("⚠️ Not currently listening, skipping audio");
-        return;
-      }
-
       try {
-        // Convert WebM to PCM format (required by Live API)
-        const pcmBuffer = await convertWebMToPCM(webmBlob);
+        // Convert PCM buffer to base64
         const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcmBuffer)));
 
         // Send audio data via Live API using PCM format
@@ -312,7 +299,7 @@ export function GeminiStreamingSpeech({
         // Don't break the flow - just skip this chunk
       }
     },
-    [isListening, isConnecting]
+    [] // No dependencies needed - just check the ref
   );
 
   const startListening = useCallback(async () => {
@@ -355,33 +342,17 @@ export function GeminiStreamingSpeech({
 
       streamRef.current = stream;
 
-      // Create MediaRecorder for capturing audio chunks
-      const audioFormat = getBestAudioFormat();
-      console.log("🎵 Using audio format:", audioFormat.description);
+      // Create PCM audio processor for direct audio capture
+      console.log("🎵 Creating direct PCM audio processor");
+      const audioProcessor = createPCMAudioProcessor(stream, sendPCMToLiveAPI);
+      audioProcessorRef.current = audioProcessor;
 
-      const mediaRecorder = new MediaRecorder(stream, audioFormat.mimeType ? { mimeType: audioFormat.mimeType } : undefined);
-
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          console.log("📼 Audio chunk received:", { size: event.data.size });
-          // Send directly to Live API
-          sendAudioToLiveAPI(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        console.log("📼 MediaRecorder stopped");
-      };
-
-      // Start recording with continuous chunks
-      mediaRecorder.start(1000); // Send data every 1 second for real-time processing
       setIsListening(true);
       onCurrentFieldChange("listening");
-      console.log("✅ Live API recording started - isListening set to true, session ready:", {
+      console.log("✅ Live API recording started with direct PCM processing:", {
         hasSession: !!liveSessionRef.current,
         sessionType: liveSessionRef.current?.constructor?.name,
+        audioContextState: audioProcessor.audioContext.state,
       });
     } catch (err) {
       console.error("❌ Error starting Live API recording:", err);
@@ -389,16 +360,17 @@ export function GeminiStreamingSpeech({
       setIsListening(false);
       setIsConnecting(false);
     }
-  }, [isSupported, connectToLiveAPI, sendAudioToLiveAPI, onCurrentFieldChange]);
+  }, [isSupported, connectToLiveAPI, sendPCMToLiveAPI, onCurrentFieldChange]);
 
   const stopListening = useCallback(() => {
     console.log("🛑 Stopping Live API speech recognition");
     setIsListening(false);
     setIsConnecting(false);
 
-    // Stop MediaRecorder
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      mediaRecorderRef.current.stop();
+    // Clean up audio processor
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.cleanup();
+      audioProcessorRef.current = null;
     }
 
     // Stop media stream
@@ -441,6 +413,9 @@ export function GeminiStreamingSpeech({
 
     return () => {
       // Cleanup on unmount
+      if (audioProcessorRef.current) {
+        audioProcessorRef.current.cleanup();
+      }
       if (liveSessionRef.current) {
         liveSessionRef.current.close();
       }
