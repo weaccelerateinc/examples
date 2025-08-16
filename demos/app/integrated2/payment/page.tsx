@@ -52,6 +52,7 @@ function PaymentContent() {
 
   // Debug logging for state changes
   const handleCardNumberChange = (value: string) => {
+    console.log("Payment page - Received card number for update:", value);
     console.log("Payment page - Setting card number:", value);
     setNewCardNumber(value);
   };

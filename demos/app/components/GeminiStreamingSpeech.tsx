@@ -33,96 +33,146 @@ export function GeminiStreamingSpeech({
   const liveSessionRef = useRef<any>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioProcessorRef = useRef<{ audioContext: AudioContext; cleanup: () => void } | null>(null);
+  // Ensure accumulatedDigitsRef is defined
   const accumulatedDigitsRef = useRef({
     cardNumber: "",
     expiry: "",
     cvv: "",
   });
+  const currentFieldRef = useRef<"cardNumber" | "expiry" | "cvv" | null>(null);
   const stopListeningRef = useRef<(() => void) | null>(null);
 
-  const processGeminiTranscript = useCallback(
-    (transcript: string) => {
-      console.log("🎯 Processing Gemini response:", transcript);
-      setCurrentTranscript(transcript);
+  // Process character stream from Gemini based on symbols
+  const processCharacterStream = useCallback(
+    (text: string) => {
+      console.log("🔄 Processing character stream:", text);
 
-      try {
-        // Try to parse JSON response from Gemini
-        const response = JSON.parse(transcript.trim());
-        console.log("📋 Parsed Gemini response:", response);
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
 
-        // Validate the JSON structure
-        if (typeof response !== "object" || response === null) {
-          console.warn("⚠️ Invalid JSON response from Gemini");
-          return;
-        }
-
-        const { cardNumber, expiry, cvv, transcript: originalTranscript } = response;
-
-        // Update transcript with what was actually said
-        if (originalTranscript) {
-          setCurrentTranscript(originalTranscript);
-        }
-
-        // Update card number if provided
-        if (cardNumber && typeof cardNumber === "string") {
-          console.log("💳 Gemini identified card number:", cardNumber);
-          const formattedCardNumber = cardNumber.replace(/(\d{4})(?=\d)/g, "$1 ");
-          onCardNumberChange(formattedCardNumber);
+        // Check for field indicators
+        if (char === "#") {
+          // Switch to card number field
+          currentFieldRef.current = "cardNumber";
           onCurrentFieldChange("cardNumber");
-
-          accumulatedDigitsRef.current.cardNumber = cardNumber;
-          setFieldsStatus((prev) => ({
-            ...prev,
-            cardNumber: cardNumber.length >= 13,
-          }));
-        }
-
-        // Update expiry if provided
-        if (expiry && typeof expiry === "string") {
-          console.log("📅 Gemini identified expiry:", expiry);
-          const formattedExpiry = expiry.length >= 4 ? `${expiry.slice(0, 2)}/${expiry.slice(2)}` : expiry;
-          onExpiryChange(formattedExpiry);
+          console.log("🎯 Switched to card number field");
+          continue;
+        } else if (char === "$") {
+          // Switch to expiry field
+          currentFieldRef.current = "expiry";
           onCurrentFieldChange("expiry");
-
-          accumulatedDigitsRef.current.expiry = expiry;
-          setFieldsStatus((prev) => ({
-            ...prev,
-            expiry: expiry.length >= 4,
-          }));
-        }
-
-        // Update CVV if provided
-        if (cvv && typeof cvv === "string") {
-          console.log("🔒 Gemini identified CVV:", cvv);
-          onCvvChange(cvv);
+          console.log("🎯 Switched to expiry field");
+          continue;
+        } else if (char === "@") {
+          // Switch to CVV field
+          currentFieldRef.current = "cvv";
           onCurrentFieldChange("cvv");
-
-          accumulatedDigitsRef.current.cvv = cvv;
-          setFieldsStatus((prev) => ({
-            ...prev,
-            cvv: cvv.length >= 3,
-          }));
+          console.log("🎯 Switched to CVV field");
+          continue;
         }
 
-        // Check if all fields are completed
-        const accumulated = accumulatedDigitsRef.current;
-        const allComplete =
-          accumulated.cardNumber.length >= 13 && accumulated.expiry.length >= 4 && accumulated.cvv.length >= 3;
+        // Process digits for the current field
+        if (/\d/.test(char) && currentFieldRef.current) {
+          const field = currentFieldRef.current;
+          accumulatedDigitsRef.current[field] += char;
 
-        if (allComplete) {
-          console.log("✅ All fields completed via Gemini intelligence - stopping recognition");
-          setTimeout(() => {
-            if (stopListeningRef.current) {
-              stopListeningRef.current();
+          // Update the appropriate field
+          if (field === "cardNumber") {
+            const formattedCardNumber = accumulatedDigitsRef.current.cardNumber.replace(/(\d{4})(?=\d)/g, "$1 ");
+            onCardNumberChange(formattedCardNumber);
+            setFieldsStatus((prev) => ({
+              ...prev,
+              cardNumber: accumulatedDigitsRef.current.cardNumber.length >= 13,
+            }));
+          } else if (field === "expiry") {
+            let formattedExpiry = accumulatedDigitsRef.current.expiry;
+            if (formattedExpiry.length === 2 && !formattedExpiry.includes("/")) {
+              formattedExpiry = formattedExpiry.slice(0, 2) + "/" + formattedExpiry.slice(2);
             }
-          }, 1000);
-        }
-      } catch (error) {
-        console.warn("⚠️ Failed to parse JSON from Gemini, received plain text:", transcript);
-        console.warn("Parse error:", error);
+            onExpiryChange(formattedExpiry);
+            setFieldsStatus((prev) => ({
+              ...prev,
+              expiry: accumulatedDigitsRef.current.expiry.length >= 4,
+            }));
+          } else if (field === "cvv") {
+            onCvvChange(accumulatedDigitsRef.current.cvv);
+            setFieldsStatus((prev) => ({
+              ...prev,
+              cvv: accumulatedDigitsRef.current.cvv.length >= 3,
+            }));
+          }
 
-        // Fallback: treat as plain transcript for display
-        setCurrentTranscript(transcript);
+          console.log(`🔢 Added digit "${char}" to ${field}:`, accumulatedDigitsRef.current[field]);
+        }
+      }
+
+      return {
+        cardNumber: accumulatedDigitsRef.current.cardNumber,
+        expiry: accumulatedDigitsRef.current.expiry,
+        cvv: accumulatedDigitsRef.current.cvv,
+      };
+    },
+    [onCardNumberChange, onExpiryChange, onCvvChange, onCurrentFieldChange]
+  );
+
+  const processGeminiTranscript = useCallback(
+    (cardInfo) => {
+      console.log("🎯 Processing Gemini response:", cardInfo);
+
+      // Update card number if provided
+      if (cardInfo.cardNumber) {
+        console.log("💳 Gemini identified card number:", cardInfo.cardNumber);
+        const formattedCardNumber = cardInfo.cardNumber.replace(/(\d{4})(?=\d)/g, "$1 ");
+        onCardNumberChange(formattedCardNumber);
+        onCurrentFieldChange("cardNumber");
+
+        accumulatedDigitsRef.current.cardNumber = cardInfo.cardNumber;
+        setFieldsStatus((prev) => ({
+          ...prev,
+          cardNumber: cardInfo.cardNumber.length >= 13,
+        }));
+      }
+
+      // Update expiry if provided
+      if (cardInfo.expiry) {
+        console.log("📅 Gemini identified expiry:", cardInfo.expiry);
+        const formattedExpiry =
+          cardInfo.expiry.length >= 4 ? `${cardInfo.expiry.slice(0, 2)}/${cardInfo.expiry.slice(2)}` : cardInfo.expiry;
+        onExpiryChange(formattedExpiry);
+        onCurrentFieldChange("expiry");
+
+        accumulatedDigitsRef.current.expiry = cardInfo.expiry;
+        setFieldsStatus((prev) => ({
+          ...prev,
+          expiry: cardInfo.expiry.length >= 4,
+        }));
+      }
+
+      // Update CVV if provided
+      if (cardInfo.cvv) {
+        console.log("🔒 Gemini identified CVV:", cardInfo.cvv);
+        onCvvChange(cardInfo.cvv);
+        onCurrentFieldChange("cvv");
+
+        accumulatedDigitsRef.current.cvv = cardInfo.cvv;
+        setFieldsStatus((prev) => ({
+          ...prev,
+          cvv: cardInfo.cvv.length >= 3,
+        }));
+      }
+
+      // Check if all fields are completed
+      const accumulated = accumulatedDigitsRef.current;
+      const allComplete =
+        accumulated.cardNumber.length >= 13 && accumulated.expiry.length >= 4 && accumulated.cvv.length >= 3;
+
+      if (allComplete) {
+        console.log("✅ All fields completed via Gemini intelligence - stopping recognition");
+        setTimeout(() => {
+          if (stopListeningRef.current) {
+            stopListeningRef.current();
+          }
+        }, 1000);
       }
     },
     [onCardNumberChange, onExpiryChange, onCvvChange, onCurrentFieldChange]
@@ -173,38 +223,17 @@ export function GeminiStreamingSpeech({
           },
           onmessage: (message: any) => {
             console.log("📨 Raw Live API response:", message);
+            // Add detailed logging for LiveServerMessage
             console.log("📨 Detailed Live API response:", JSON.stringify(message, null, 2));
 
-            // Extract transcript from Live API response
+            // Check if the response contains the expected structure
             if (message.serverContent?.modelTurn?.parts?.[0]?.text) {
-              const transcript = message.serverContent.modelTurn.parts[0].text;
-              accumulatedResponse += transcript;
-
-              // Check if the accumulated response forms a complete JSON object
-              try {
-                const response = JSON.parse(accumulatedResponse.trim());
-                processGeminiTranscript(JSON.stringify(response));
-                accumulatedResponse = ""; // Reset after successful parse
-              } catch (error) {
-                // If parsing fails, wait for more data
-                console.warn("⚠️ Incomplete JSON response, waiting for more data...");
-              }
-            }
-
-            // Also check for other message types that might contain text
-            if (message.candidates?.[0]?.content?.parts?.[0]?.text) {
-              const transcript = message.candidates[0].content.parts[0].text;
-              accumulatedResponse += transcript;
-
-              // Check if the accumulated response forms a complete JSON object
-              try {
-                const response = JSON.parse(accumulatedResponse.trim());
-                processGeminiTranscript(JSON.stringify(response));
-                accumulatedResponse = ""; // Reset after successful parse
-              } catch (error) {
-                // If parsing fails, wait for more data
-                console.warn("⚠️ Incomplete JSON response, waiting for more data...");
-              }
+              const text = message.serverContent.modelTurn.parts[0].text;
+              console.log("🔍 Processing text:", text);
+              const cardInfo = processCharacterStream(text);
+              processGeminiTranscript(cardInfo);
+            } else {
+              console.warn("⚠️ Unexpected response structure, missing 'parts':", message);
             }
           },
           onerror: (error: any) => {
@@ -483,25 +512,3 @@ export function GeminiStreamingSpeech({
     </div>
   );
 }
-
-// Function to extract card information from plain text
-const extractCardInfo = (text: string) => {
-  const cardInfo = {
-    cardNumber: null,
-    expiry: null,
-    cvv: null,
-  };
-
-  const lines = text.split("\n");
-  lines.forEach((line) => {
-    if (line.includes("CHANGE_FORM_FIELD cardNumber:")) {
-      cardInfo.cardNumber = line.split(":")[1].trim();
-    } else if (line.includes("CHANGE_FORM_FIELD expiry:")) {
-      cardInfo.expiry = line.split(":")[1].trim();
-    } else if (line.includes("CHANGE_FORM_FIELD cvv:")) {
-      cardInfo.cvv = line.split(":")[1].trim();
-    }
-  });
-
-  return cardInfo;
-};
