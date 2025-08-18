@@ -22,7 +22,7 @@ export function GeminiStreamingSpeech({
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentTranscript, setCurrentTranscript] = useState("");
+  const [currentTranscript] = useState("");
   const [fieldsStatus, setFieldsStatus] = useState({
     cardNumber: false,
     expiry: false,
@@ -116,7 +116,7 @@ export function GeminiStreamingSpeech({
   );
 
   const processGeminiTranscript = useCallback(
-    (cardInfo) => {
+    (cardInfo: any) => {
       console.log("🎯 Processing Gemini response:", cardInfo);
 
       // Update card number if provided
