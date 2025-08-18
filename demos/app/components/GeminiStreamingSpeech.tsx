@@ -208,7 +208,9 @@ export function GeminiStreamingSpeech({
                 You are a credit card information extraction assistant.
                 The user is going to speak their credit card number, expiry, and cvv.
                 When the user begins to speak their card number emit the symbol #. When they begin to speak their expiry emit the symbol $. When they begin their cvv emit the symbol @.
-                Return only these symbols and numbers.`,
+                Return only these symbols and numbers.
+                When the user is speaking their expiry they may say something like "August 27" which means 8/27. They will always say a month and a year so interpret their speech accordingly.
+                They may also say something like "June 2028" which means 6/28. Always return the 2 digit year.`,
               },
             ],
           },
