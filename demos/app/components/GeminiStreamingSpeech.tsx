@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Session } from "@google/genai";
 import { createPCMAudioProcessor, checkAudioSupport } from "../utils/audioUtils";
 
 interface GeminiStreamingSpeechProps {
@@ -12,6 +12,18 @@ interface GeminiStreamingSpeechProps {
   onCvvChange: (value: string) => void;
   onCurrentFieldChange: (field: "cardNumber" | "expiry" | "cvv" | "listening") => void;
 }
+
+let accText = "";
+const processTextStream = (incoming: string) => {
+  accText += incoming;
+  try {
+    const response = JSON.parse(accText.replaceAll("```", "").replaceAll("json", ""));
+    accText = "";
+    return response as { card_number?: string; expiry?: string; cvv?: string };
+  } catch {
+    return null;
+  }
+};
 
 export function GeminiStreamingSpeech({
   onCardNumberChange,
@@ -30,7 +42,7 @@ export function GeminiStreamingSpeech({
   });
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const liveSessionRef = useRef<any>(null);
+  const liveSessionRef = useRef<Session | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioProcessorRef = useRef<{ audioContext: AudioContext; cleanup: () => void } | null>(null);
   // Ensure accumulatedDigitsRef is defined
@@ -39,144 +51,7 @@ export function GeminiStreamingSpeech({
     expiry: "",
     cvv: "",
   });
-  const currentFieldRef = useRef<"cardNumber" | "expiry" | "cvv" | null>(null);
   const stopListeningRef = useRef<(() => void) | null>(null);
-
-  // Process character stream from Gemini based on symbols
-  const processCharacterStream = useCallback(
-    (text: string) => {
-      console.log("🔄 Processing character stream:", text);
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-
-        // Check for field indicators
-        if (char === "#") {
-          // Switch to card number field
-          currentFieldRef.current = "cardNumber";
-          onCurrentFieldChange("cardNumber");
-          console.log("🎯 Switched to card number field");
-          continue;
-        } else if (char === "$") {
-          // Switch to expiry field
-          currentFieldRef.current = "expiry";
-          onCurrentFieldChange("expiry");
-          console.log("🎯 Switched to expiry field");
-          continue;
-        } else if (char === "@") {
-          // Switch to CVV field
-          currentFieldRef.current = "cvv";
-          onCurrentFieldChange("cvv");
-          console.log("🎯 Switched to CVV field");
-          continue;
-        }
-
-        // Process digits for the current field
-        if (/\d/.test(char) && currentFieldRef.current) {
-          const field = currentFieldRef.current;
-          accumulatedDigitsRef.current[field] += char;
-
-          // Update the appropriate field
-          if (field === "cardNumber") {
-            const formattedCardNumber = accumulatedDigitsRef.current.cardNumber.replace(/(\d{4})(?=\d)/g, "$1 ");
-            onCardNumberChange(formattedCardNumber);
-            setFieldsStatus((prev) => ({
-              ...prev,
-              cardNumber: accumulatedDigitsRef.current.cardNumber.length >= 13,
-            }));
-          } else if (field === "expiry") {
-            let formattedExpiry = accumulatedDigitsRef.current.expiry;
-            if (formattedExpiry.length === 2 && !formattedExpiry.includes("/")) {
-              formattedExpiry = formattedExpiry.slice(0, 2) + "/" + formattedExpiry.slice(2);
-            }
-            onExpiryChange(formattedExpiry);
-            setFieldsStatus((prev) => ({
-              ...prev,
-              expiry: accumulatedDigitsRef.current.expiry.length >= 4,
-            }));
-          } else if (field === "cvv") {
-            onCvvChange(accumulatedDigitsRef.current.cvv);
-            setFieldsStatus((prev) => ({
-              ...prev,
-              cvv: accumulatedDigitsRef.current.cvv.length >= 3,
-            }));
-          }
-
-          console.log(`🔢 Added digit "${char}" to ${field}:`, accumulatedDigitsRef.current[field]);
-        }
-      }
-
-      return {
-        cardNumber: accumulatedDigitsRef.current.cardNumber,
-        expiry: accumulatedDigitsRef.current.expiry,
-        cvv: accumulatedDigitsRef.current.cvv,
-      };
-    },
-    [onCardNumberChange, onExpiryChange, onCvvChange, onCurrentFieldChange]
-  );
-
-  const processGeminiTranscript = useCallback(
-    (cardInfo: any) => {
-      console.log("🎯 Processing Gemini response:", cardInfo);
-
-      // Update card number if provided
-      if (cardInfo.cardNumber) {
-        console.log("💳 Gemini identified card number:", cardInfo.cardNumber);
-        const formattedCardNumber = cardInfo.cardNumber.replace(/(\d{4})(?=\d)/g, "$1 ");
-        onCardNumberChange(formattedCardNumber);
-        onCurrentFieldChange("cardNumber");
-
-        accumulatedDigitsRef.current.cardNumber = cardInfo.cardNumber;
-        setFieldsStatus((prev) => ({
-          ...prev,
-          cardNumber: cardInfo.cardNumber.length >= 13,
-        }));
-      }
-
-      // Update expiry if provided
-      if (cardInfo.expiry) {
-        console.log("📅 Gemini identified expiry:", cardInfo.expiry);
-        const formattedExpiry =
-          cardInfo.expiry.length >= 4 ? `${cardInfo.expiry.slice(0, 2)}/${cardInfo.expiry.slice(2)}` : cardInfo.expiry;
-        onExpiryChange(formattedExpiry);
-        onCurrentFieldChange("expiry");
-
-        accumulatedDigitsRef.current.expiry = cardInfo.expiry;
-        setFieldsStatus((prev) => ({
-          ...prev,
-          expiry: cardInfo.expiry.length >= 4,
-        }));
-      }
-
-      // Update CVV if provided
-      if (cardInfo.cvv) {
-        console.log("🔒 Gemini identified CVV:", cardInfo.cvv);
-        onCvvChange(cardInfo.cvv);
-        onCurrentFieldChange("cvv");
-
-        accumulatedDigitsRef.current.cvv = cardInfo.cvv;
-        setFieldsStatus((prev) => ({
-          ...prev,
-          cvv: cardInfo.cvv.length >= 3,
-        }));
-      }
-
-      // Check if all fields are completed
-      const accumulated = accumulatedDigitsRef.current;
-      const allComplete =
-        accumulated.cardNumber.length >= 13 && accumulated.expiry.length >= 4 && accumulated.cvv.length >= 3;
-
-      if (allComplete) {
-        console.log("✅ All fields completed via Gemini intelligence - stopping recognition");
-        setTimeout(() => {
-          if (stopListeningRef.current) {
-            stopListeningRef.current();
-          }
-        }, 1000);
-      }
-    },
-    [onCardNumberChange, onExpiryChange, onCvvChange, onCurrentFieldChange]
-  );
 
   // Connect to Gemini Live API via official client
   const connectToLiveAPI = useCallback(async () => {
@@ -207,8 +82,9 @@ export function GeminiStreamingSpeech({
                 text: `
                 You are a credit card information extraction assistant.
                 The user is going to speak their credit card number, expiry, and cvv.
-                When the user begins to speak their card number emit the symbol #. When they begin to speak their expiry emit the symbol $. When they begin their cvv emit the symbol @.
-                Return only these symbols and numbers.
+                The audio portion will be the user's speech and the text portion you receive will be the current state of the card information. Return a JSON payload
+                describing edits to this information that should be made given their speech.
+                The payload should meet the spec { card_number?: string, expiry?: string, cvv?: string }.
                 When the user is speaking their expiry they may say something like "August 27" which means 8/27. They will always say a month and a year so interpret their speech accordingly.
                 They may also say something like "June 2028" which means 6/28. Always return the 2 digit year.`,
               },
@@ -229,8 +105,19 @@ export function GeminiStreamingSpeech({
             if (message.serverContent?.modelTurn?.parts?.[0]?.text) {
               const text = message.serverContent.modelTurn.parts[0].text;
               console.log("🔍 Processing text:", text);
-              const cardInfo = processCharacterStream(text);
-              processGeminiTranscript(cardInfo);
+              const jres = processTextStream(text);
+              if (jres?.card_number) {
+                onCardNumberChange(jres.card_number.toString());
+              }
+              if (jres?.expiry) {
+                onExpiryChange(jres.expiry.toString());
+              }
+              if (jres?.cvv) {
+                onCvvChange(jres.cvv.toString());
+              }
+              console.log("🔍 Processing JSON:", jres);
+              //   const cardInfo = processCharacterStream(text);
+              //   processGeminiTranscript(cardInfo);
             } else {
               console.warn("⚠️ Unexpected response structure, missing 'parts':", message);
             }
@@ -262,7 +149,7 @@ export function GeminiStreamingSpeech({
       setIsConnecting(false);
       liveSessionRef.current = null;
     }
-  }, [processGeminiTranscript, isListening, processCharacterStream]);
+  }, [isListening, onCardNumberChange, onCvvChange, onExpiryChange]);
 
   // Send PCM audio data to Live API
   const sendPCMToLiveAPI = useCallback(
@@ -277,13 +164,16 @@ export function GeminiStreamingSpeech({
         // Convert PCM buffer to base64
         const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcmBuffer)));
 
+        const formState = `cardNumber: ${accumulatedDigitsRef.current.cardNumber}, expiry: ${accumulatedDigitsRef.current.expiry}, cvv: ${accumulatedDigitsRef.current.cvv}`;
         // Send audio data via Live API using PCM format
         liveSessionRef.current.sendRealtimeInput({
+          //   text: formState,
           audio: {
             data: base64Audio,
             mimeType: "audio/pcm;rate=16000",
           },
         });
+        console.log(`${new Date().toLocaleTimeString()}: Sent audio to Live API with form state: ${formState}`);
       } catch (error) {
         console.error("❌ Error sending audio to Live API:", error);
         // Don't break the flow - just skip this chunk
