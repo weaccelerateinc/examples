@@ -178,9 +178,6 @@ export function GeminiStreamingSpeech({
     [onCardNumberChange, onExpiryChange, onCvvChange, onCurrentFieldChange]
   );
 
-  // Accumulate partial responses
-  let accumulatedResponse = "";
-
   // Connect to Gemini Live API via official client
   const connectToLiveAPI = useCallback(async () => {
     try {
@@ -222,7 +219,7 @@ export function GeminiStreamingSpeech({
             setIsConnecting(false);
           },
           onmessage: (message: any) => {
-            console.log("📨 Raw Live API response:", message);
+            console.log(`${new Date().toLocaleTimeString()}: Raw Live API response:`, message);
             // Add detailed logging for LiveServerMessage
             console.log("📨 Detailed Live API response:", JSON.stringify(message, null, 2));
 
@@ -263,7 +260,7 @@ export function GeminiStreamingSpeech({
       setIsConnecting(false);
       liveSessionRef.current = null;
     }
-  }, [processGeminiTranscript, isListening]);
+  }, [processGeminiTranscript, isListening, processCharacterStream]);
 
   // Send PCM audio data to Live API
   const sendPCMToLiveAPI = useCallback(
@@ -386,6 +383,7 @@ export function GeminiStreamingSpeech({
     if (isListening) {
       stopListening();
     } else {
+      console.log(`${new Date().toLocaleTimeString()}: Starting Live API speech recognition`);
       startListening();
     }
   }, [isListening, startListening, stopListening]);
