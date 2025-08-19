@@ -164,7 +164,6 @@ export function GeminiStreamingSpeech({
         // Convert PCM buffer to base64
         const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcmBuffer)));
 
-        const formState = `cardNumber: ${accumulatedDigitsRef.current.cardNumber}, expiry: ${accumulatedDigitsRef.current.expiry}, cvv: ${accumulatedDigitsRef.current.cvv}`;
         // Send audio data via Live API using PCM format
         liveSessionRef.current.sendRealtimeInput({
           //   text: formState,
@@ -173,7 +172,6 @@ export function GeminiStreamingSpeech({
             mimeType: "audio/pcm;rate=16000",
           },
         });
-        console.log(`${new Date().toLocaleTimeString()}: Sent audio to Live API with form state: ${formState}`);
       } catch (error) {
         console.error("❌ Error sending audio to Live API:", error);
         // Don't break the flow - just skip this chunk
