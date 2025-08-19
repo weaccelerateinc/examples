@@ -49,7 +49,7 @@ function PaymentContent() {
   const [newCardNumber, setNewCardNumber] = useState("");
   const [newCardExpiry, setNewCardExpiry] = useState("");
   const [newCardCvv, setNewCardCvv] = useState("");
-  const [currentField, setCurrentField] = useState<"cardNumber" | "expiry" | "cvv" | "listening">("listening");
+  const [, setCurrentField] = useState<"cardNumber" | "expiry" | "cvv" | "listening">("listening");
 
   // Debug logging for state changes
   const handleCardNumberChange = (value: string) => {
