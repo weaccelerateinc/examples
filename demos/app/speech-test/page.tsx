@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { StreamingSpeechRecognition } from "../components/StreamingSpeechRecognition";
+import { GeminiStreamingSpeech } from "../components/GeminiStreamingSpeech";
 
 export default function SpeechTestPage() {
   const [cardNumber, setCardNumber] = useState("");
@@ -59,9 +59,9 @@ export default function SpeechTestPage() {
           </div>
         </div>
 
-        {/* Speech Recognition Component */}
+        {/* Gemini AI Speech Recognition Component */}
         <div className="border-2 border-blue-200 rounded-lg p-6 mb-8">
-          <StreamingSpeechRecognition
+          <GeminiStreamingSpeech
             onCardNumberChange={handleCardNumberChange}
             onExpiryChange={handleExpiryChange}
             onCvvChange={handleCvvChange}
@@ -119,12 +119,6 @@ export default function SpeechTestPage() {
           <div>User Agent: {typeof navigator !== "undefined" ? navigator.userAgent : "N/A"}</div>
           <div>Protocol: {typeof window !== "undefined" ? window.location.protocol : "N/A"}</div>
           <div>Host: {typeof window !== "undefined" ? window.location.host : "N/A"}</div>
-          <div>
-            Speech Recognition Support:{" "}
-            {typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition)
-              ? "✅ Available"
-              : "❌ Not Available"}
-          </div>
         </div>
 
         {/* Instructions */}

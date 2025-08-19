@@ -8,7 +8,7 @@ import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
-import { UnifiedCreditCardSpeech } from "../../components/UnifiedCreditCardSpeech";
+import { GeminiStreamingSpeech } from "../../components/GeminiStreamingSpeech";
 
 declare global {
   interface Window {
@@ -49,9 +49,11 @@ function PaymentContent() {
   const [newCardNumber, setNewCardNumber] = useState("");
   const [newCardExpiry, setNewCardExpiry] = useState("");
   const [newCardCvv, setNewCardCvv] = useState("");
+  const [, setCurrentField] = useState<"cardNumber" | "expiry" | "cvv" | "listening">("listening");
 
   // Debug logging for state changes
   const handleCardNumberChange = (value: string) => {
+    console.log("Payment page - Received card number for update:", value);
     console.log("Payment page - Setting card number:", value);
     setNewCardNumber(value);
   };
@@ -330,11 +332,12 @@ function PaymentContent() {
                         </div>
                       </div>
 
-                      {/* Unified Voice & Camera Input */}
-                      <UnifiedCreditCardSpeech
+                      {/* Gemini Streaming Speech Input */}
+                      <GeminiStreamingSpeech
                         onCardNumberChange={handleCardNumberChange}
                         onExpiryChange={handleCardExpiryChange}
                         onCvvChange={handleCardCvvChange}
+                        onCurrentFieldChange={setCurrentField}
                       />
                     </div>
                   )}

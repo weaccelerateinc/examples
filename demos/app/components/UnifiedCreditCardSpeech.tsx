@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Loader2, Camera, CameraOff } from "lucide-react";
-import { StreamingSpeechRecognition } from "./StreamingSpeechRecognition";
+import { GeminiStreamingSpeech } from "./GeminiStreamingSpeech";
 
 interface UnifiedCreditCardSpeechProps {
   onCardNumberChange: (value: string) => void;
@@ -251,8 +251,8 @@ export function UnifiedCreditCardSpeech({ onCardNumberChange, onExpiryChange, on
 
   return (
     <div className="space-y-4">
-      {/* Streaming Voice Input */}
-      <StreamingSpeechRecognition
+      {/* Gemini AI Voice Input */}
+      <GeminiStreamingSpeech
         onCardNumberChange={onCardNumberChange}
         onExpiryChange={onExpiryChange}
         onCvvChange={onCvvChange}

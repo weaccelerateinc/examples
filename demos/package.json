@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/genai": "^1.14.0",
     "@stripe/stripe-js": "^4.9.0",
     "autoprefixer": "^10.4.20",
     "braintree": "^3.28.0",
