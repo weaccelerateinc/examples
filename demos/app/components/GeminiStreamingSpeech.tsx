@@ -338,19 +338,23 @@ export function GeminiStreamingSpeech({
   return (
     <div className="space-y-2">
       {/* Live API Speech Control */}
-      <div className="flex items-center justify-center gap-3 p-3 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 rounded-lg border border-blue-200/50 shadow-sm">
-        <button
-          type="button"
-          onClick={toggleListening}
-          disabled={isConnecting}
+      <button
+        type="button"
+        onClick={toggleListening}
+        disabled={isConnecting}
+        className={`w-full flex items-center justify-center gap-3 p-3 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 rounded-lg border border-blue-200/50 shadow-sm transition-all hover:shadow-md ${
+          isConnecting ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+        }`}
+        title={isListening ? "Stop listening" : isConnecting ? "Connecting..." : "Start Live API listening"}
+      >
+        <div
           className={`p-2.5 rounded-full transition-all ${
             isListening
-              ? "bg-red-500 text-white hover:bg-red-600 shadow-lg animate-pulse"
+              ? "bg-red-500 text-white shadow-lg animate-pulse"
               : isConnecting
-              ? "bg-blue-500 text-white shadow-lg cursor-not-allowed opacity-50"
-              : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl"
+              ? "bg-blue-500 text-white shadow-lg"
+              : "bg-blue-600 text-white shadow-lg"
           }`}
-          title={isListening ? "Stop listening" : isConnecting ? "Connecting..." : "Start Live API listening"}
         >
           {isConnecting ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -359,7 +363,7 @@ export function GeminiStreamingSpeech({
           ) : (
             <Mic className="w-5 h-5" />
           )}
-        </button>
+        </div>
 
         <div className="text-center flex-1">
           <div className="font-medium text-sm">
@@ -428,7 +432,7 @@ export function GeminiStreamingSpeech({
             )}
           </div>
         </div>
-      </div>
+      </button>
 
       {/* Error Display */}
       {error && (
