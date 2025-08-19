@@ -11,6 +11,7 @@ interface GeminiStreamingSpeechProps {
   onExpiryChange: (value: string) => void;
   onCvvChange: (value: string) => void;
   onCurrentFieldChange: (field: "cardNumber" | "expiry" | "cvv" | "listening") => void;
+  onActiveFieldChange?: (field: "cardNumber" | "expiry" | "cvv" | "listening" | null) => void;
 }
 
 let accText = "";
@@ -30,6 +31,7 @@ export function GeminiStreamingSpeech({
   onExpiryChange,
   onCvvChange,
   onCurrentFieldChange,
+  onActiveFieldChange,
 }: GeminiStreamingSpeechProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
@@ -40,6 +42,7 @@ export function GeminiStreamingSpeech({
     expiry: false,
     cvv: false,
   });
+  const [activeField, setActiveField] = useState<"cardNumber" | "expiry" | "cvv" | "listening" | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
   const liveSessionRef = useRef<Session | null>(null);
@@ -106,15 +109,30 @@ export function GeminiStreamingSpeech({
               const text = message.serverContent.modelTurn.parts[0].text;
               console.log("🔍 Processing text:", text);
               const jres = processTextStream(text);
+              
+              // Update field status and notify parent component
               if (jres?.card_number) {
                 onCardNumberChange(jres.card_number.toString());
+                setFieldsStatus(prev => ({ ...prev, cardNumber: true }));
+                setActiveField("cardNumber");
+                onCurrentFieldChange("cardNumber");
+                onActiveFieldChange?.("cardNumber");
               }
               if (jres?.expiry) {
                 onExpiryChange(jres.expiry.toString());
+                setFieldsStatus(prev => ({ ...prev, expiry: true }));
+                setActiveField("expiry");
+                onCurrentFieldChange("expiry");
+                onActiveFieldChange?.("expiry");
               }
               if (jres?.cvv) {
                 onCvvChange(jres.cvv.toString());
+                setFieldsStatus(prev => ({ ...prev, cvv: true }));
+                setActiveField("cvv");
+                onCurrentFieldChange("cvv");
+                onActiveFieldChange?.("cvv");
               }
+              
               console.log("🔍 Processing JSON:", jres);
               //   const cardInfo = processCharacterStream(text);
               //   processGeminiTranscript(cardInfo);
@@ -203,6 +221,8 @@ export function GeminiStreamingSpeech({
         expiry: false,
         cvv: false,
       });
+      setActiveField("listening");
+      onActiveFieldChange?.("listening");
 
       // Connect to Live API first
       await connectToLiveAPI();
@@ -316,42 +336,42 @@ export function GeminiStreamingSpeech({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Live API Speech Control */}
-      <div className="flex items-center justify-center gap-4 p-4 bg-gray-50 rounded-lg">
+      <div className="flex items-center justify-center gap-3 p-3 bg-gradient-to-br from-blue-50 via-sky-50 to-blue-100 rounded-lg border border-blue-200/50 shadow-sm">
         <button
           type="button"
           onClick={toggleListening}
           disabled={isConnecting}
-          className={`p-4 rounded-full transition-all ${
+          className={`p-2.5 rounded-full transition-all ${
             isListening
               ? "bg-red-500 text-white hover:bg-red-600 shadow-lg animate-pulse"
               : isConnecting
               ? "bg-blue-500 text-white shadow-lg cursor-not-allowed opacity-50"
-              : "bg-green-500 text-white hover:bg-green-600 shadow-lg"
+              : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl"
           }`}
           title={isListening ? "Stop listening" : isConnecting ? "Connecting..." : "Start Live API listening"}
         >
           {isConnecting ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
           ) : isListening ? (
-            <MicOff className="w-6 h-6" />
+            <MicOff className="w-5 h-5" />
           ) : (
-            <Mic className="w-6 h-6" />
+            <Mic className="w-5 h-5" />
           )}
         </button>
 
         <div className="text-center flex-1">
-          <div className="font-medium">
+          <div className="font-medium text-sm">
             {isConnecting
               ? "🔗 Connecting to Live API..."
               : isListening
               ? "🎤 Listening with Live API..."
               : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv
               ? "🎉 All Complete!"
-              : "Click to start Live API voice input"}
+              : "Click to start voice input with Accelerate Voice AI."}
           </div>
-          <div className="text-sm text-gray-500">
+          <div className="text-xs text-gray-500">
             {isConnecting ? (
               "Establishing real-time connection..."
             ) : isListening ? (
@@ -361,15 +381,42 @@ export function GeminiStreamingSpeech({
                     ? "Perfect! All fields captured with Live API!"
                     : "Keep speaking your card details - Live API is listening in real-time!"}
                 </div>
-                <div className="text-xs">
-                  Progress: {fieldsStatus.cardNumber ? "✅ Card" : "⏳ Card"}
-                  {" → "}
-                  {fieldsStatus.expiry ? "✅ Expiry" : "⏳ Expiry"}
-                  {" → "}
-                  {fieldsStatus.cvv ? "✅ CVV" : "⏳ CVV"}
+                <div className="text-xs flex items-center justify-center gap-2">
+                  <span className="flex items-center gap-1">
+                    {activeField === "cardNumber" ? (
+                      <span className="text-green-500 animate-pulse">🟢</span>
+                    ) : fieldsStatus.cardNumber ? (
+                      <span className="text-green-600">✅</span>
+                    ) : (
+                      <span className="text-gray-400">⏳</span>
+                    )}
+                    <span className={activeField === "cardNumber" ? "text-green-600 font-medium" : ""}>Card</span>
+                  </span>
+                  <span className="text-gray-400">→</span>
+                  <span className="flex items-center gap-1">
+                    {activeField === "expiry" ? (
+                      <span className="text-green-500 animate-pulse">🟢</span>
+                    ) : fieldsStatus.expiry ? (
+                      <span className="text-green-600">✅</span>
+                    ) : (
+                      <span className="text-gray-400">⏳</span>
+                    )}
+                    <span className={activeField === "expiry" ? "text-green-600 font-medium" : ""}>Expiry</span>
+                  </span>
+                  <span className="text-gray-400">→</span>
+                  <span className="flex items-center gap-1">
+                    {activeField === "cvv" ? (
+                      <span className="text-green-500 animate-pulse">🟢</span>
+                    ) : fieldsStatus.cvv ? (
+                      <span className="text-green-600">✅</span>
+                    ) : (
+                      <span className="text-gray-400">⏳</span>
+                    )}
+                    <span className={activeField === "cvv" ? "text-green-600 font-medium" : ""}>CVV</span>
+                  </span>
                 </div>
                 {currentTranscript && (
-                  <span className="text-xs font-mono bg-white px-2 py-1 rounded mt-2 inline-block">
+                  <span className="text-xs font-mono bg-white px-2 py-1 rounded mt-1 inline-block">
                     &ldquo;{currentTranscript}&rdquo;
                   </span>
                 )}
@@ -377,7 +424,7 @@ export function GeminiStreamingSpeech({
             ) : fieldsStatus.cardNumber && fieldsStatus.expiry && fieldsStatus.cvv ? (
               "All card details captured successfully with Live API!"
             ) : (
-              "🚀 Powered by Gemini Live API - ultra-low latency real-time speech: &lsquo;My card number is 4111 1111 1111 1111, expires 12/25, CVV 123&rsquo;"
+              ""
             )}
           </div>
         </div>

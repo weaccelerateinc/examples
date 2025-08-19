@@ -50,6 +50,7 @@ function PaymentContent() {
   const [newCardExpiry, setNewCardExpiry] = useState("");
   const [newCardCvv, setNewCardCvv] = useState("");
   const [, setCurrentField] = useState<"cardNumber" | "expiry" | "cvv" | "listening">("listening");
+  const [activeField, setActiveField] = useState<"cardNumber" | "expiry" | "cvv" | "listening" | null>(null);
 
   // Debug logging for state changes
   const handleCardNumberChange = (value: string) => {
@@ -305,40 +306,107 @@ function PaymentContent() {
                   </label>
                   {selectedPayment === "newCard" && (
                     <div className="mt-4 space-y-4">
-                      {/* Regular input fields */}
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          placeholder="Credit Card Number"
-                          value={newCardNumber}
-                          onChange={(e) => handleCardNumberChange(e.target.value)}
-                          className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                        />
-                        <div className="flex gap-3">
-                          <input
-                            type="text"
-                            placeholder="Exp"
-                            value={newCardExpiry}
-                            onChange={(e) => handleCardExpiryChange(e.target.value)}
-                            className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                            onFocus={() => console.log("Expiry field focused, current value:", newCardExpiry)}
-                          />
-                          <input
-                            placeholder="CVV"
-                            value={newCardCvv}
-                            onChange={(e) => handleCardCvvChange(e.target.value)}
-                            className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                          />
-                        </div>
-                      </div>
-
                       {/* Gemini Streaming Speech Input */}
                       <GeminiStreamingSpeech
                         onCardNumberChange={handleCardNumberChange}
                         onExpiryChange={handleCardExpiryChange}
                         onCvvChange={handleCardCvvChange}
                         onCurrentFieldChange={setCurrentField}
+                        onActiveFieldChange={setActiveField}
                       />
+
+                      {/* Regular input fields */}
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Credit Card Number"
+                            value={newCardNumber}
+                            onChange={(e) => handleCardNumberChange(e.target.value)}
+                            className={`w-full px-3 py-3 pr-10 border rounded-md focus:ring-2 focus:ring-sky-500 outline-none transition-colors ${
+                              activeField === "cardNumber" 
+                                ? "border-green-500 bg-green-50" 
+                                : newCardNumber 
+                                ? "border-green-300 bg-green-25" 
+                                : "border-neutral-200"
+                            }`}
+                          />
+                          {activeField === "cardNumber" && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <div className="w-5 h-5 bg-green-500 rounded-full animate-pulse flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
+                            </div>
+                          )}
+                          {newCardNumber && activeField !== "cardNumber" && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                <span className="text-white text-xs">✓</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-3">
+                          <div className="relative flex-1">
+                            <input
+                              type="text"
+                              placeholder="Exp"
+                              value={newCardExpiry}
+                              onChange={(e) => handleCardExpiryChange(e.target.value)}
+                              className={`w-full px-3 py-3 pr-10 border rounded-md focus:ring-2 focus:ring-sky-500 outline-none transition-colors ${
+                                activeField === "expiry" 
+                                  ? "border-green-500 bg-green-50" 
+                                  : newCardExpiry 
+                                  ? "border-green-300 bg-green-25" 
+                                  : "border-neutral-200"
+                              }`}
+                              onFocus={() => console.log("Expiry field focused, current value:", newCardExpiry)}
+                            />
+                            {activeField === "expiry" && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="w-5 h-5 bg-green-500 rounded-full animate-pulse flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              </div>
+                            )}
+                            {newCardExpiry && activeField !== "expiry" && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs">✓</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="relative flex-1">
+                            <input
+                              placeholder="CVV"
+                              value={newCardCvv}
+                              onChange={(e) => handleCardCvvChange(e.target.value)}
+                              className={`w-full px-3 py-3 pr-10 border rounded-md focus:ring-2 focus:ring-sky-500 outline-none transition-colors ${
+                                activeField === "cvv" 
+                                  ? "border-green-500 bg-green-50" 
+                                  : newCardCvv 
+                                  ? "border-green-300 bg-green-25" 
+                                  : "border-neutral-200"
+                              }`}
+                            />
+                            {activeField === "cvv" && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="w-5 h-5 bg-green-500 rounded-full animate-pulse flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              </div>
+                            )}
+                            {newCardCvv && activeField !== "cvv" && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                  <span className="text-white text-xs">✓</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
