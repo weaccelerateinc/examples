@@ -1,12 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getProductByIdWithFallback } from "../products";
 import type { Product } from "../products/types";
 
-export default function ProductDetailPage() {
+function ProductDetailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('product') || '1';
@@ -160,5 +160,13 @@ export default function ProductDetailPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function ProductDetailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProductDetailPageContent />
+    </Suspense>
   );
 }
