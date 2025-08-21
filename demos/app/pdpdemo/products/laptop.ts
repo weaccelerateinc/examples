@@ -12,7 +12,7 @@ export const laptop: Product = {
     "/laptop/3.jpg",
     "/laptop/4.jpg"
   ],
-  category: "Electronics & Accessories",
+  category: "Accessories",
   features: [
     "Dual zipper enclosures for secure closure and easy access",
     "Foam padding to protect against dust, dirt, and minor shocks",
