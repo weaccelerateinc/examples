@@ -3,7 +3,7 @@ import { Product } from './types';
 export const laptop: Product = {
   id: "2",
   name: "Laptop Sleeve",
-  price: 29.99,
+  price: 0.99,
   description: "Shield your laptop in style with this sleek and modern Laptop Sleeve. Made from smooth neoprene, it offers a minimalist aesthetic that fits seamlessly into your everyday life. The lightweight design makes it perfect for commuters, students, or remote workers looking for an easy, stylish way to protect their devices. Ideal for anyone who loves technology and values a polished look, this sleeve is perfect for back-to-school season, workplace upgrades, or as a thoughtful gift for tech enthusiasts. Whether it's a birthday, holiday, or any special occasion, this Laptop Sleeve is a practical and trendy choice that elevates your tech gear.",
   image: "/laptop/1.jpg",
   images: [
