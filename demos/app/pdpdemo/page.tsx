@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState, useEffect } from "react";
+import { FormEvent, useState, useEffect, Suspense } from "react";
 import { CheckoutSummary } from "./payment/CheckoutSummary";
 import { stripeOptions } from "../options";
 import Script from "next/script";
@@ -25,7 +25,7 @@ function tryFormatPhone(pn: string): string {
   return `${last10.slice(0, 3)}-${last10.slice(3, 6)}-${last10.slice(6)}`;
 }
 
-export default function CheckoutPage() {
+function CheckoutPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const productId = searchParams.get('productId');
@@ -44,6 +44,8 @@ export default function CheckoutPage() {
     if (productId) {
       const product = getProductByIdWithFallback(productId);
       setSelectedProduct(product);
+    } else {
+      setSelectedProduct(null);
     }
   }, [productId]);
 
@@ -105,59 +107,63 @@ export default function CheckoutPage() {
           </div>
         </header>
 
-        <main className="flex-1 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Our Products</h1>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Discover our premium selection of high-quality products designed to enhance your lifestyle.
+        <main className="flex-1 bg-white">
+          <div className="max-w-7xl mx-auto px-6 py-16">
+            <div className="text-center mb-16">
+              <h1 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">Shop Our Collection</h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Discover thoughtfully curated products that combine quality, style, and functionality.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
               {products.map((product) => (
-                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                  <div className="relative h-64 w-full">
+                <div key={product.id} className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-gray-300 hover:shadow-xl transition-all duration-300 flex flex-col">
+                  <div className="relative h-80 w-full bg-gray-50 overflow-hidden">
                     <Image
                       src={product.image}
                       alt={product.name}
                       fill
-                      className="object-contain"
+                      className="object-contain p-6 group-hover:scale-105 transition-transform duration-300"
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
-                  <div className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  <div className="p-8 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider bg-gray-100 px-3 py-1.5 rounded-full">
                         {product.category}
                       </span>
-                      <span className="text-2xl font-bold text-gray-900">
+                      <span className="text-3xl font-bold text-gray-900">
                         ${product.price.toFixed(2)}
                       </span>
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4 leading-tight">
                       {product.name}
                     </h3>
-                    <p className="text-gray-600 mb-4 line-clamp-3">
+                    <p className="text-gray-600 mb-6 leading-relaxed line-clamp-3 text-base">
                       {product.description}
                     </p>
-                    <div className="mb-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-2">Key Features:</h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
+                    <div className="mb-6">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">Highlights</h4>
+                      <ul className="text-sm text-gray-600 space-y-2">
                         {product.features.slice(0, 3).map((feature, index) => (
-                          <li key={index} className="flex items-center">
-                            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></span>
-                            {feature}
+                          <li key={index} className="flex items-start">
+                            <svg className="w-4 h-4 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="leading-relaxed">{feature}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    <Link
-                      href={`/pdpdemo/product?product=${product.id}`}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-md transition-colors duration-200 flex items-center justify-center"
-                    >
-                      View Details
-                    </Link>
+                    <div className="mt-auto">
+                      <Link
+                        href={`/pdpdemo/product?product=${product.id}`}
+                        className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center h-14 text-base group-hover:shadow-lg"
+                      >
+                        View Product
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -222,9 +228,15 @@ export default function CheckoutPage() {
           {/* Product Information */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <Link href="/pdpdemo" className="text-blue-600 hover:underline">
+              <button 
+                onClick={() => {
+                  router.push('/pdpdemo');
+                  setSelectedProduct(null);
+                }} 
+                className="text-blue-600 hover:underline cursor-pointer"
+              >
                 ← Back to Catalog
-              </Link>
+              </button>
             </div>
             
             <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
@@ -367,5 +379,13 @@ export default function CheckoutPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutPageContent />
+    </Suspense>
   );
 }

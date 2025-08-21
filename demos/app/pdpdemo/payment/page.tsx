@@ -7,6 +7,7 @@ import { stripeOptions } from "../../options";
 import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
+import Link from "next/link";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
 import { getProductByIdWithFallback } from "../products";
 
@@ -444,12 +445,19 @@ function PaymentContent() {
         <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
           <div className="flex justify-between w-full items-center">
             <div className="flex gap-3 items-center">
-              <span className="text-3xl font-black text-black">
-                <Image src="/baggslogo.svg" alt="Baggs Logo" width={30} height={30} />
-              </span>
-              <span className="text-2xl font-bold tracking-tighter text-black">Accelerate Swag Store</span>
+              <Link href="/pdpdemo" className="flex gap-3 items-center">
+                <span className="text-3xl font-black text-black">
+                  <Image src="/baggslogo.svg" alt="Baggs Logo" width={30} height={30} />
+                </span>
+                <span className="text-2xl font-bold tracking-tighter text-black">Accelerate Swag Store</span>
+              </Link>
             </div>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" className="h-6 w-6" width={30} height={30} />
+            <div className="flex items-center gap-4">
+              <Link href="/pdpdemo" className="text-blue-600 hover:underline text-sm font-medium">
+                ← Back to Catalog
+              </Link>
+              <Image src="/checkoutbag.svg" alt="Checkout Bag" className="h-6 w-6" width={30} height={30} />
+            </div>
           </div>
         </div>
       </header>

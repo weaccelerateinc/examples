@@ -1,15 +1,15 @@
 import { Product } from './types';
 import { tote } from './tote';
-import { tshirt } from './tshirt';
+import { laptop } from './laptop';
 import { mug } from './mug';
 
 export const products: Product[] = [
   tote,
-  tshirt,
+  laptop,
   mug
 ];
 
-export { tote, tshirt, mug };
+export { tote, laptop, mug };
 
 // Utility function to find product by ID
 export const getProductById = (id: string): Product | undefined => {
