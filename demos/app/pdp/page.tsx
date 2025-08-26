@@ -2,16 +2,89 @@
 "use client";
 import Image from "next/image";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AccelerateModal } from "./acceleratemodal";
+
+// Types for Printify products
+interface PrintifyProduct {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  blueprint_id: number;
+  shop_id: number;
+  images: string[];
+  variants: Array<{ id: number; price: number; is_enabled: boolean }>;
+}
+
+interface ProductsResponse {
+  success: boolean;
+  products: PrintifyProduct[];
+  total: number;
+}
+
+// Fetch function for products
+const fetchProducts = async (): Promise<ProductsResponse> => {
+  const response = await fetch("/api/pdp/list-products");
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
+  }
+
+  return response.json();
+};
 
 export default function ProductDetailsPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const [mainImage, setMainImage] = useState("/shirt.avif");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Fetch products using useQuery
+  const {
+    data: productsData,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["printify-products"],
+    queryFn: fetchProducts,
+  });
+
   const sizes = ["XS", "S", "M", "L", "XL"];
-  const productImages = ["/shirt.avif", "/product-1.avif", "/product-2.avif", "/product-3.avif"];
+  const fallbackImages = ["/shirt.avif", "/product-1.avif", "/product-2.avif", "/product-3.avif"];
+
+  // Get current product or use fallback data
+  const currentProduct = productsData?.products?.[selectedProductIndex];
+  const productImages = currentProduct?.images && currentProduct.images.length > 0 ? currentProduct.images : fallbackImages;
+  const productTitle = currentProduct?.title || "Los Angeles Rams Fanatics Unisex LA Strong T-Shirt - Black";
+  const productDescription =
+    currentProduct?.description ||
+    "Fanatics has collaborated with League partners and LA sports organizations to design merchandise which helps support those directly impacted by the devastating wildfires in the LA communities.";
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-700"></div>
+          <p className="mt-4 text-gray-600">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Failed to load products</p>
+          <p className="text-gray-600">{error instanceof Error ? error.message : "Unknown error"}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex overflow-hidden flex-col bg-white min-h-screen">
@@ -35,13 +108,7 @@ export default function ProductDetailsPage() {
         {/* Product Images */}
         <div className="md:w-2/3 space-y-4">
           <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
-            <Image
-              src={mainImage}
-              alt="Product Main Image"
-              fill
-              className="object-cover"
-              priority
-            />
+            <Image src={mainImage} alt="Product Main Image" fill className="object-cover" priority />
           </div>
           <div className="grid grid-cols-4 gap-4">
             {productImages.map((img, i) => (
@@ -49,15 +116,10 @@ export default function ProductDetailsPage() {
                 key={i}
                 onClick={() => setMainImage(img)}
                 className={`aspect-square relative rounded-lg overflow-hidden bg-gray-100 ${
-                  mainImage === img ? 'ring-2 ring-sky-700' : ''
+                  mainImage === img ? "ring-2 ring-sky-700" : ""
                 }`}
               >
-                <Image
-                  src={img}
-                  alt={`Product Image ${i + 1}`}
-                  fill
-                  className="object-cover"
-                />
+                <Image src={img} alt={`Product Image ${i + 1}`} fill className="object-cover" />
               </button>
             ))}
           </div>
@@ -65,10 +127,41 @@ export default function ProductDetailsPage() {
 
         {/* Product Details */}
         <div className="md:w-1/3 space-y-6">
+          {/* Product Selection */}
+          {productsData && productsData.products.length > 1 && (
+            <div>
+              <h2 className="text-sm font-medium text-gray-900 mb-2">Select Product</h2>
+              <select
+                value={selectedProductIndex}
+                onChange={(e) => {
+                  setSelectedProductIndex(parseInt(e.target.value));
+                  setMainImage(productsData.products[parseInt(e.target.value)]?.images?.[0] || fallbackImages[0]);
+                }}
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+              >
+                {productsData.products.map((product, index) => (
+                  <option key={product.id} value={index}>
+                    {product.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Los Angeles Rams Fanatics Unisex LA Strong T-Shirt - Black
-            </h1>
-            <p className="text-2xl font-semibold text-gray-900 mt-2">$34.99</p>
+            <h1 className="text-3xl font-bold text-gray-900">{productTitle}</h1>
+            <p className="text-2xl font-semibold text-gray-900 mt-2">
+              {currentProduct?.variants?.[0]?.price ? `$${(currentProduct.variants[0].price / 100).toFixed(2)}` : "$34.99"}
+            </p>
+            {currentProduct?.tags && currentProduct.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {currentProduct.tags.slice(0, 3).map((tag, index) => (
+                  <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -84,9 +177,7 @@ export default function ProductDetailsPage() {
                   key={size}
                   onClick={() => setSelectedSize(size)}
                   className={`py-2 text-sm font-medium rounded-md border ${
-                    selectedSize === size
-                      ? "border-sky-700 bg-sky-50 text-sky-700"
-                      : "border-gray-200 hover:border-gray-300"
+                    selectedSize === size ? "border-sky-700 bg-sky-50 text-sky-700" : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   {size}
@@ -98,10 +189,7 @@ export default function ProductDetailsPage() {
           <div>
             <h2 className="text-sm font-medium text-gray-900 mb-2">Quantity</h2>
             <div className="flex items-center border border-gray-200 rounded-md w-32">
-              <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="px-3 py-2 border-r border-gray-200"
-              >
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 border-r border-gray-200">
                 -
               </button>
               <input
@@ -111,18 +199,13 @@ export default function ProductDetailsPage() {
                 onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                 className="w-full text-center focus:outline-none"
               />
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="px-3 py-2 border-l border-gray-200"
-              >
+              <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-2 border-l border-gray-200">
                 +
               </button>
             </div>
           </div>
 
-          <button
-            className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 rounded-md"
-          >
+          <button className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 rounded-md">
             Add to Cart
           </button>
 
@@ -133,24 +216,20 @@ export default function ProductDetailsPage() {
             Accelerate Buy Now
           </button>
 
-          <AccelerateModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            subtotal={34.99}
-            
-          />
+          <AccelerateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} subtotal={34.99} />
 
           <div className="prose prose-sm">
             <h2 className="text-sm font-medium text-gray-900">Product Description</h2>
-            <p className="text-gray-600">
-            Fanatics has collaborated with League partners and LA sports organizations to design merchandise which helps support those directly impacted by the devastating wildfires in the LA communities. Fanatics, Leagues, and the participating sports organizations will not profit from the sale of the LA Strong merchandise and will make a donation directly to the American Red Cross and the LA Fire Department Foundation. The American Red Cross provides assistance to those affected by these fires and the LA Fire Department Foundation provides much needed support and equipment to first responders. For more information on these charitable organizations, please visit redcross.org and supportlafd.org.
-            </p>
+            <div className="text-gray-600" dangerouslySetInnerHTML={{ __html: productDescription }} />
           </div>
 
           <div className="space-y-2">
             <h2 className="text-sm font-medium text-gray-900">Features</h2>
             <ul className="list-disc list-inside text-sm text-gray-600">
-              <li>Product ID: 202756569</li>
+              {currentProduct?.id && <li>Product ID: {currentProduct.id}</li>}
+              {currentProduct?.blueprint_id && <li>Blueprint ID: {currentProduct.blueprint_id}</li>}
+              {currentProduct?.shop_id && <li>Shop ID: {currentProduct.shop_id}</li>}
+              {currentProduct?.variants && <li>Available variants: {currentProduct.variants.length}</li>}
               <li>Material: 100% Cotton</li>
               <li>Machine wash, tumble dry low</li>
               <li>Officially licensed</li>
