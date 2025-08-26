@@ -112,7 +112,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
       try {
         window.accelerate.init({
           amount: stripeOptions.amount,
-          merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+          merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
           checkoutFlow: "Inline",
           checkoutMode: "StripeToken",
           onLoginSuccess: (user) => {
@@ -162,8 +162,26 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
         subtotal,
         cardLast4: card?.details?.mask || "****",
       });
+
+      if ("status" in card) {
+        console.log("Error", { card });
+        return;
+      }
+      console.log({ card });
+      const confirmIntent = await fetch("/api/stripe/confirm", {
+        method: "POST",
+        body: JSON.stringify({
+          processorToken: card.processorToken,
+          cartId: "some-cart",
+        }),
+      });
+      const res = (await confirmIntent.json()) as { status: string; message?: string };
+      if (res.status === "succeeded") {
+        router.push("/pdp/confirmation");
+      } else {
+        console.error(res.message || "Unknown error");
+      }
     }
-    router.push("/pdp/confirmation");
     onClose();
   };
 
