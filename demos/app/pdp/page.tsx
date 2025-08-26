@@ -216,7 +216,18 @@ export default function ProductDetailsPage() {
             Accelerate Buy Now
           </button>
 
-          <AccelerateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} subtotal={34.99} />
+          <AccelerateModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            subtotal={currentProduct?.variants?.[0]?.price ? currentProduct.variants[0].price / 100 : 34.99}
+            selectedProduct={{
+              id: currentProduct?.id || "fallback-product",
+              title: productTitle,
+              price: currentProduct?.variants?.[0]?.price ? currentProduct.variants[0].price / 100 : 34.99,
+              selectedSize,
+              quantity,
+            }}
+          />
 
           <div className="prose prose-sm">
             <h2 className="text-sm font-medium text-gray-900">Product Description</h2>

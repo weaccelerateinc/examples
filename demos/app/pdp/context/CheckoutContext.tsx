@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from "react";
 
 interface CheckoutData {
   firstName: string;
@@ -12,6 +12,13 @@ interface CheckoutData {
   shipping: string;
   subtotal: number;
   cardLast4: string;
+  product?: {
+    id: string;
+    title: string;
+    price: number;
+    selectedSize?: string;
+    quantity?: number;
+  };
 }
 
 interface CheckoutContextType {
@@ -24,17 +31,13 @@ const CheckoutContext = createContext<CheckoutContextType | undefined>(undefined
 export function CheckoutProvider({ children }: { children: ReactNode }) {
   const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
 
-  return (
-    <CheckoutContext.Provider value={{ checkoutData, setCheckoutData }}>
-      {children}
-    </CheckoutContext.Provider>
-  );
+  return <CheckoutContext.Provider value={{ checkoutData, setCheckoutData }}>{children}</CheckoutContext.Provider>;
 }
 
 export function useCheckout() {
   const context = useContext(CheckoutContext);
   if (context === undefined) {
-    throw new Error('useCheckout must be used within a CheckoutProvider');
+    throw new Error("useCheckout must be used within a CheckoutProvider");
   }
   return context;
-} 
+}

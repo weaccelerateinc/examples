@@ -11,6 +11,13 @@ interface AccelerateModalProps {
   isOpen: boolean;
   onClose: () => void;
   subtotal: number;
+  selectedProduct?: {
+    id: string;
+    title: string;
+    price: number;
+    selectedSize?: string;
+    quantity?: number;
+  };
 }
 
 declare global {
@@ -19,7 +26,7 @@ declare global {
   }
 }
 
-export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalProps) {
+export function AccelerateModal({ isOpen, onClose, subtotal, selectedProduct }: AccelerateModalProps) {
   const router = useRouter();
   const { setCheckoutData } = useCheckout();
   const [selectedShipping, setSelectedShipping] = useState("standard");
@@ -161,6 +168,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
         shipping: selectedShipping,
         subtotal,
         cardLast4: card?.details?.mask || "****",
+        product: selectedProduct,
       });
 
       if ("status" in card) {
@@ -168,11 +176,11 @@ export function AccelerateModal({ isOpen, onClose, subtotal }: AccelerateModalPr
         return;
       }
       console.log({ card });
-      const confirmIntent = await fetch("/api/stripe/confirm", {
+      const confirmIntent = await fetch("/api/pdp/confirm", {
         method: "POST",
         body: JSON.stringify({
           processorToken: card.processorToken,
-          cartId: "some-cart",
+          checkoutId: selectedProduct?.id || "unknown-product",
         }),
       });
       const res = (await confirmIntent.json()) as { status: string; message?: string };

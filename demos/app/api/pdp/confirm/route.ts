@@ -9,18 +9,36 @@ export async function POST(request: NextRequest) {
     checkoutId: string;
   };
 
-  // You should validate this intent matches the cart
+  console.log("Processing checkout for product:", data.checkoutId);
+
+  // You should validate this intent matches the cart/product
   // const intent = await stripeClient.paymentIntents.retrieve(data.processorToken);
-  // const myCart = get_cart(checkoutId);
-  // if (myCard.amount != intent.amount) throw new Error("Problems")
+  // const product = await getProduct(data.checkoutId);
+  // if (product.price != intent.amount) throw new Error("Price mismatch")
   //
 
   try {
     const confirmation = await stripeClient.paymentIntents.confirm(data.processorToken);
-    return Response.json({ status: confirmation.status });
+
+    // Log successful purchase for the specific product
+    console.log(`Successfully processed payment for product ${data.checkoutId}:`, {
+      status: confirmation.status,
+      paymentIntentId: confirmation.id,
+      amount: confirmation.amount,
+    });
+
+    return Response.json({
+      status: confirmation.status,
+      productId: data.checkoutId,
+      paymentIntentId: confirmation.id,
+    });
   } catch (error) {
+    console.log("Payment confirmation failed for product:", data.checkoutId);
     console.log(JSON.stringify(error, null, 2));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Response.json({ status: "failed", message: (error as any)?.raw?.message || "Unknown error" });
+    return Response.json({
+      status: "failed",
+      message: error instanceof Error ? error.message : "Unknown error",
+      productId: data.checkoutId,
+    });
   }
 }
