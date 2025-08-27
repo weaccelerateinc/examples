@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { AccelerateUser, AccelerateWindowAPI } from "accelerate-js-types";
-import { stripeOptions } from "../options";
 import Script from "next/script";
 import { AccelerateWallet } from "../../components/AccelerateWallet";
 import { useRouter } from "next/navigation";
 import { useCheckout } from "./context/CheckoutContext";
+
+const STATIC_PRODUCT_PRICE = 99; // CENTS USD
 
 interface AccelerateModalProps {
   isOpen: boolean;
@@ -118,7 +119,7 @@ export function AccelerateModal({ isOpen, onClose, subtotal, selectedProduct }: 
       console.log("Initializing Accelerate...");
       try {
         window.accelerate.init({
-          amount: stripeOptions.amount,
+          amount: STATIC_PRODUCT_PRICE,
           merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
           checkoutFlow: "Inline",
           checkoutMode: "StripeToken",
@@ -181,6 +182,21 @@ export function AccelerateModal({ isOpen, onClose, subtotal, selectedProduct }: 
         body: JSON.stringify({
           processorToken: card.processorToken,
           checkoutId: selectedProduct?.id || "unknown-product",
+          customer: {
+            firstName,
+            lastName,
+            email,
+            phone: phoneNumber,
+          },
+          shipTo: {
+            name: `${firstName} ${lastName}`,
+            address: {
+              line1: addrLine1,
+              city: addrCity,
+              state: addrState,
+              postal_code: addrZip,
+            },
+          },
         }),
       });
       const res = (await confirmIntent.json()) as { status: string; message?: string };
