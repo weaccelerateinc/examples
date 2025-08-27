@@ -18,6 +18,7 @@ interface CheckoutData {
     price: number;
     selectedSize?: string;
     quantity?: number;
+    variantId?: string;
   };
 }
 

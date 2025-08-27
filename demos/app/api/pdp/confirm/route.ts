@@ -7,6 +7,10 @@ export async function POST(request: NextRequest) {
   const data = (await request.json()) as {
     processorToken: string;
     checkoutId: string;
+    line_item: {
+      product_id: string;
+      variant_id: string;
+    };
     customer: {
       firstName: string;
       lastName: string;
@@ -66,8 +70,8 @@ export async function POST(request: NextRequest) {
             label: `Order for ${data.shipTo.name}`,
             line_items: [
               {
-                product_id: data.checkoutId,
-                variant_id: 1, // You might want to pass this from the frontend
+                product_id: data.line_item.product_id,
+                variant_id: parseInt(data.line_item.variant_id),
                 quantity: 1,
               },
             ],
@@ -98,26 +102,7 @@ export async function POST(request: NextRequest) {
           });
 
           if (printifyOrder.ok) {
-            const orderResult = await printifyOrder.json();
-            console.log("Printify order created successfully:", orderResult.id);
-
-            // Submit the order for production
-            const submitOrder = await fetch(
-              `https://api.printify.com/v1/shops/${shopId}/orders/${orderResult.id}/send_to_production.json`,
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${printifyApiToken}`,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-
-            if (submitOrder.ok) {
-              console.log("Order submitted to production:", orderResult.id);
-            } else {
-              console.log("Failed to submit order to production, but order created");
-            }
+            console.log("Printify order created successfully:", printifyOrder);
           } else {
             const errorText = await printifyOrder.text();
             console.error("Failed to create Printify order:", errorText);

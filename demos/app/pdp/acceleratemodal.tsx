@@ -18,6 +18,7 @@ interface AccelerateModalProps {
     price: number;
     selectedSize?: string;
     quantity?: number;
+    variantId?: string;
   };
 }
 
@@ -182,6 +183,10 @@ export function AccelerateModal({ isOpen, onClose, subtotal, selectedProduct }: 
         body: JSON.stringify({
           processorToken: card.processorToken,
           checkoutId: selectedProduct?.id || "unknown-product",
+          line_item: {
+            product_id: selectedProduct?.id || "unknown-product",
+            variant_id: selectedProduct?.variantId || "1",
+          },
           customer: {
             firstName,
             lastName,

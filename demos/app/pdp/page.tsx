@@ -35,7 +35,7 @@ const fetchProducts = async (): Promise<ProductsResponse> => {
 };
 
 export default function ProductDetailsPage() {
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const [mainImage, setMainImage] = useState("/shirt.avif");
@@ -51,7 +51,6 @@ export default function ProductDetailsPage() {
     queryFn: fetchProducts,
   });
 
-  const sizes = ["XS", "S", "M", "L", "XL"];
   const fallbackImages = ["/shirt.avif", "/product-1.avif", "/product-2.avif", "/product-3.avif"];
 
   // Get current product or use fallback data
@@ -61,6 +60,48 @@ export default function ProductDetailsPage() {
   const productDescription =
     currentProduct?.description ||
     "Fanatics has collaborated with League partners and LA sports organizations to design merchandise which helps support those directly impacted by the devastating wildfires in the LA communities.";
+
+  // Debug logging for entire products result
+  if (productsData && !error) {
+    console.log("=== PRODUCTS API RESPONSE DEBUG ===");
+    console.log("Full products data:", productsData);
+    console.log("Number of products:", productsData.products?.length || 0);
+    productsData.products?.forEach((product, index) => {
+      console.log(`Product ${index + 1}:`, {
+        id: product.id,
+        title: product.title,
+        variants_count: product.variants?.length || 0,
+        enabled_variants_count: product.variants?.filter((v) => v.is_enabled)?.length || 0,
+        images_count: product.images?.length || 0,
+      });
+    });
+    console.log("=== END PRODUCTS DEBUG ===");
+  }
+
+  // Filter enabled variants only
+  const enabledVariants = currentProduct?.variants?.filter((variant) => variant.is_enabled) || [];
+
+  // Get currently selected variant
+  const selectedVariant = enabledVariants[selectedVariantIndex] || enabledVariants[0];
+
+  // Debug logging for current product variants
+  if (currentProduct?.variants) {
+    console.log(`=== CURRENT PRODUCT VARIANTS DEBUG ===`);
+    console.log(`Product: ${currentProduct.title}`);
+    console.log(`Product ID: ${currentProduct.id}`);
+    console.log(`Total Variants: ${currentProduct.variants.length}`);
+    console.log(`Enabled Variants: ${enabledVariants.length}`);
+    console.log("All variants:", currentProduct.variants);
+    enabledVariants.forEach((variant, index) => {
+      console.log(`Enabled Variant ${index + 1}:`, {
+        id: variant.id,
+        price: variant.price,
+        is_enabled: variant.is_enabled,
+        price_in_dollars: variant.price / 100,
+      });
+    });
+    console.log("=== END CURRENT PRODUCT VARIANTS DEBUG ===");
+  }
 
   // Loading state
   if (isLoading) {
@@ -151,7 +192,7 @@ export default function ProductDetailsPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{productTitle}</h1>
             <p className="text-2xl font-semibold text-gray-900 mt-2">
-              {currentProduct?.variants?.[0]?.price ? `$${(currentProduct.variants[0].price / 100).toFixed(2)}` : "$34.99"}
+              {selectedVariant?.price ? `$${(selectedVariant.price / 100).toFixed(2)}` : "$34.99"}
             </p>
             {currentProduct?.tags && currentProduct.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
@@ -164,27 +205,26 @@ export default function ProductDetailsPage() {
             )}
           </div>
 
-          <div>
-            <h2 className="text-sm font-medium text-gray-900">Color</h2>
-            <p className="text-gray-600">Black</p>
-          </div>
-
-          <div>
-            <h2 className="text-sm font-medium text-gray-900 mb-2">Size</h2>
-            <div className="grid grid-cols-5 gap-2">
-              {sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`py-2 text-sm font-medium rounded-md border ${
-                    selectedSize === size ? "border-sky-700 bg-sky-50 text-sky-700" : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
+          {enabledVariants.length > 1 && (
+            <div>
+              <h2 className="text-sm font-medium text-gray-900 mb-2">Product Variant</h2>
+              <select
+                value={selectedVariantIndex}
+                onChange={(e) => setSelectedVariantIndex(parseInt(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
+              >
+                {enabledVariants.map((variant, index) => (
+                  <option key={variant.id} value={index}>
+                    Variant {variant.id} - ${(variant.price / 100).toFixed(2)}
+                    {variant.is_enabled ? "" : " (Disabled)"}
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-gray-500 mt-1">
+                Selected: Variant ID {selectedVariant?.id} - ${(selectedVariant?.price || 0) / 100}
+              </p>
             </div>
-          </div>
+          )}
 
           <div>
             <h2 className="text-sm font-medium text-gray-900 mb-2">Quantity</h2>
@@ -219,13 +259,14 @@ export default function ProductDetailsPage() {
           <AccelerateModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            subtotal={currentProduct?.variants?.[0]?.price ? currentProduct.variants[0].price / 100 : 34.99}
+            subtotal={selectedVariant?.price ? selectedVariant.price / 100 : 34.99}
             selectedProduct={{
               id: currentProduct?.id || "fallback-product",
               title: productTitle,
-              price: currentProduct?.variants?.[0]?.price ? currentProduct.variants[0].price / 100 : 34.99,
-              selectedSize,
+              price: selectedVariant?.price ? selectedVariant.price / 100 : 34.99,
+              selectedSize: `Variant ${selectedVariant?.id}`,
               quantity,
+              variantId: selectedVariant?.id?.toString() || "1",
             }}
           />
 
