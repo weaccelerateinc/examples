@@ -12,7 +12,6 @@ function ConfirmationContent() {
   const shippingCost = selectedShipping === "express" ? 9.99 : 0;
 
   // Get product information from URL params
-  const productId = searchParams.get("productId") || "";
   const productTitle = searchParams.get("productTitle") || "";
   // Hardcode product price to $0.99
   const productPrice = 0.99;
@@ -64,8 +63,6 @@ function ConfirmationContent() {
             variantTitle={variantTitle}
             productPrice={productPrice}
             quantity={quantity}
-            selectedShipping={true}
-            shippingCost={shippingCost}
             onTotalChange={(total) => {
               console.log("Total changed:", total);
               return true;

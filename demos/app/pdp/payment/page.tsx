@@ -171,8 +171,6 @@ function PaymentContent() {
             variantTitle={variantTitle}
             productPrice={productPrice}
             quantity={quantity}
-            selectedShipping={false}
-            shippingCost={0}
             onTotalChange={(total: number) => {
               setTotalPrice(total);
               return true;

@@ -52,7 +52,6 @@ const fetchProducts = async (): Promise<ProductsResponse> => {
 };
 
 export default function ProductDetailsPage() {
-  const [selectedProductIndex, setSelectedProductIndex] = useState(0);
 
   // Fetch products using useQuery
   const {

@@ -126,7 +126,6 @@ export default function PDPCheckoutPage() {
               variantTitle={variantTitle}
               productPrice={productPrice}
               quantity={quantity}
-              shippingCost={0}
               onTotalChange={(total) => {
                 console.log("Total changed:", total);
                 return true;

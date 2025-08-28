@@ -45,8 +45,6 @@ export function CheckoutSummary({
   variantTitle, 
   productPrice, 
   quantity, 
-  selectedShipping, 
-  shippingCost, 
   onTotalChange 
 }: CheckoutSummaryProps) {
   // Hardcode product price to $0.99
@@ -93,7 +91,5 @@ interface CheckoutSummaryProps {
   variantTitle: string;
   productPrice: number;
   quantity: number;
-  selectedShipping?: boolean | undefined;
-  shippingCost: number;
   onTotalChange: (total: number) => void;
 }
