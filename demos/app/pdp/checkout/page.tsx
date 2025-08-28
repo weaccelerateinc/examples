@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
@@ -23,7 +23,7 @@ function tryFormatPhone(pn: string): string {
   return `${last10.slice(0, 3)}-${last10.slice(3, 6)}-${last10.slice(6)}`;
 }
 
-export default function PDPCheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -267,5 +267,13 @@ export default function PDPCheckoutPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function PDPCheckoutPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CheckoutContent />
+    </Suspense>
   );
 }
