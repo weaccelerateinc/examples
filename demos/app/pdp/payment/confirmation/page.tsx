@@ -9,7 +9,6 @@ import { Suspense } from "react";
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const selectedShipping = searchParams.get("shipping");
-  const shippingCost = selectedShipping === "express" ? 9.99 : 0;
 
   // Get product information from URL params
   const productTitle = searchParams.get("productTitle") || "";
