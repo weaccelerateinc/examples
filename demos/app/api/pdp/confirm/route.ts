@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
           });
 
           if (printifyOrder.ok) {
-            console.log("Printify order created successfully:", printifyOrder);
+            console.log("Printify order created successfully:", printifyOrder.status);
           } else {
             const errorText = await printifyOrder.text();
             console.error("Failed to create Printify order:", errorText);
