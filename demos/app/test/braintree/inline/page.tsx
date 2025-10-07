@@ -265,7 +265,7 @@ export default function CheckoutPage() {
         onReady={() => {
           window.accelerate.init({
             amount: stripeOptions.amount,
-            merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+            merchantId: process.env.NEXT_PUBLIC_BT_MERCHANT_ID || process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             checkoutMode: "BraintreeNonce" as any, // TODO: Fix typing
