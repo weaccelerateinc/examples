@@ -23,7 +23,7 @@ During the backend call to confirm you should perform all of the normal cart and
 
 ### Confirmation Call
 
-In the handoff flow, it's important to include the processor toekn in the metadata for your backend's confirmation call. This ensures that the webhook events sent to Accelerate can be accurately matched. Ensure that you add the token as follows:&#x20;
+In the handoff flow, it's important to include the processor token in the metadata for your backend's confirmation call. This ensures that the webhook events sent to Accelerate can be accurately matched. Ensure that you add the token as follows:&#x20;
 
 ```
 metadata: {
