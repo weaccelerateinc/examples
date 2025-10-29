@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     // Get API token from environment variables
@@ -49,10 +51,32 @@ export async function GET() {
       })
     );
 
+    // Add a static product for AirPods
+    const airpodsProduct = {
+      id: "airpods",
+      title: "AirPods",
+      description: `
+        <p>Experience the magic of wireless audio with Apple AirPods. They deliver an unparalleled listening experience with all your devices.</p>
+        <br/>
+        <ul>
+          <li>Rich, high-quality audio and voice</li>
+          <li>Seamless switching between devices</li>
+          <li>Listen and talk all day with multiple charges from the Charging Case</li>
+        </ul>
+      `,
+      tags: ["electronics", "audio"],
+      blueprint_id: 0,
+      shop_id: shopId,
+      images: ["/airpods.jpg", "/airpods.jpg", "/airpods.jpg"],
+      variants: [{ id: 1, price: 199, is_enabled: true }],
+    };
+
+    const allProducts = [airpodsProduct, ...productCatalog];
+
     return NextResponse.json({
       success: true,
-      products: productCatalog,
-      total: productCatalog.length,
+      products: allProducts,
+      total: allProducts.length,
     });
   } catch (error) {
     console.error("Failed to fetch Printify catalog:", error);

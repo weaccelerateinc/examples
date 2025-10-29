@@ -59,11 +59,34 @@ export async function POST(request: NextRequest) {
     });
 
     if (confirmation.status === "succeeded") {
-      // Create Printify order
+      if (data.checkoutId === "airpods") {
+        const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
+        if (slackWebhookUrl) {
+          fetch(slackWebhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: "@gary.chao airpods purchase" }),
+          })
+            .then((response) => {
+              if (response.ok) {
+                console.log("Slack notification sent for airpods purchase.");
+              } else {
+                console.error("Failed to send Slack notification:", response.statusText);
+              }
+            })
+            .catch((error) => {
+              console.error("Error sending Slack notification:", error);
+            });
+        } else {
+          console.error("Slack webhook URL not configured");
+        }
+      }
+      // Create Printify order only if it's not airpods
       const printifyApiToken = process.env.PDP_PRINTIFY_TOKEN;
       const shopId = 23936709;
-
-      if (printifyApiToken) {
+      if (data.checkoutId !== "airpods" && printifyApiToken) {
         try {
           const orderData = {
             external_id: confirmation.id, // Use Stripe payment intent ID as external reference
