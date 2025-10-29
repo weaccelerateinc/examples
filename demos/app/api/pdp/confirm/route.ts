@@ -62,79 +62,80 @@ export async function POST(request: NextRequest) {
       if (data.checkoutId === "airpods") {
         const slackWebhookUrl = process.env.SLACK_WEBHOOK_URL;
         if (slackWebhookUrl) {
-          fetch(slackWebhookUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ text: "@gary.chao airpods purchase" }),
-          })
-            .then((response) => {
-              if (response.ok) {
-                console.log("Slack notification sent for airpods purchase.");
-              } else {
-                console.error("Failed to send Slack notification:", response.statusText);
-              }
-            })
-            .catch((error) => {
-              console.error("Error sending Slack notification:", error);
+          try {
+            const response = await fetch(slackWebhookUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ text: "@gary.chao airpods purchase" }),
             });
+            if (response.ok) {
+              console.log("Slack notification sent for airpods purchase.");
+            } else {
+              console.error("Failed to send Slack notification:", response.statusText);
+            }
+          } catch (error) {
+            console.error("Error sending Slack notification:", error);
+          }
         } else {
           console.error("Slack webhook URL not configured");
         }
       }
       // Create Printify order only if it's not airpods
-      const printifyApiToken = process.env.PDP_PRINTIFY_TOKEN;
-      const shopId = 23936709;
-      if (data.checkoutId !== "airpods" && printifyApiToken) {
-        try {
-          const orderData = {
-            external_id: confirmation.id, // Use Stripe payment intent ID as external reference
-            label: `Order for ${data.shipTo.name}`,
-            line_items: [
-              {
-                product_id: data.line_item.product_id,
-                variant_id: parseInt(data.line_item.variant_id),
-                quantity: 1,
+      if (data.checkoutId !== "airpods") {
+        const printifyApiToken = process.env.PDP_PRINTIFY_TOKEN;
+        const shopId = 23936709;
+        if (printifyApiToken) {
+          try {
+            const orderData = {
+              external_id: confirmation.id, // Use Stripe payment intent ID as external reference
+              label: `Order for ${data.shipTo.name}`,
+              line_items: [
+                {
+                  product_id: data.line_item.product_id,
+                  variant_id: parseInt(data.line_item.variant_id),
+                  quantity: 1,
+                },
+              ],
+              shipping_method: 1, // Standard shipping
+              is_printify_express: false,
+              send_shipping_notification: true,
+              address_to: {
+                first_name: data.customer.firstName,
+                last_name: data.customer.lastName,
+                email: data.customer.email,
+                phone: data.customer.phone,
+                country: "US",
+                region: data.shipTo.address.state,
+                address1: data.shipTo.address.line1,
+                city: data.shipTo.address.city,
+                zip: data.shipTo.address.postal_code,
               },
-            ],
-            shipping_method: 1, // Standard shipping
-            is_printify_express: false,
-            send_shipping_notification: true,
-            address_to: {
-              first_name: data.customer.firstName,
-              last_name: data.customer.lastName,
-              email: data.customer.email,
-              phone: data.customer.phone,
-              country: "US",
-              region: data.shipTo.address.state,
-              address1: data.shipTo.address.line1,
-              city: data.shipTo.address.city,
-              zip: data.shipTo.address.postal_code,
-            },
-          };
+            };
 
-          console.log("Creating Printify order for product:", data.checkoutId);
-          const printifyOrder = await fetch(`https://api.printify.com/v1/shops/${shopId}/orders.json`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${printifyApiToken}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(orderData),
-          });
+            console.log("Creating Printify order for product:", data.checkoutId);
+            const printifyOrder = await fetch(`https://api.printify.com/v1/shops/${shopId}/orders.json`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${printifyApiToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(orderData),
+            });
 
-          if (printifyOrder.ok) {
-            console.log("Printify order created successfully:", printifyOrder.status);
-          } else {
-            const errorText = await printifyOrder.text();
-            console.error("Failed to create Printify order:", errorText);
+            if (printifyOrder.ok) {
+              console.log("Printify order created successfully:", printifyOrder.status);
+            } else {
+              const errorText = await printifyOrder.text();
+              console.error("Failed to create Printify order:", errorText);
+            }
+          } catch (printifyError) {
+            console.error("Error creating Printify order:", printifyError);
           }
-        } catch (printifyError) {
-          console.error("Error creating Printify order:", printifyError);
+        } else {
+          console.error("Printify API token not configured");
         }
-      } else {
-        console.error("Printify API token not configured");
       }
     }
     return Response.json({
