@@ -25,9 +25,9 @@ interface ProductsResponse {
 
 // Function to strip HTML tags for plain text display
 const stripHtmlTags = (html: string): string => {
-  const tmp = document.createElement('div');
+  const tmp = document.createElement("div");
   tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
+  return tmp.textContent || tmp.innerText || "";
 };
 
 // Function to get a valid image URL
@@ -35,9 +35,9 @@ const getValidImageUrl = (images: string[] | undefined): string => {
   if (!images || images.length === 0) {
     return "/shirt.avif";
   }
-  
+
   // Find the first non-empty, non-undefined image URL
-  const validImage = images.find(img => img && img.trim() !== "");
+  const validImage = images.find((img) => img && img.trim() !== "");
   return validImage || "/shirt.avif";
 };
 
@@ -46,9 +46,9 @@ const getValidImageUrls = (images: string[] | undefined): string[] => {
   if (!images || images.length === 0) {
     return ["/shirt.avif", "/product-1.avif", "/product-2.avif", "/product-3.avif"];
   }
-  
+
   // Filter out empty and undefined image URLs
-  const validImages = images.filter(img => img && img.trim() !== "");
+  const validImages = images.filter((img) => img && img.trim() !== "");
   return validImages.length > 0 ? validImages : ["/shirt.avif", "/product-1.avif", "/product-2.avif", "/product-3.avif"];
 };
 
@@ -83,7 +83,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   });
 
   // Find the product based on the ID from the API response
-  const currentProduct = productsData?.products?.find(p => p.id === id);
+  const currentProduct = productsData?.products?.find((p) => p.id === id);
 
   // Set initial main image when product is found
   useEffect(() => {
@@ -97,10 +97,12 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   // Handle checkout navigation
   const handleCheckout = () => {
     if (!currentProduct) return;
-    
-    const selectedVariant = currentProduct.variants?.filter((variant) => variant.is_enabled)[selectedVariantIndex] || currentProduct.variants?.filter((variant) => variant.is_enabled)[0];
+
+    const selectedVariant =
+      currentProduct.variants?.filter((variant) => variant.is_enabled)[selectedVariantIndex] ||
+      currentProduct.variants?.filter((variant) => variant.is_enabled)[0];
     const productPrice = selectedVariant ? selectedVariant.price / 100 : 0;
-    
+
     const params = new URLSearchParams({
       productId: currentProduct.id,
       productTitle: stripHtmlTags(currentProduct.title),
@@ -110,7 +112,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
       quantity: quantity.toString(),
       productImage: getValidImageUrl(currentProduct.images),
     });
-    
+
     router.push(`/pdp/checkout?${params.toString()}`);
   };
 
@@ -133,8 +135,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
         <div className="text-center">
           <p className="text-red-600 mb-4">Failed to load product</p>
           <p className="text-gray-600 mb-8">{error instanceof Error ? error.message : "Unknown error"}</p>
-          <Link 
-            href="/pdp" 
+          <Link
+            href="/pdp"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Home
@@ -151,8 +153,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
           <p className="text-gray-600 mb-8">The product you&apos;re looking for doesn&apos;t exist.</p>
-          <Link 
-            href="/pdp" 
+          <Link
+            href="/pdp"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
             Back to Home
@@ -216,9 +218,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
         <div className="md:w-1/3 space-y-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">{productTitle}</h1>
-            <p className="text-2xl font-semibold text-gray-900 mt-2">
-              ${productPrice.toFixed(2)}
-            </p>
+            <p className="text-2xl font-semibold text-gray-900 mt-2">${productPrice.toFixed(2)}</p>
             {productTags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {productTags.map((tag, index) => (
@@ -247,8 +247,6 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             </div>
           )}
 
-
-
           <button
             onClick={handleCheckout}
             className="w-full h-[56px] text-xl font-semibold text-white bg-green-700 hover:bg-green-800 rounded-md"
@@ -258,22 +256,13 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
           <div className="prose prose-sm">
             <h2 className="text-sm font-medium text-gray-900">Product Description</h2>
-            <div 
-              className="text-gray-600"
-              dangerouslySetInnerHTML={{ __html: productDescription }}
-            />
+            <div className="text-gray-600" dangerouslySetInnerHTML={{ __html: productDescription }} />
           </div>
 
           <div className="space-y-2">
             <h2 className="text-sm font-medium text-gray-900">Features</h2>
             <ul className="list-disc list-inside text-sm text-gray-600">
-              <li>Product ID: {currentProduct.id}</li>
-              {currentProduct.blueprint_id && <li>Blueprint ID: {currentProduct.blueprint_id}</li>}
-              {currentProduct.shop_id && <li>Shop ID: {currentProduct.shop_id}</li>}
               {currentProduct.variants && <li>Available variants: {currentProduct.variants.length}</li>}
-              <li>Material: 100% Cotton</li>
-              <li>Machine wash, tumble dry low</li>
-              <li>High-quality printing</li>
             </ul>
           </div>
         </div>
