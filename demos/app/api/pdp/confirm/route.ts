@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ text: "@gary.chao airpods purchase" }),
+              body: JSON.stringify({ text: "<@U07RLVAE9CG> airpods purchase" }),
             });
             if (response.ok) {
               console.log("Slack notification sent for airpods purchase.");
