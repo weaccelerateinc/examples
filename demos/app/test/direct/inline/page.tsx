@@ -183,7 +183,7 @@ export default function CheckoutPage() {
         onReady={() => {
           window.accelerate.init({
             amount: stripeOptions.amount,
-            merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+            merchantId: process.env.NEXT_PUBLIC_DIRECT_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "Direct",
             onLoginSuccess: (user) => {
