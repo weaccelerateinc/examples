@@ -240,12 +240,24 @@ export default function CheckoutPage() {
             </div>
             {/* Display error message if exists */}
             <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
-              >
-                Continue
-              </button>
+              {defaultCard ? (
+                <button
+                  type="submit"
+                  className="w-full h-[56px] px-4 text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md flex items-center justify-center gap-3"
+                >
+                  <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
+                  <span className="text-lg font-semibold">
+                    Pay now with {defaultCard.cardName} ••••{defaultCard.last4}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
+                >
+                  Continue
+                </button>
+              )}
             </div>
           </form>
 
@@ -273,6 +285,7 @@ export default function CheckoutPage() {
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!, // Set merchant ID
             checkoutFlow: "Inline", // Set checkout flow
             checkoutMode: "StripeToken", // Set checkout mode
+            universalAuth: true,
             onLoginSuccess: (user) => {
               // Callback for successful login
               console.log("Accelerate user logged in", { user }); // Log user data
