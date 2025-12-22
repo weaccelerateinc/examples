@@ -474,10 +474,10 @@
   resolved "https://registry.npmjs.org/@ungap/structured-clone/-/structured-clone-1.2.1.tgz"
   integrity sha512-fEzPV3hSkSMltkw152tJKNARhOupqbH96MZWyRjNaYZOMIzbrTeQDG+MTc6Mr2pgzFQzFxAfmhGDNP5QK++2ZA==
 
-accelerate-js-types@0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/accelerate-js-types/-/accelerate-js-types-0.6.0.tgz#e718dd1aee9d555ec0383a2df0655d1a80dc8f0c"
-  integrity sha512-rd1ge9NEFJUCtlrn9/ZRBv+OL9iSl3vHwTAqT+aqG7uuLuz94X71dR5yjn9JMgaaQU/7OUkLEt6td4WrGu8UGQ==
+accelerate-js-types@0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/accelerate-js-types/-/accelerate-js-types-0.7.0.tgz#f0c83b524f7c3a1f6f954c7f584b9cf59e54fa42"
+  integrity sha512-cm1EP69PVQnncxUcLp9LQcHokxFZSBwSeBOoquTo8EuiB2WbHNiyOD+MaKZcOLzMYjHoTJtD0Tg7E71vVuDEeg==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
