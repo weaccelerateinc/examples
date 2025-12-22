@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { FormEvent, useState } from "react"; // React hooks for managing state and handling form events
+import { useState } from "react"; // React hooks for managing state and handling form events
 import { CheckoutSummary } from "./payment/CheckoutSummary"; // Component for displaying checkout summary
 import { stripeOptions } from "../options"; // Stripe options for payment processing
 import Script from "next/script"; // Next.js component for loading external scripts
