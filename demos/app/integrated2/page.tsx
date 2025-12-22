@@ -49,6 +49,18 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   // Function to populate address fields from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
+    if (user.firstName) {
+      setFirstName(user.firstName);
+    }
+    if (user.lastName) {
+      setLastName(user.lastName);
+    }
+    if (user.phoneNumber) {
+      setPhone(user.phoneNumber);
+    }
+    if (user.emailAddress) {
+      setEmail(user.emailAddress);
+    }
     if (user?.addresses[0]) {
       setAddrLine1(user.addresses[0].line1 || addrLine1);
       setAddrCity(user.addresses[0].city || addrCity);
@@ -247,6 +259,7 @@ export default function CheckoutPage() {
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!, // Set merchant ID
             checkoutFlow: "Inline", // Set checkout flow
             checkoutMode: "StripeToken", // Set checkout mode
+            universalAuth: true,
             onLoginSuccess: (user) => {
               // Callback for successful login
               console.log("Accelerate user logged in", { user }); // Log user data
