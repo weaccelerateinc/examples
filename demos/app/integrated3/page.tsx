@@ -83,8 +83,7 @@ export default function CheckoutPage() {
   };
 
   // Form submission handler
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (useDefaultCard?: boolean) => {
     const params = new URLSearchParams({
       email: (document.querySelector('input[placeholder="Email"]') as HTMLInputElement)?.value || "",
       phone: phoneNumber,
@@ -94,7 +93,7 @@ export default function CheckoutPage() {
       city: addrCity,
       state: addrState,
       zip: addrZip,
-      defaultCardId: defaultCard?.cardId || "",
+      defaultCardId: useDefaultCard ? defaultCard?.cardId || "" : "",
     });
     router.push(`/integrated3/payment?${params.toString()}`); // Navigate to payment page with query parameters
   };
@@ -157,7 +156,13 @@ export default function CheckoutPage() {
         </section>
 
         <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(true);
+            }}
+            className="space-y-8"
+          >
             {" "}
             {/* Form for user input */}
             <div className="mb-6">
@@ -256,6 +261,17 @@ export default function CheckoutPage() {
                   className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
                 >
                   Continue
+                </button>
+              )}
+              {defaultCard && (
+                <button
+                  onClick={() => {
+                    setDefaultCard(null);
+                    handleSubmit(false);
+                  }}
+                  className="w-full h-[56px] text-xl font-semibold border border-neutral-200 bg-transparent hover:bg-neutral-100 text-neutral-400 rounded-md"
+                >
+                  Continue with a different card
                 </button>
               )}
             </div>
