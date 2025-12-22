@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
 
-export const AccelerateWallet = () => {
+export const AccelerateWallet = ({ defaultCardId }: { defaultCardId?: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (containerRef.current?.children?.length === 0) {
-      window.accelerate.openWallet();
+      console.log("Opening wallet with default card id", defaultCardId);
+      window.accelerate.openWallet({ defaultCardId });
     }
     return () => {
       try {

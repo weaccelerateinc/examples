@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { FormEvent, useState } from "react"; // React hooks for managing state and handling form events
+import { useState } from "react"; // React hooks for managing state and handling form events
 import { CheckoutSummary } from "./payment/CheckoutSummary"; // Component for displaying checkout summary
 import { stripeOptions } from "../options"; // Stripe options for payment processing
 import Script from "next/script"; // Next.js component for loading external scripts
@@ -83,8 +83,7 @@ export default function CheckoutPage() {
   };
 
   // Form submission handler
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (useDefaultCard?: boolean) => {
     const params = new URLSearchParams({
       email: (document.querySelector('input[placeholder="Email"]') as HTMLInputElement)?.value || "",
       phone: phoneNumber,
@@ -94,7 +93,7 @@ export default function CheckoutPage() {
       city: addrCity,
       state: addrState,
       zip: addrZip,
-      defaultCardId: defaultCard?.cardId || "",
+      defaultCardId: useDefaultCard ? defaultCard?.cardId || "" : "",
     });
     router.push(`/integrated3/payment?${params.toString()}`); // Navigate to payment page with query parameters
   };
@@ -157,7 +156,13 @@ export default function CheckoutPage() {
         </section>
 
         <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(true);
+            }}
+            className="space-y-8"
+          >
             {" "}
             {/* Form for user input */}
             <div className="mb-6">
@@ -240,12 +245,35 @@ export default function CheckoutPage() {
             </div>
             {/* Display error message if exists */}
             <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
-              >
-                Continue
-              </button>
+              {defaultCard ? (
+                <button
+                  type="submit"
+                  className="w-full h-[56px] px-4 text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md flex items-center justify-center gap-3"
+                >
+                  <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
+                  <span className="text-lg font-semibold">
+                    Pay now with {defaultCard.cardName} ••••{defaultCard.last4}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
+                >
+                  Continue
+                </button>
+              )}
+              {defaultCard && (
+                <button
+                  onClick={() => {
+                    setDefaultCard(null);
+                    handleSubmit(false);
+                  }}
+                  className="w-full h-[56px] text-xl font-semibold border border-neutral-200 bg-transparent hover:bg-neutral-100 text-neutral-400 rounded-md"
+                >
+                  Continue with a different card
+                </button>
+              )}
             </div>
           </form>
 
@@ -273,6 +301,7 @@ export default function CheckoutPage() {
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!, // Set merchant ID
             checkoutFlow: "Inline", // Set checkout flow
             checkoutMode: "StripeToken", // Set checkout mode
+            universalAuth: true,
             onLoginSuccess: (user) => {
               // Callback for successful login
               console.log("Accelerate user logged in", { user }); // Log user data

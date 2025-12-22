@@ -31,6 +31,8 @@ function PaymentContent() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [email, _setEmail] = useState(searchParams.get("email") || "");
 
+  const defaultCardId = searchParams.get("defaultCardId");
+
   const [accelLoaded, setAccelerateLoaded] = useState(false);
 
   useEffect(() => {
@@ -89,7 +91,7 @@ function PaymentContent() {
       }
       console.log({ card: JSON.stringify(card) });
       router.push(
-        `/integrated2/payment/confirmation?` +
+        `/integrated3/payment/confirmation?` +
           `firstName=${encodeURIComponent(firstName)}&` +
           `lastName=${encodeURIComponent(lastName)}&` +
           `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
@@ -113,7 +115,7 @@ function PaymentContent() {
       const last4 = newCardNumber.replace(/\D/g, "").slice(-4);
 
       router.push(
-        `/integrated2/payment/confirmation?` +
+        `/integrated3/payment/confirmation?` +
           `firstName=${encodeURIComponent(firstName)}&` +
           `lastName=${encodeURIComponent(lastName)}&` +
           `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
@@ -280,7 +282,7 @@ function PaymentContent() {
                   </label>
                   {selectedPayment === "card" && accelLoaded && (
                     <div className="mt-4 w-full">
-                      <AccelerateWallet />
+                      <AccelerateWallet defaultCardId={defaultCardId || undefined} />
                     </div>
                   )}
                 </div>
@@ -488,6 +490,7 @@ function PaymentContent() {
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "StripeToken",
+            universalAuth: true,
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
             },
