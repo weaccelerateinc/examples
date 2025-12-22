@@ -324,10 +324,10 @@ function PaymentContent() {
                             value={newCardNumber}
                             onChange={(e) => handleCardNumberChange(e.target.value)}
                             className={`w-full px-3 py-3 pr-10 border rounded-md focus:ring-2 focus:ring-sky-500 outline-none transition-colors ${
-                              activeField === "cardNumber" 
-                                ? "border-green-500 bg-green-50" 
-                                : newCardNumber 
-                                ? "border-green-300 bg-green-25" 
+                              activeField === "cardNumber"
+                                ? "border-green-500 bg-green-50"
+                                : newCardNumber
+                                ? "border-green-300 bg-green-25"
                                 : "border-neutral-200"
                             }`}
                           />
@@ -354,10 +354,10 @@ function PaymentContent() {
                               value={newCardExpiry}
                               onChange={(e) => handleCardExpiryChange(e.target.value)}
                               className={`w-full px-3 py-3 pr-10 border rounded-md focus:ring-2 focus:ring-sky-500 outline-none transition-colors ${
-                                activeField === "expiry" 
-                                  ? "border-green-500 bg-green-50" 
-                                  : newCardExpiry 
-                                  ? "border-green-300 bg-green-25" 
+                                activeField === "expiry"
+                                  ? "border-green-500 bg-green-50"
+                                  : newCardExpiry
+                                  ? "border-green-300 bg-green-25"
                                   : "border-neutral-200"
                               }`}
                               onFocus={() => console.log("Expiry field focused, current value:", newCardExpiry)}
@@ -383,10 +383,10 @@ function PaymentContent() {
                               value={newCardCvv}
                               onChange={(e) => handleCardCvvChange(e.target.value)}
                               className={`w-full px-3 py-3 pr-10 border rounded-md focus:ring-2 focus:ring-sky-500 outline-none transition-colors ${
-                                activeField === "cvv" 
-                                  ? "border-green-500 bg-green-50" 
-                                  : newCardCvv 
-                                  ? "border-green-300 bg-green-25" 
+                                activeField === "cvv"
+                                  ? "border-green-500 bg-green-50"
+                                  : newCardCvv
+                                  ? "border-green-300 bg-green-25"
                                   : "border-neutral-200"
                               }`}
                             />
@@ -488,6 +488,7 @@ function PaymentContent() {
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "StripeToken",
+            universalAuth: true,
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
             },
@@ -496,6 +497,7 @@ function PaymentContent() {
             },
           });
           setAccelerateLoaded(true);
+          console.log("Here i am##");
         }}
       />
     </div>
