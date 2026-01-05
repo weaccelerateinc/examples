@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
@@ -46,20 +46,42 @@ function CheckoutContent() {
   const [addrCity, setAddrCity] = useState("");
   const [addrZip, setAddrZip] = useState("");
   const [email, setEmail] = useState("");
+  const [defaultCard, setDefaultCard] = useState<{
+    artUrl: string;
+    cardId: string;
+    cardName: string;
+    cardType: string;
+    last4: string;
+  } | null>(null);
 
   // Function to populate address fields from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
+    if (user.firstName) {
+      setFirstName(user.firstName);
+    }
+    if (user.lastName) {
+      setLastName(user.lastName);
+    }
+    if (user.phoneNumber) {
+      setPhone(user.phoneNumber);
+    }
+    if (user.emailAddress) {
+      setEmail(user.emailAddress);
+    }
     if (user?.addresses[0]) {
       setAddrLine1(user.addresses[0].line1 || addrLine1);
       setAddrCity(user.addresses[0].city || addrCity);
       setAddrState(user.addresses[0].state || addrState);
       setAddrZip(user.addresses[0].postalCode || addrZip);
     }
+    console.log({ user });
+    if (user.quickCard) {
+      setDefaultCard(user.quickCard);
+    }
   };
 
   // Form submission handler
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (useDefaultCard?: boolean) => {
     const params = new URLSearchParams({
       email: (document.querySelector('input[placeholder="Email"]') as HTMLInputElement)?.value || "",
       phone: phoneNumber,
@@ -69,6 +91,7 @@ function CheckoutContent() {
       city: addrCity,
       state: addrState,
       zip: addrZip,
+      defaultCardId: useDefaultCard ? defaultCard?.cardId || "" : "",
       // Product information
       productId,
       productTitle,
@@ -78,7 +101,7 @@ function CheckoutContent() {
       quantity: quantity.toString(),
       productImage,
     });
-    router.push(`/pdp/payment?${params.toString()}`);
+    router.push(`/pdp2/payment?${params.toString()}`);
   };
 
   const maybeLogin = (phoneValue: string) => {
@@ -135,7 +158,13 @@ function CheckoutContent() {
         </section>
 
         <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit(true);
+            }}
+            className="space-y-8"
+          >
             <div className="mb-6">
               <h3 className="font-semibold mb-4">Contact Information</h3>
               <div className="space-y-3.5">
@@ -215,12 +244,35 @@ function CheckoutContent() {
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
-              >
-                Continue
-              </button>
+              {defaultCard ? (
+                <button
+                  type="submit"
+                  className="w-full h-[56px] px-4 text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md flex items-center justify-center gap-3"
+                >
+                  <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
+                  <span className="text-lg font-semibold">
+                    Pay now with {defaultCard.cardName} ••••{defaultCard.last4}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
+                >
+                  Continue
+                </button>
+              )}
+              {defaultCard && (
+                <button
+                  onClick={() => {
+                    setDefaultCard(null);
+                    handleSubmit(false);
+                  }}
+                  className="w-full h-[56px] text-xl font-semibold border border-neutral-200 bg-transparent hover:bg-neutral-100 text-neutral-400 rounded-md"
+                >
+                  Continue with a different card
+                </button>
+              )}
               <Link
                 href="/pdp2"
                 className="w-full h-[56px] text-xl font-semibold text-sky-700 bg-white border-2 border-sky-700 hover:bg-sky-50 rounded-md flex items-center justify-center transition-colors"
@@ -247,7 +299,7 @@ function CheckoutContent() {
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
         strategy="afterInteractive"
         onReady={() => {
-          console.log("pdp-checkout.onReady");
+          console.log("pdp2-checkout.onReady");
           // Hardcode the amount to $0.99 for testing
           const hardcodedAmount = 0.99;
 
@@ -256,6 +308,7 @@ function CheckoutContent() {
             merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "StripeToken",
+            universalAuth: true,
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);

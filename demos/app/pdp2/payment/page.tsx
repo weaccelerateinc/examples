@@ -28,6 +28,8 @@ function PaymentContent() {
   const lastName = searchParams.get("lastName") || "";
   const email = searchParams.get("email") || "";
 
+  const defaultCardId = searchParams.get("defaultCardId");
+
   // Get product information from URL params
   const productId = searchParams.get("productId") || "";
   const productTitle = searchParams.get("productTitle") || "";
@@ -65,6 +67,7 @@ function PaymentContent() {
         merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
         checkoutFlow: "Inline",
         checkoutMode: "StripeToken",
+        universalAuth: true,
         onLoginSuccess: (user) => {
           console.log("Accelerate user logged in", { user });
         },
@@ -122,7 +125,7 @@ function PaymentContent() {
       const res = (await confirmIntent.json()) as { status: string; message?: string };
       if (res.status === "succeeded") {
         router.push(
-          `/pdp/payment/confirmation?` +
+          `/pdp2/payment/confirmation?` +
             `firstName=${encodeURIComponent(firstName)}&` +
             `lastName=${encodeURIComponent(lastName)}&` +
             `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
@@ -261,7 +264,7 @@ function PaymentContent() {
                   </label>
                   {selectedPayment === "card" && accelLoaded && (
                     <div className="mt-4 w-full">
-                      <AccelerateWallet />
+                      <AccelerateWallet defaultCardId={defaultCardId || undefined} />
                     </div>
                   )}
                 </div>
@@ -340,7 +343,7 @@ function PaymentContent() {
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
         strategy="afterInteractive"
         onReady={() => {
-          console.log("pdp-payment.onReady");
+          console.log("pdp2-payment.onReady");
           // Hardcode the amount to $0.99 for testing
           const hardcodedAmount = 0.99;
 
@@ -349,6 +352,7 @@ function PaymentContent() {
             merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "StripeToken",
+            universalAuth: true,
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
             },

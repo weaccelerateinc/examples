@@ -4,6 +4,14 @@ import { useState, useEffect, use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Script from "next/script";
+import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
+
+declare global {
+  interface Window {
+    accelerate: AccelerateWindowAPI;
+  }
+}
 
 // Types for Printify products
 interface PrintifyProduct {
@@ -69,6 +77,50 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const [mainImage, setMainImage] = useState("/shirt.avif"); // Initialize with fallback image
   const router = useRouter();
 
+  // QuickCard state
+  const [defaultCard, setDefaultCard] = useState<{
+    artUrl: string;
+    cardId: string;
+    cardName: string;
+    cardType: string;
+    last4: string;
+  } | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    email: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+  } | null>(null);
+
+  // Function to populate user data from Accelerate
+  const maybeUseAccelUser = (user: AccelerateUser) => {
+    console.log("Product page received user:", { user });
+
+    const info: typeof userInfo = {
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      phoneNumber: user.phoneNumber || "",
+      email: user.emailAddress || "",
+    };
+
+    if (user?.addresses?.[0]) {
+      info.address = user.addresses[0].line1 || "";
+      info.city = user.addresses[0].city || "";
+      info.state = user.addresses[0].state || "";
+      info.zip = user.addresses[0].postalCode || "";
+    }
+
+    setUserInfo(info);
+
+    if (user.quickCard) {
+      setDefaultCard(user.quickCard);
+    }
+  };
+
   // Unwrap params using React.use()
   const { id } = use(params);
 
@@ -95,25 +147,39 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   }, [currentProduct]);
 
   // Handle checkout navigation
-  const handleCheckout = () => {
+  const handleCheckout = (useQuickCard?: boolean) => {
     if (!currentProduct) return;
 
     const selectedVariant =
       currentProduct.variants?.filter((variant) => variant.is_enabled)[selectedVariantIndex] ||
       currentProduct.variants?.filter((variant) => variant.is_enabled)[0];
-    const productPrice = selectedVariant ? selectedVariant.price / 100 : 0;
+    const productPriceValue = selectedVariant ? selectedVariant.price / 100 : 0;
 
-    const params = new URLSearchParams({
+    const urlParams = new URLSearchParams({
       productId: currentProduct.id,
       productTitle: stripHtmlTags(currentProduct.title),
-      productPrice: productPrice.toString(),
+      productPrice: productPriceValue.toString(),
       variantId: selectedVariant?.id?.toString() || "1",
       variantTitle: selectedVariant ? `Variant ${selectedVariant.id}` : "Standard",
       quantity: quantity.toString(),
       productImage: getValidImageUrl(currentProduct.images),
     });
 
-    router.push(`/pdp/checkout?${params.toString()}`);
+    // If using quickCard and we have user info, go directly to payment
+    if (useQuickCard && defaultCard && userInfo) {
+      urlParams.set("email", userInfo.email || "");
+      urlParams.set("phone", userInfo.phoneNumber || "");
+      urlParams.set("firstName", userInfo.firstName || "");
+      urlParams.set("lastName", userInfo.lastName || "");
+      urlParams.set("address", userInfo.address || "");
+      urlParams.set("city", userInfo.city || "");
+      urlParams.set("state", userInfo.state || "");
+      urlParams.set("zip", userInfo.zip || "");
+      urlParams.set("defaultCardId", defaultCard.cardId);
+      router.push(`/pdp2/payment?${urlParams.toString()}`);
+    } else {
+      router.push(`/pdp2/checkout?${urlParams.toString()}`);
+    }
   };
 
   // Loading state
@@ -139,7 +205,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             href="/pdp2"
             className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Back to Home
+            Back to Products
           </Link>
         </div>
       </div>
@@ -181,7 +247,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
       <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
         <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
           <div className="flex justify-between w-full items-center">
-            <Link href="/pdp" className="flex gap-3 items-center hover:opacity-80 transition-opacity">
+            <Link href="/pdp2" className="flex gap-3 items-center hover:opacity-80 transition-opacity">
               <span className="text-3xl font-black text-blue-500">
                 <Image src="/baggslogo.svg" alt="Accelerate Swag Store Logo" width={30} height={30} />
               </span>
@@ -247,12 +313,23 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             </div>
           )}
 
-          <button
-            onClick={handleCheckout}
-            className="w-full h-[56px] text-xl font-semibold text-white bg-green-700 hover:bg-green-800 rounded-md"
-          >
-            Continue to Checkout
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => handleCheckout(false)}
+              className="w-full h-[56px] text-xl font-semibold text-white bg-green-700 hover:bg-green-800 rounded-md"
+            >
+              Continue to Checkout
+            </button>
+            {defaultCard && (
+              <button
+                onClick={() => handleCheckout(true)}
+                className="w-full h-[56px] px-4 text-white bg-sky-700 hover:bg-sky-800 rounded-md flex items-center justify-center gap-3"
+              >
+                <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
+                <span className="text-lg font-semibold">Buy now ••••{defaultCard.last4}</span>
+              </button>
+            )}
+          </div>
 
           <div className="prose prose-sm">
             <h2 className="text-sm font-medium text-gray-900">Product Description</h2>
@@ -267,6 +344,33 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </main>
+
+      <Script
+        crossOrigin="anonymous"
+        type="module"
+        src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
+        strategy="afterInteractive"
+        onReady={() => {
+          console.log("pdp2-product.onReady");
+          // Hardcode the amount to $0.99 for testing
+          const hardcodedAmount = 0.99;
+
+          window.accelerate.init({
+            amount: Math.round(hardcodedAmount * 100), // Convert to cents (99 cents)
+            merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
+            checkoutFlow: "Inline",
+            checkoutMode: "StripeToken",
+            universalAuth: true,
+            onLoginSuccess: (user) => {
+              console.log("Accelerate user logged in on product page", { user });
+              maybeUseAccelUser(user);
+            },
+            onCardSelected: (cid) => {
+              console.log("Card selected:", cid);
+            },
+          });
+        }}
+      />
     </div>
   );
 }

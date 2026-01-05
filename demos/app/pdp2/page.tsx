@@ -142,7 +142,7 @@ export default function ProductDetailsPage() {
             return (
               <Link
                 key={product.id}
-                href={`/pdp/${product.id}`}
+                href={`/pdp2/${product.id}`}
                 className="group bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200"
               >
                 {/* Product Image */}
