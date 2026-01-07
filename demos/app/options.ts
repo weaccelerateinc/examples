@@ -1,5 +1,5 @@
 export const stripeOptions = {
-  amount: 299,
+  amount: 9999,
   currency: "usd",
   mode: "payment" as const,
 };

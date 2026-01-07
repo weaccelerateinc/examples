@@ -21,6 +21,14 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-2">Integrated2 Checkout</h2>
           <p className="text-gray-600">Duplicate of integrated payment flow with speech-to-text</p>
         </Link>
+        
+        <Link 
+          href="/lightningmcqueen" 
+          className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+        >
+          <h2 className="text-xl font-semibold mb-2">Lightning McQueen Checkout</h2>
+          <p className="text-gray-600">Lightning McQueen integrated payment flow demo</p>
+        </Link>
       </div>
     </div>
   );
