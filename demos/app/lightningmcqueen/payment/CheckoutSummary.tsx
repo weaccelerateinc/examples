@@ -2,14 +2,6 @@ import * as React from "react";
 import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 
-const PriceRow = ({ label, value, hint, className = "" }: PriceRowProps) => (
-  <div className={`flex justify-between text-sm ${className}`}>
-    <span>{label}</span>
-    <span className="text-neutral-500">{value}</span>
-    {hint && <div className="text-sm text-neutral-500">{hint}</div>}
-  </div>
-);
-
 const ProductItem = ({
   imageSrc,
   name,
@@ -96,13 +88,6 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange 
       </div>
     </div>
   );
-}
-
-interface PriceRowProps {
-  label: string;
-  value: string;
-  hint?: string;
-  className?: string;
 }
 
 interface CheckoutSummaryProps {
