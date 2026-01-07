@@ -8,7 +8,7 @@ import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
-import { Lock, Truck, Zap, CreditCard, ShieldCheck } from "lucide-react";
+import { Lock, Truck, Zap, CreditCard } from "lucide-react";
 
 declare global {
   interface Window {

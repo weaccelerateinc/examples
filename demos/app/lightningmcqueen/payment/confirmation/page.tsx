@@ -93,7 +93,7 @@ function ConfirmationContent() {
               </div>
 
               <p className="text-slate-600">
-                We've sent a confirmation email to {searchParams.get("email") || "your email"}. You'll receive an update when your order ships.
+                We&apos;ve sent a confirmation email to {searchParams.get("email") || "your email"}. You&apos;ll receive an update when your order ships.
               </p>
             </div>
 
