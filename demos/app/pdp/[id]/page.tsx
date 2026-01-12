@@ -31,6 +31,25 @@ const stripHtmlTags = (html: string): string => {
   return tmp.textContent || tmp.innerText || "";
 };
 
+// Function to remove specification lines (lines starting with ".:") from description
+const stripSpecifications = (html: string): string => {
+  // Create a temporary element to parse the HTML
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  
+  // Find and remove paragraphs containing specification lines
+  const paragraphs = tmp.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    const text = p.textContent || "";
+    // Check if the paragraph contains specification lines (starting with ".: ")
+    if (text.includes(".: ") || text.match(/^\s*\.:/) || text.includes("Fabric weight:") || text.includes("Dimensions:")) {
+      p.remove();
+    }
+  });
+  
+  return tmp.innerHTML;
+};
+
 // Function to get a valid image URL
 const getValidImageUrl = (images: string[] | undefined): string => {
   if (!images || images.length === 0) {
@@ -167,9 +186,24 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
   // Get product data
   const productTitle = stripHtmlTags(currentProduct.title);
-  const productDescription = currentProduct.description; // Keep HTML for rendering
+  const productDescription = stripSpecifications(currentProduct.description); // Remove specifications, keep HTML for rendering
   const productImages = getValidImageUrls(currentProduct.images);
-  const productTags = currentProduct.tags || [];
+  
+  // Tags to filter out
+  const excludedTags = [
+    "Valentine's Day",
+    "Valentine's Day Picks",
+    "Valentine's Day promotion",
+    "Spring Essentials",
+    "US Elections Season",
+    "Halloween",
+    "TikTok",
+    "Bestsellers",
+    "Home & Living",
+  ];
+  const productTags = (currentProduct.tags || []).filter(
+    (tag) => !excludedTags.some((excluded) => tag.toLowerCase() === excluded.toLowerCase())
+  );
 
   // Filter enabled variants only
   const enabledVariants = currentProduct.variants?.filter((variant) => variant.is_enabled) || [];
