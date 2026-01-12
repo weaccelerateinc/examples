@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Lock } from "lucide-react";
 
 // Types for Printify products
 interface PrintifyProduct {
@@ -178,17 +179,24 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   return (
     <div className="flex overflow-hidden flex-col bg-white min-h-screen">
       {/* Header */}
-      <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
-        <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
-          <div className="flex justify-between w-full items-center">
-            <Link href="/pdp" className="flex gap-3 items-center hover:opacity-80 transition-opacity">
-              <span className="text-3xl font-black text-blue-500">
-                <Image src="/baggslogo.svg" alt="Accelerate Swag Store Logo" width={30} height={30} />
-              </span>
-              <span className="text-2xl font-bold tracking-tighter text-stone-950">Accelerate Swag Store</span>
-            </Link>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" width={30} height={30} className="h-6 w-6" />
-          </div>
+      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <Link href="/pdp" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                <Image 
+                  src="/avatar-black.png" 
+                  alt="Accelerate Logo" 
+                  width={40} 
+                  height={40} 
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                />
+              </div>
+            </div>
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate</span>
+          </Link>
+          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
       </header>
 

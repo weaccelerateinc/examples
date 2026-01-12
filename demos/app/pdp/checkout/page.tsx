@@ -5,6 +5,7 @@ import Script from "next/script";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
 import Image from "next/image";
 import Link from "next/link";
+import { Lock, User, Mail, Phone, MapPin } from "lucide-react";
 import { CheckoutSummary } from "./CheckoutSummary";
 
 declare global {
@@ -102,24 +103,163 @@ function CheckoutContent() {
   };
 
   return (
-    <div className="flex overflow-hidden flex-col bg-white">
-      <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
-        <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
-          <div className="flex justify-between w-full items-center">
-            <Link href="/pdp" className="flex gap-3 items-center hover:opacity-80 transition-opacity">
-              <span className="text-3xl font-black text-blue-500">
-                <Image src="/baggslogo.svg" alt="Accelerate Swag Store Logo" width={30} height={30} />
-              </span>
-              <span className="text-2xl font-bold tracking-tighter text-stone-950">Accelerate Swag Store</span>
-            </Link>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" width={30} height={30} className="h-6 w-6" />
+    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
+      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <Link href="/pdp" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                <Image 
+                  src="/avatar-black.png" 
+                  alt="Accelerate Logo" 
+                  width={40} 
+                  height={40} 
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                />
+              </div>
+            </div>
+            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate</span>
+          </Link>
+          <div className="flex items-center gap-2 text-slate-600 text-xs sm:text-sm">
+            <Lock className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="font-medium hidden sm:inline">Secure Checkout</span>
           </div>
         </div>
       </header>
 
-      <main className="flex flex-wrap md:flex-nowrap md:flex-row-reverse justify-center w-full max-w-7xl mx-auto">
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[520px] md:border-l border-neutral-200">
-          <div className="max-w-[444px] w-full mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Checkout</h1>
+              <p className="text-slate-600">Enter your details to continue</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Contact Information */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
+                    <User className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Contact Information</h2>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      data-testid="first-name-input"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      onBlur={() => {
+                        maybeLogin(phoneNumber);
+                      }}
+                      placeholder="First name"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      data-testid="last-name-input"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      onBlur={() => {
+                        maybeLogin(phoneNumber);
+                      }}
+                      placeholder="Last name"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      value={phoneNumber}
+                      onChange={(e) => {
+                        setPhone(tryFormatPhone(e.target.value));
+                        maybeLogin(e?.target.value);
+                      }}
+                      placeholder="Phone number"
+                      type="tel"
+                      className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Billing Information */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg">
+                    <MapPin className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-slate-900">Billing Address</h2>
+                </div>
+                <div className="space-y-4">
+                  <input
+                    placeholder="Street address"
+                    value={addrLine1}
+                    onChange={(e) => setAddrLine1(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="Apartment, suite, etc. (optional)"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <div className="grid grid-cols-3 gap-4">
+                    <input
+                      placeholder="City"
+                      value={addrCity}
+                      onChange={(e) => setAddrCity(e.target.value)}
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="State"
+                      value={addrState}
+                      onChange={(e) => setAddrState(e.target.value)}
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="ZIP"
+                      value={addrZip}
+                      onChange={(e) => setAddrZip(e.target.value)}
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30"
+                >
+                  Continue to Payment
+                </button>
+                <Link
+                  href="/pdp"
+                  className="w-full py-4 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl flex items-center justify-center transition-colors font-semibold"
+                >
+                  Back to Products
+                </Link>
+              </div>
+            </form>
+
+            <p className="text-center text-sm text-slate-500">
+              By continuing you agree to our{" "}
+              <a href="https://www.weaccelerate.com/terms" className="text-blue-600 hover:underline">Terms of Service</a>
+              {" "}and{" "}
+              <a href="https://www.weaccelerate.com/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+            </p>
+          </div>
+
+          <div className="lg:sticky lg:top-8 h-fit">
             <CheckoutSummary
               productImage={productImage}
               productTitle={productTitle}
@@ -132,113 +272,7 @@ function CheckoutContent() {
               }}
             />
           </div>
-        </section>
-
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Contact Information</h3>
-              <div className="space-y-3.5">
-                <div className="flex flex-col sm:flex-row gap-3.5">
-                  <input
-                    data-testid="first-name-input"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    onBlur={() => {
-                      maybeLogin(phoneNumber);
-                    }}
-                    placeholder="First name"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    data-testid="last-name-input"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    onBlur={() => {
-                      maybeLogin(phoneNumber);
-                    }}
-                    placeholder="Last name"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    setPhone(tryFormatPhone(e.target.value));
-                    maybeLogin(e?.target.value);
-                  }}
-                  placeholder="Phone number"
-                  type="tel"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-              </div>
-            </div>
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Billing Information</h3>
-              <div className="space-y-3.5">
-                <input
-                  placeholder="Address"
-                  value={addrLine1}
-                  onChange={(e) => setAddrLine1(e.target.value)}
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  placeholder="Apartments, suite, etc (optional)"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
-                  <input
-                    placeholder="City"
-                    value={addrCity}
-                    onChange={(e) => setAddrCity(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="State"
-                    value={addrState}
-                    onChange={(e) => setAddrState(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="Zip code"
-                    value={addrZip}
-                    onChange={(e) => setAddrZip(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
-              >
-                Continue
-              </button>
-              <Link
-                href="/pdp"
-                className="w-full h-[56px] text-xl font-semibold text-sky-700 bg-white border-2 border-sky-700 hover:bg-sky-50 rounded-md flex items-center justify-center transition-colors"
-              >
-                Back to Products
-              </Link>
-            </div>
-          </form>
-
-          <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-            <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
-              Privacy policy
-            </a>
-            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
-              Terms of service
-            </a>
-          </footer>
-        </section>
+        </div>
       </main>
 
       <Script
@@ -253,7 +287,7 @@ function CheckoutContent() {
           
           window.accelerate.init({
             amount: Math.round(hardcodedAmount * 100), // Convert to cents (99 cents)
-            merchantId: process.env.NEXT_PUBLIC_PDP_MERCHANT_ID!,
+            merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "StripeToken",
             onLoginSuccess: (user) => {

@@ -42,13 +42,16 @@ export function CheckoutSummary({
   variantTitle, 
   productPrice, 
   quantity, 
+  selectedShipping, 
+  shippingCost = 0,
   onTotalChange 
 }: CheckoutSummaryProps) {
   // Hardcode product price to $0.99
   const hardcodedPrice = 0.99;
   const subtotal = hardcodedPrice * quantity;
-  const shipping = 0;
-  const total = subtotal + shipping;
+  const shipping = shippingCost;
+  const estimatedTax = 0;
+  const total = subtotal + shipping + estimatedTax;
 
   React.useEffect(() => {
     if (onTotalChange) onTotalChange(total);
@@ -76,8 +79,16 @@ export function CheckoutSummary({
         </div>
         <div className="flex justify-between text-slate-600">
           <span>Shipping</span>
-          <span className="text-green-600 font-medium">FREE</span>
+          <span className={shippingCost === 0 ? "text-green-600 font-medium" : ""}>
+            {shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}
+          </span>
         </div>
+        {estimatedTax > 0 && (
+          <div className="flex justify-between text-slate-600">
+            <span>Tax</span>
+            <span>${estimatedTax.toFixed(2)}</span>
+          </div>
+        )}
         <div className="border-t border-slate-200 pt-4 flex justify-between text-lg font-bold text-slate-900">
           <span>Total</span>
           <span>${Number(total).toFixed(2)}</span>
@@ -97,5 +108,8 @@ interface CheckoutSummaryProps {
   variantTitle: string;
   productPrice: number;
   quantity: number;
+  selectedShipping?: boolean;
+  shippingCost?: number;
   onTotalChange: (total: number) => void;
 }
+
