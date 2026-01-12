@@ -364,19 +364,9 @@ export default function ProductDetailsPage() {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Shop</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">All Products</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">New Arrivals</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Best Sellers</a></li>
-              </ul>
-            </div>
-            <div>
               <h4 className="font-semibold mb-4">Accelerate</h4>
               <ul className="space-y-2 text-sm text-slate-400">
                 <li><a href="https://weaccelerate.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">About Accelerate</a></li>
-                <li><a href="https://weaccelerate.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">For Merchants</a></li>
-                <li><a href="https://weaccelerate.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Security</a></li>
               </ul>
             </div>
           </div>
