@@ -8,7 +8,7 @@ import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
-import { Lock, Truck, Zap, CreditCard } from "lucide-react";
+import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
 
 declare global {
   interface Window {
@@ -46,6 +46,7 @@ function PaymentContent() {
   const [shippingCost, setShippingCost] = useState(0);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(true);
 
   console.log({
     selectedPayment,
@@ -107,13 +108,12 @@ function PaymentContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="grid lg:grid-cols-2 gap-12">
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
-              <p className="text-slate-600">Complete your secure checkout</p>
-            </div>
-
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
+          <p className="text-slate-600">Complete your secure checkout</p>
+        </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8 order-2 lg:order-1">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Shipping Information */}
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
@@ -290,15 +290,33 @@ function PaymentContent() {
             </p>
           </div>
 
-          <div className="lg:sticky lg:top-8 h-fit">
-            <CheckoutSummary
-              selectedShipping={selectedShipping === "express"}
-              shippingCost={shippingCost}
-              onTotalChange={(total: number) => {
-                setTotalPrice(total);
-                return true;
-              }}
-            />
+          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)}
+                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              >
+                <h2 className="text-lg font-semibold text-slate-900">Order Summary</h2>
+                {isOrderSummaryExpanded ? (
+                  <ChevronUp className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
+              {isOrderSummaryExpanded && (
+                <div className="px-8 pb-8">
+                  <CheckoutSummary
+                    selectedShipping={selectedShipping === "express"}
+                    shippingCost={shippingCost}
+                    onTotalChange={(total: number) => {
+                      setTotalPrice(total);
+                      return true;
+                    }}
+                    hideTitle={true}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
