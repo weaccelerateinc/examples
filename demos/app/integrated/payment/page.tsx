@@ -304,7 +304,7 @@ function PaymentContent() {
                 )}
               </button>
               {isOrderSummaryExpanded && (
-                <div className="px-8 pb-8">
+                <div className="px-8 pb-8 [&>div>h2]:hidden [&>div]:bg-transparent [&>div]:p-0 [&>div]:shadow-none [&>div]:border-0 [&>div]:rounded-none">
                   <CheckoutSummary
                     selectedShipping={selectedShipping === "express"}
                     shippingCost={shippingCost}
@@ -312,7 +312,6 @@ function PaymentContent() {
                       setTotalPrice(total);
                       return true;
                     }}
-                    hideTitle={true}
                   />
                 </div>
               )}
