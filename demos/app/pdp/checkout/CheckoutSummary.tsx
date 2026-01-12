@@ -40,7 +40,7 @@ export function CheckoutSummary({
   productImage, 
   productTitle, 
   variantTitle, 
-  productPrice, 
+  productPrice: _productPrice, 
   quantity, 
   onTotalChange 
 }: CheckoutSummaryProps) {

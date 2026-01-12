@@ -3,7 +3,7 @@ import React from 'react';
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Shield, Zap, CreditCard, Lock, Check, ArrowRight, Sparkles, TrendingUp, Clock } from 'lucide-react';
+import { Shield, Zap, CreditCard, Lock, Check, ArrowRight, Sparkles, TrendingUp, Clock } from 'lucide-react';
 
 // Types for Printify products
 interface PrintifyProduct {
@@ -315,7 +315,7 @@ export default function ProductDetailsPage() {
           <Zap className="w-16 h-16 mx-auto mb-6 text-slate-300" />
           <h2 className="text-4xl font-bold mb-6">Ready to Accelerate Your Business?</h2>
           <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-            Join thousands of merchants who've increased their conversion rates with Accelerate Checkout. 
+            Join thousands of merchants who&apos;ve increased their conversion rates with Accelerate Checkout. 
             Fast, secure, and loved by customers.
           </p>
           <div className="flex gap-4 justify-center">

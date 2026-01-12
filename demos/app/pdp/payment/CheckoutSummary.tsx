@@ -40,9 +40,9 @@ export function CheckoutSummary({
   productImage, 
   productTitle, 
   variantTitle, 
-  productPrice, 
+  productPrice: _productPrice, 
   quantity, 
-  selectedShipping, 
+  selectedShipping: _selectedShipping, 
   shippingCost = 0,
   onTotalChange 
 }: CheckoutSummaryProps) {
