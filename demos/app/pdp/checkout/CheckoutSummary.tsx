@@ -40,7 +40,8 @@ export function CheckoutSummary({
   productImage, 
   productTitle, 
   variantTitle, 
-  productPrice: _productPrice, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  productPrice, 
   quantity, 
   onTotalChange 
 }: CheckoutSummaryProps) {

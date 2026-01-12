@@ -40,9 +40,11 @@ export function CheckoutSummary({
   productImage, 
   productTitle, 
   variantTitle, 
-  productPrice: _productPrice, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  productPrice, 
   quantity, 
-  selectedShipping: _selectedShipping, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  selectedShipping, 
   shippingCost = 0,
   onTotalChange 
 }: CheckoutSummaryProps) {
