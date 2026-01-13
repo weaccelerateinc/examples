@@ -21,9 +21,13 @@ function PaymentContent() {
   const searchParams = useSearchParams();
 
   // Billing address (from initial form, preserved)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [billingAddress, _setBillingAddress] = useState(searchParams.get("address") || "");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [billingCity, _setBillingCity] = useState(searchParams.get("city") || "");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [billingState, _setBillingState] = useState(searchParams.get("state") || "");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [billingZip, _setBillingZip] = useState(searchParams.get("zip") || "");
 
   // Shipping address (editable, initialized from billing)
