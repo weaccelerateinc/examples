@@ -98,7 +98,15 @@ export default function CheckoutPage() {
     router.push(`/integrated3/payment?${params.toString()}`); // Navigate to payment page with query parameters
   };
 
-  const maybeLogin = (phoneValue: string) => {
+  const maybeLogin = async (phoneValue: string) => {
+    const isLoggedIn = await window.accelerate.isLoggedIn({
+      firstName,
+      lastName,
+      phoneNumber: phoneValue,
+      email: email || "test.demo@weaccelerate.com",
+    });
+    console.log({ isLoggedIn });
+    if (isLoggedIn) return;
     console.log({ firstName, lastName, phoneValue });
 
     if (firstName == "") return;

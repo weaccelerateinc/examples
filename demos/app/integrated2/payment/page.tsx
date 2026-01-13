@@ -496,7 +496,6 @@ function PaymentContent() {
             },
           });
           setAccelerateLoaded(true);
-          console.log("Here i am##");
         }}
       />
     </div>
