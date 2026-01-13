@@ -21,10 +21,10 @@ function PaymentContent() {
   const searchParams = useSearchParams();
 
   // Billing address (from initial form, preserved)
-  const [billingAddress, setBillingAddress] = useState(searchParams.get("address") || "");
-  const [billingCity, setBillingCity] = useState(searchParams.get("city") || "");
-  const [billingState, setBillingState] = useState(searchParams.get("state") || "");
-  const [billingZip, setBillingZip] = useState(searchParams.get("zip") || "");
+  const [billingAddress, _setBillingAddress] = useState(searchParams.get("address") || "");
+  const [billingCity, _setBillingCity] = useState(searchParams.get("city") || "");
+  const [billingState, _setBillingState] = useState(searchParams.get("state") || "");
+  const [billingZip, _setBillingZip] = useState(searchParams.get("zip") || "");
 
   // Shipping address (editable, initialized from billing)
   const [address, setAddress] = useState(searchParams.get("address") || "");
