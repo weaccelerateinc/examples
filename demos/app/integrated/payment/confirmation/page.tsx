@@ -4,13 +4,14 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckoutSummary } from "../CheckoutSummary";
 import Image from "next/image";
-import { Suspense } from "react";
-import { Lock, CheckCircle2 } from "lucide-react";
+import { Suspense, useState } from "react";
+import { Lock, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const selectedShipping = searchParams.get("shipping");
   const shippingCost = selectedShipping === "express" ? 9.99 : 0;
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const getShippingText = () => {
     if (selectedShipping === "express") {
@@ -74,6 +75,36 @@ function ConfirmationContent() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Order Summary - Mobile: Top and Collapsible, Desktop: Right Side */}
+        <div className="lg:hidden mb-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-200"
+            >
+              <h2 className="text-lg font-semibold text-slate-900">Order Summary</h2>
+              {isCollapsed ? (
+                <ChevronDown className="w-5 h-5 text-slate-500" />
+              ) : (
+                <ChevronUp className="w-5 h-5 text-slate-500" />
+              )}
+            </button>
+            <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? "max-h-0 overflow-hidden" : "max-h-[2000px]"}`}>
+              <div className="p-0">
+                <CheckoutSummary
+                  selectedShipping={selectedShipping === "express"}
+                  shippingCost={shippingCost}
+                  onTotalChange={(total) => {
+                    console.log("Total changed:", total);
+                    return true;
+                  }}
+                  hideHeading={true}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-2 gap-12">
           <div className="space-y-8">
             {/* Success Confirmation */}
@@ -117,9 +148,10 @@ function ConfirmationContent() {
                     <p className="text-slate-900">
                       {fullName}
                       <br />
-                      {searchParams.get("address")}
+                      {searchParams.get("shippingAddress") || searchParams.get("address")}
+                      {searchParams.get("shippingApartment") && ` ${searchParams.get("shippingApartment")}`}
                       <br />
-                      {searchParams.get("city")}, {searchParams.get("state")} {searchParams.get("zip")}
+                      {searchParams.get("shippingCity") || searchParams.get("city")}, {searchParams.get("shippingState") || searchParams.get("state")} {searchParams.get("shippingZip") || searchParams.get("zip")}
                       <br />
                       United States
                     </p>
@@ -146,9 +178,9 @@ function ConfirmationContent() {
                     <p className="text-slate-900">
                       {fullName}
                       <br />
-                      {searchParams.get("address")}
+                      {searchParams.get("billingAddress") || searchParams.get("address")}
                       <br />
-                      {searchParams.get("city")}, {searchParams.get("state")} {searchParams.get("zip")}
+                      {searchParams.get("billingCity") || searchParams.get("city")}, {searchParams.get("billingState") || searchParams.get("state")} {searchParams.get("billingZip") || searchParams.get("zip")}
                       <br />
                       United States
                     </p>
@@ -184,7 +216,8 @@ function ConfirmationContent() {
             </footer>
           </div>
 
-          <div className="lg:sticky lg:top-8 h-fit">
+          {/* Order Summary - Desktop: Right Side, Always Visible */}
+          <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
             <CheckoutSummary
               selectedShipping={selectedShipping === "express"}
               shippingCost={shippingCost}

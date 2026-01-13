@@ -36,7 +36,7 @@ const ProductItem = ({
   </div>
 );
 
-export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange }: CheckoutSummaryProps) {
+export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange, hideHeading }: CheckoutSummaryProps) {
   const product = {
     imageSrc: "/jordan-1-low-fragment-design-x-travis-scott-1.jpg",
     name: "Air Jordan 1 Lows Fragment X Travis Scott",
@@ -54,8 +54,8 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange 
   }, [total, onTotalChange]);
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-      <h2 className="text-lg font-semibold text-slate-900 mb-6">Order Summary</h2>
+    <div className={`bg-white p-8 ${hideHeading ? "rounded-none border-0 shadow-none" : "rounded-2xl shadow-sm border border-slate-200"}`}>
+      {!hideHeading && <h2 className="text-lg font-semibold text-slate-900 mb-6">Order Summary</h2>}
       
       {/* Order Items */}
       <div className="space-y-4 mb-6 pb-6 border-b border-slate-200">
@@ -94,4 +94,5 @@ interface CheckoutSummaryProps {
   selectedShipping?: boolean | undefined;
   shippingCost: number;
   onTotalChange: (total: number) => void;
+  hideHeading?: boolean;
 }

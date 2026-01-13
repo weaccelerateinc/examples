@@ -125,13 +125,12 @@ export default function CheckoutPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="grid lg:grid-cols-2 gap-12">
-          <div className="space-y-8">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">Checkout</h1>
-              <p className="text-slate-600">Complete your purchase securely</p>
-            </div>
-
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Checkout</h1>
+          <p className="text-slate-600">Complete your purchase securely</p>
+        </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8 order-2 lg:order-1">
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
                 <h2 className="text-lg font-semibold text-slate-900 mb-6">Contact Information</h2>
@@ -187,26 +186,24 @@ export default function CheckoutPage() {
                     onChange={(e) => setAddrLine1(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
-                  <div className="grid grid-cols-3 gap-4">
-                    <input
-                      placeholder="City"
-                      value={addrCity}
-                      onChange={(e) => setAddrCity(e.target.value)}
-                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                    />
-                    <input
-                      placeholder="State"
-                      value={addrState}
-                      onChange={(e) => setAddrState(e.target.value)}
-                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                    />
-                    <input
-                      placeholder="ZIP"
-                      value={addrZip}
-                      onChange={(e) => setAddrZip(e.target.value)}
-                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                    />
-                  </div>
+                  <input
+                    placeholder="City"
+                    value={addrCity}
+                    onChange={(e) => setAddrCity(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="State"
+                    value={addrState}
+                    onChange={(e) => setAddrState(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="ZIP"
+                    value={addrZip}
+                    onChange={(e) => setAddrZip(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
                 </div>
               </div>
 
@@ -228,7 +225,7 @@ export default function CheckoutPage() {
             </footer>
           </div>
 
-          <div className="lg:sticky lg:top-8 h-fit">
+          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
             <CheckoutSummary
               shippingCost={0} // Shipping cost
               onTotalChange={(total) => {
