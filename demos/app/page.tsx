@@ -11,7 +11,7 @@ export default function Home() {
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">Integrated Checkout</h2>
-          <p className="text-gray-600">Original integrated payment flow with speech-to-text</p>
+          <p className="text-gray-600">Original integrated payment flow</p>
         </Link>
         
         <Link 
@@ -23,11 +23,11 @@ export default function Home() {
         </Link>
         
         <Link 
-          href="/lightningmcqueen" 
+          href="/integrated3" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
-          <h2 className="text-xl font-semibold mb-2">Lightning McQueen Checkout</h2>
-          <p className="text-gray-600">Lightning McQueen integrated payment flow demo</p>
+          <h2 className="text-xl font-semibold mb-2">Integrated3 Checkout</h2>
+          <p className="text-gray-600">Integrated payment flow with cookies to persist login</p>
         </Link>
       </div>
     </div>
