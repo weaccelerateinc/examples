@@ -115,7 +115,10 @@ function PaymentContent() {
                 />
               </div>
             </div>
-            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate</span>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
+              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
+            </div>
           </div>
           <div className="flex items-center gap-2 text-slate-600 text-xs sm:text-sm">
             <Lock className="w-3 h-3 sm:w-4 sm:h-4" />

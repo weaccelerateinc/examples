@@ -29,6 +29,14 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-2">Integrated3 Checkout</h2>
           <p className="text-gray-600">Integrated payment flow with cookies to persist login</p>
         </Link>
+        
+        <Link 
+          href="/pdp" 
+          className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+        >
+          <h2 className="text-xl font-semibold mb-2">PDP Checkout</h2>
+          <p className="text-gray-600">Product detail page with integrated checkout flow</p>
+        </Link>
       </div>
     </div>
   );

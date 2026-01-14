@@ -152,7 +152,7 @@ export default function CheckoutPage() {
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate</span>
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
               <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
             </div>
           </div>

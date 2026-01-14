@@ -118,7 +118,10 @@ export default function CheckoutPage() {
                 />
               </div>
             </div>
-            <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate</span>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
+              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
+            </div>
           </div>
           <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
