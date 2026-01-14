@@ -7,6 +7,7 @@ import Script from "next/script"; // Next.js component for loading external scri
 import { useRouter } from "next/navigation"; // Hook for programmatic navigation
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types"; // Type definitions for Accelerate API
 import Image from "next/image"; // Next.js component for optimized image loading
+import { Lock } from "lucide-react"; // Icon for secure checkout
 
 // Declare global types for the window object
 declare global {
@@ -134,25 +135,166 @@ export default function CheckoutPage() {
 
   // Render the component
   return (
-    <div className="flex overflow-hidden flex-col bg-white">
-      <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
-        <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
-          <div className="flex justify-between w-full items-center">
-            <div className="flex gap-3 items-center">
-              <span className="text-3xl font-black text-blue-500">
-                <Image src="/baggslogo.svg" alt="Baggs Logo" width={30} height={30} /> {/* Logo */}
-              </span>
-              <span className="text-2xl font-bold tracking-tighter text-stone-950">Baggs</span> {/* Brand name */}
+    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
+      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                <Image 
+                  src="/avatar-black.png" 
+                  alt="Accelerate Logo" 
+                  width={40} 
+                  height={40} 
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                />
+              </div>
             </div>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" width={30} height={30} className="h-6 w-6" />{" "}
-            {/* Checkout bag icon */}
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate</span>
+              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
+            </div>
           </div>
+          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
       </header>
 
-      <main className="flex flex-wrap md:flex-nowrap md:flex-row-reverse justify-center w-full max-w-7xl mx-auto">
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[520px] md:border-l border-neutral-200">
-          <div className="max-w-[444px] w-full mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Checkout</h1>
+          <p className="text-slate-600">Complete your purchase securely</p>
+        </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8 order-2 lg:order-1">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(true);
+              }}
+              className="space-y-8"
+            >
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Contact Information</h2>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      data-testid="first-name-input"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      onBlur={() => {
+                        maybeLogin(phoneNumber);
+                      }}
+                      placeholder="First name"
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      data-testid="last-name-input"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      onBlur={() => {
+                        maybeLogin(phoneNumber);
+                      }}
+                      placeholder="Last name"
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email address"
+                    type="email"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      setPhone(tryFormatPhone(e.target.value));
+                      maybeLogin(e?.target.value);
+                    }}
+                    placeholder="Phone number"
+                    type="tel"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Billing Address</h2>
+                <div className="space-y-4">
+                  <input
+                    placeholder="Street address"
+                    value={addrLine1}
+                    onChange={(e) => setAddrLine1(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="City"
+                    value={addrCity}
+                    onChange={(e) => setAddrCity(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="State"
+                    value={addrState}
+                    onChange={(e) => setAddrState(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="ZIP"
+                    value={addrZip}
+                    onChange={(e) => setAddrZip(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {defaultCard ? (
+                  <button
+                    type="submit"
+                    className="w-full h-[56px] px-4 text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 disabled:bg-sky-700/50 rounded-xl flex items-center justify-center gap-3 transition shadow-lg shadow-blue-500/30 font-semibold"
+                  >
+                    {defaultCard.artUrl && (
+                      <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
+                    )}
+                    <span className="text-lg font-semibold">
+                      Pay now with {defaultCard.cardName} ••••{defaultCard.last4}
+                    </span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30"
+                  >
+                    Continue to Payment
+                  </button>
+                )}
+                {defaultCard && (
+                  <button
+                    onClick={() => {
+                      setDefaultCard(null);
+                      handleSubmit(false);
+                    }}
+                    className="w-full h-[56px] text-xl font-semibold border border-slate-200 bg-transparent hover:bg-slate-50 text-slate-400 rounded-xl transition"
+                  >
+                    Continue with a different card
+                  </button>
+                )}
+              </div>
+            </form>
+
+            <footer className="flex flex-wrap gap-3.5 py-5 text-sm text-slate-600">
+              <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
+                Privacy policy
+              </a>
+              <a href="https://www.weaccelerate.com/terms" className="hover:underline">
+                Terms of service
+              </a>
+            </footer>
+          </div>
+
+          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
             <CheckoutSummary
               shippingCost={0} // Shipping cost
               onTotalChange={(total) => {
@@ -161,139 +303,7 @@ export default function CheckoutPage() {
               }}
             />
           </div>
-        </section>
-
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmit(true);
-            }}
-            className="space-y-8"
-          >
-            {" "}
-            {/* Form for user input */}
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Contact Information</h3>
-              <div className="space-y-3.5">
-                <div className="flex flex-col sm:flex-row gap-3.5">
-                  <input
-                    data-testid="first-name-input"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    onBlur={() => {
-                      maybeLogin(phoneNumber);
-                    }}
-                    placeholder="First name"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    data-testid="last-name-input"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    onBlur={() => {
-                      maybeLogin(phoneNumber);
-                    }}
-                    placeholder="Last name"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    setPhone(tryFormatPhone(e.target.value));
-                    maybeLogin(e?.target.value);
-                  }}
-                  placeholder="Phone number"
-                  type="tel"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-              </div>
-            </div>
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Billing Information</h3>
-              <div className="space-y-3.5">
-                <input
-                  placeholder="Address"
-                  value={addrLine1}
-                  onChange={(e) => setAddrLine1(e.target.value)}
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  placeholder="Apartments, suite, etc (optional)"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
-                  <input
-                    placeholder="City"
-                    value={addrCity}
-                    onChange={(e) => setAddrCity(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="State"
-                    value={addrState}
-                    onChange={(e) => setAddrState(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="Zip code"
-                    value={addrZip}
-                    onChange={(e) => setAddrZip(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-            {/* Display error message if exists */}
-            <div className="flex flex-col gap-3">
-              {defaultCard ? (
-                <button
-                  type="submit"
-                  className="w-full h-[56px] px-4 text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md flex items-center justify-center gap-3"
-                >
-                  <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
-                  <span className="text-lg font-semibold">
-                    Pay now with {defaultCard.cardName} ••••{defaultCard.last4}
-                  </span>
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 hover:bg-sky-800 disabled:bg-sky-700/50 rounded-md"
-                >
-                  Continue
-                </button>
-              )}
-              {defaultCard && (
-                <button
-                  onClick={() => {
-                    setDefaultCard(null);
-                    handleSubmit(false);
-                  }}
-                  className="w-full h-[56px] text-xl font-semibold border border-neutral-200 bg-transparent hover:bg-neutral-100 text-neutral-400 rounded-md"
-                >
-                  Continue with a different card
-                </button>
-              )}
-            </div>
-          </form>
-
-          <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-            <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
-              Privacy policy
-            </a>
-            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
-              Terms of service
-            </a>
-          </footer>
-        </section>
+        </div>
       </main>
 
       <Script
