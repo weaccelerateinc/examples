@@ -34,7 +34,7 @@ interface ProductsResponse {
 
 // Function to strip HTML tags for plain text display
 const stripHtmlTags = (html: string): string => {
-  if (typeof document === 'undefined') return html;
+  if (typeof document === "undefined") return html;
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || "";
@@ -42,11 +42,11 @@ const stripHtmlTags = (html: string): string => {
 
 // Function to remove specification lines (lines starting with ".:") from description
 const stripSpecifications = (html: string): string => {
-  if (typeof document === 'undefined') return html;
+  if (typeof document === "undefined") return html;
   // Create a temporary element to parse the HTML
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
-  
+
   // Find and remove paragraphs containing specification lines
   const paragraphs = tmp.querySelectorAll("p");
   paragraphs.forEach((p) => {
@@ -56,7 +56,7 @@ const stripSpecifications = (html: string): string => {
       p.remove();
     }
   });
-  
+
   return tmp.innerHTML;
 };
 
@@ -142,7 +142,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     if (user.quickCard) {
       setDefaultCard(user.quickCard);
     }
-    
+
     // Card loading is complete (whether we got a card or not)
     setIsCardLoading(false);
   };
@@ -262,7 +262,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const productTitle = stripHtmlTags(currentProduct.title);
   const productDescription = stripSpecifications(currentProduct.description); // Remove specifications, keep HTML for rendering
   const productImages = getValidImageUrls(currentProduct.images);
-  
+
   // Tags to filter out
   const excludedTags = [
     "Valentine's Day",
@@ -293,17 +293,19 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
               <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                <Image 
-                  src="/avatar-black.png" 
-                  alt="Accelerate Logo" 
-                  width={40} 
-                  height={40} 
+                <Image
+                  src="/avatar-black.png"
+                  alt="Accelerate Logo"
+                  width={40}
+                  height={40}
                   className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
                 />
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">
+                Accelerate Store
+              </span>
               <span className="text-xs text-slate-500 flex items-center gap-1">
                 <Zap className="w-3 h-3 text-amber-500" />
                 Powered by Accelerate Checkout
@@ -333,8 +335,8 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                       key={i}
                       onClick={() => setMainImage(img)}
                       className={`aspect-square relative rounded-lg overflow-hidden bg-slate-100 border-2 transition-all ${
-                        mainImage === img 
-                          ? "border-blue-600 ring-2 ring-blue-200" 
+                        mainImage === img
+                          ? "border-blue-600 ring-2 ring-blue-200"
                           : "border-slate-200 hover:border-slate-300"
                       }`}
                     >
@@ -355,7 +357,10 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               {productTags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
                   {productTags.map((tag, index) => (
-                    <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -391,14 +396,14 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
                 </svg>
               </button>
               {isCardLoading ? (
-                <div className="w-full h-14 px-4 bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl shadow-lg shadow-slate-700/20 flex items-center justify-center gap-3">
+                <div className="w-full h-14 opacity-0 pointer-events-none px-4 bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl shadow-lg shadow-slate-700/20 flex items-center justify-center gap-3">
                   <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span className="text-lg font-semibold text-white">Loading payment method...</span>
                 </div>
               ) : defaultCard ? (
                 <button
                   onClick={() => handleCheckout(true)}
-                  className="w-full h-14 px-4 text-white bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl hover:from-slate-700 hover:to-slate-600 transition shadow-lg shadow-slate-700/20 flex items-center justify-center gap-3"
+                  className="w-full h-14 px-4 text-white bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl hover:from-slate-700 hover:to-slate-600 transition-all shadow-lg shadow-slate-700/20 flex items-center justify-center gap-3"
                 >
                   {defaultCard.artUrl && defaultCard.artUrl.trim() !== "" && (
                     <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
@@ -410,7 +415,10 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
             <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
               <h2 className="text-lg font-semibold text-slate-900 mb-3">Product Description</h2>
-              <div className="text-slate-600 text-sm leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: productDescription }} />
+              <div
+                className="text-slate-600 text-sm leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: productDescription }}
+              />
             </div>
           </div>
         </div>
@@ -424,36 +432,51 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
               <div className="relative group">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60"></div>
                 <div className="relative bg-white rounded-xl p-1.5 shadow-md">
-                  <Image 
-                    src="/avatar-black.png" 
-                    alt="Accelerate Logo" 
-                    width={40} 
-                    height={40} 
+                  <Image
+                    src="/avatar-black.png"
+                    alt="Accelerate Logo"
+                    width={40}
+                    height={40}
                     className="w-9 h-9 object-contain"
                   />
                 </div>
               </div>
               <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-white bg-clip-text text-transparent tracking-tight block">Accelerate Store</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-white bg-clip-text text-transparent tracking-tight block">
+                  Accelerate Store
+                </span>
                 <p className="text-slate-400 text-xs mt-1">Powered by Accelerate Checkout</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-center md:justify-end gap-6 text-sm">
-              <a href="https://weaccelerate.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+              <a
+                href="https://weaccelerate.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-white transition-colors"
+              >
                 About Accelerate
               </a>
-              <a href="https://www.weaccelerate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+              <a
+                href="https://www.weaccelerate.com/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-white transition-colors"
+              >
                 Privacy Policy
               </a>
-              <a href="https://www.weaccelerate.com/terms" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+              <a
+                href="https://www.weaccelerate.com/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-400 hover:text-white transition-colors"
+              >
                 Terms of Service
               </a>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-6">
-            <p className="text-center text-sm text-slate-500">
-              © 2026 Accelerate Store. All rights reserved.
-            </p>
+            <p className="text-center text-sm text-slate-500">© 2026 Accelerate Store. All rights reserved.</p>
           </div>
         </div>
       </footer>
