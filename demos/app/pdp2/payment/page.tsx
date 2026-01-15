@@ -8,6 +8,7 @@ import { CheckoutSummary } from "../checkout/CheckoutSummary";
 import Image from "next/image";
 import Link from "next/link";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
+import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
 
 declare global {
   interface Window {
@@ -20,13 +21,22 @@ function PaymentContent() {
   const searchParams = useSearchParams();
 
   // Get user information from URL params
-  const address = searchParams.get("address") || "";
-  const city = searchParams.get("city") || "";
-  const state = searchParams.get("state") || "";
-  const zip = searchParams.get("zip") || "";
   const firstName = searchParams.get("firstName") || "";
   const lastName = searchParams.get("lastName") || "";
   const email = searchParams.get("email") || "";
+
+  // Billing address (from original checkout form, preserved and not editable)
+  const billingAddress = searchParams.get("address") || "";
+  const billingCity = searchParams.get("city") || "";
+  const billingState = searchParams.get("state") || "";
+  const billingZip = searchParams.get("zip") || "";
+
+  // Shipping address (editable, initialized from URL params)
+  const [address, setAddress] = useState(searchParams.get("address") || "");
+  const [apartment, setApartment] = useState("");
+  const [city, setCity] = useState(searchParams.get("city") || "");
+  const [state, setState] = useState(searchParams.get("state") || "");
+  const [zip, setZip] = useState(searchParams.get("zip") || "");
 
   const defaultCardId = searchParams.get("defaultCardId");
 
@@ -45,6 +55,7 @@ function PaymentContent() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [accelerateInitialized, setAccelerateInitialized] = useState(false);
+  const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(true);
 
   useEffect(() => {
     console.log("Form data updated:", {
@@ -129,10 +140,15 @@ function PaymentContent() {
             `firstName=${encodeURIComponent(firstName)}&` +
             `lastName=${encodeURIComponent(lastName)}&` +
             `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
-            `address=${encodeURIComponent(address)}&` +
-            `city=${encodeURIComponent(city)}&` +
-            `state=${encodeURIComponent(state)}&` +
-            `zip=${encodeURIComponent(zip)}&` +
+            `shippingAddress=${encodeURIComponent(address)}&` +
+            `${apartment ? `shippingApartment=${encodeURIComponent(apartment)}&` : ""}` +
+            `shippingCity=${encodeURIComponent(city)}&` +
+            `shippingState=${encodeURIComponent(state)}&` +
+            `shippingZip=${encodeURIComponent(zip)}&` +
+            `billingAddress=${encodeURIComponent(billingAddress)}&` +
+            `billingCity=${encodeURIComponent(billingCity)}&` +
+            `billingState=${encodeURIComponent(billingState)}&` +
+            `billingZip=${encodeURIComponent(billingZip)}&` +
             `shipping=standard&` +
             `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
             `totalPrice=${encodeURIComponent(totalPrice)}&` +
@@ -151,95 +167,120 @@ function PaymentContent() {
   };
 
   return (
-    <div className="flex overflow-hidden flex-col bg-white">
-      <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
-        <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
-          <div className="flex justify-between w-full items-center">
-            <Link href="/pdp2" className="flex gap-3 items-center hover:opacity-80 transition-opacity">
-              <span className="text-3xl font-black text-blue-500">
-                <Image src="/baggslogo.svg" alt="Accelerate Swag Store Logo" width={30} height={30} />
+    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
+      <header className="w-full bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <Link href="/pdp2" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                <Image 
+                  src="/avatar-black.png" 
+                  alt="Accelerate Logo" 
+                  width={40} 
+                  height={40} 
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-amber-500" />
+                Powered by Accelerate Checkout
               </span>
-              <span className="text-2xl font-bold tracking-tighter text-stone-950">Accelerate Swag Store</span>
-            </Link>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" className="h-6 w-6" width={30} height={30} />
-          </div>
+            </div>
+          </Link>
+          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
       </header>
 
-      <main className="flex flex-wrap md:flex-nowrap md:flex-row-reverse justify-center w-full max-w-7xl mx-auto">
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[520px] md:border-l border-neutral-200">
-          <CheckoutSummary
-            productImage={productImage}
-            productTitle={productTitle}
-            variantTitle={variantTitle}
-            productPrice={productPrice}
-            quantity={quantity}
-            onTotalChange={(total: number) => {
-              setTotalPrice(total);
-              return true;
-            }}
-          />
-        </section>
-
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Shipping Information</h3>
-              <div className="space-y-3.5">
-                <input
-                  value={address}
-                  placeholder="Address"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  readOnly
-                />
-                <input
-                  placeholder="Apartments, suite, etc (optional)"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <div className="flex flex-wrap gap-3.5">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
+          <p className="text-slate-600">Complete your secure checkout</p>
+        </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8 order-2 lg:order-1">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Shipping Information */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Address</h2>
+                <div className="space-y-4">
                   <input
-                    value={city}
+                    type="text"
+                    placeholder="Street address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Apartment, suite, etc. (optional)"
+                    value={apartment}
+                    onChange={(e) => setApartment(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    type="text"
                     placeholder="City"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    readOnly
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
-                    value={state}
+                    type="text"
                     placeholder="State"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    readOnly
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    type="text"
+                    placeholder="ZIP"
                     value={zip}
-                    placeholder="Zip code"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    readOnly
+                    onChange={(e) => setZip(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Shipping Method</h3>
-              <div className="border border-neutral-200 rounded-md overflow-hidden">
-                <div className="flex gap-3 p-3.5">
-                  <div className="w-[18px] h-[18px] rounded-full border-2 border-sky-700 bg-sky-700"></div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Standard Shipping</div>
-                    <div className="text-sm text-neutral-500">4-10 business days</div>
-                  </div>
-                  <div className="text-sm">FREE</div>
+              {/* Shipping Method */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Method</h2>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-blue-500 bg-blue-50">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="standard"
+                      defaultChecked
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <Truck className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900">Standard Shipping</div>
+                      <div className="text-sm text-slate-500">4-10 business days</div>
+                    </div>
+                    <div className="font-semibold text-green-600">FREE</div>
+                  </label>
                 </div>
               </div>
-            </div>
 
-            <div>
-              <h3 className="text-lg font-semibold mb-1.5">Payment</h3>
-              <p className="text-sm text-neutral-500 mb-3.5">All transactions are secure and encrypted</p>
+              {/* Payment Method */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-slate-900">Payment Method</h2>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Lock className="w-3 h-3" />
+                    <span>Encrypted & Secure</span>
+                  </div>
+                </div>
 
-              <div className="border border-neutral-200 rounded-md overflow-hidden">
-                <div className="p-3.5 border-b border-neutral-200">
-                  <label className="flex gap-3 items-center">
+                <div className="space-y-3 mb-6">
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -248,93 +289,105 @@ function PaymentContent() {
                       onChange={(e) => setSelectedPayment(e.target.value)}
                       className="sr-only"
                     />
-                    <div
-                      className={`w-[18px] h-[18px] rounded-full border-2 ${
-                        selectedPayment === "card" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                      }`}
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm">Credit card</div>
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <CreditCard className="w-5 h-5 text-slate-600" />
                     </div>
+                    <div className="flex-1 font-medium text-slate-900">Credit Card</div>
                     <div className="flex gap-2">
                       <Image src="/visa.svg" alt="Visa" className="h-[21px]" width={31} height={31} />
                       <Image src="/mastercard.svg" alt="Mastercard" className="h-[21px]" width={31} height={31} />
                       <Image src="/amex.svg" alt="Amex" className="h-[21px]" width={31} height={31} />
                     </div>
                   </label>
+
                   {selectedPayment === "card" && accelLoaded && (
-                    <div className="mt-4 w-full">
+                    <div className="pt-4 border-t border-slate-200">
                       <AccelerateWallet defaultCardId={defaultCardId || undefined} />
                     </div>
                   )}
+
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="paypal"
+                      checked={selectedPayment === "paypal"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <div className="text-lg font-bold text-blue-600">P</div>
+                    </div>
+                    <div className="flex-1 font-medium text-slate-900">PayPal</div>
+                    <Image src="/paypal.svg" alt="PayPal" className="h-[21px]" width={51} height={51} />
+                  </label>
+
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="zip"
+                      checked={selectedPayment === "zip"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <div className="text-lg font-bold text-slate-600">Z</div>
+                    </div>
+                    <div className="flex-1 font-medium text-slate-900">Zip - Pay in 4 installments</div>
+                    <Image src="/zip.svg" alt="Zip" className="h-[21px]" width={51} height={51} />
+                  </label>
                 </div>
-
-                <label className="flex gap-3 p-3.5 border-b border-neutral-200">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="paypal"
-                    checked={selectedPayment === "paypal"}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-[18px] h-[18px] rounded-full border-2 ${
-                      selectedPayment === "paypal" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm">PayPal</div>
-                  </div>
-                  <Image src="/paypal.svg" alt="PayPal" className="h-[21px]" width={51} height={51} />
-                </label>
-
-                <label className="flex gap-3 p-3.5">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="zip"
-                    checked={selectedPayment === "zip"}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-[18px] h-[18px] rounded-full border-2 ${
-                      selectedPayment === "zip" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm">Zip - Pay in 4 installments</div>
-                  </div>
-                  <Image src="/zip.svg" alt="Zip" className="h-[21px]" width={51} height={51} />
-                </label>
               </div>
+
+              <button
+                type="submit"
+                disabled={!selectedCard}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none"
+              >
+                Complete Payment {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-slate-500">
+              By completing this purchase you agree to our{" "}
+              <a href="https://www.weaccelerate.com/terms" className="text-blue-600 hover:underline">Terms of Service</a>
+              {" "}and{" "}
+              <a href="https://www.weaccelerate.com/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+            </p>
+          </div>
+
+          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)}
+                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
+              >
+                <h2 className="text-lg font-semibold text-slate-900">Order Summary</h2>
+                {isOrderSummaryExpanded ? (
+                  <ChevronUp className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
+              {isOrderSummaryExpanded && (
+                <div className="px-8 pb-8 [&>div>h2]:hidden [&>div]:bg-transparent [&>div]:p-0 [&>div]:shadow-none [&>div]:border-0 [&>div]:rounded-none">
+                  <CheckoutSummary
+                    productImage={productImage}
+                    productTitle={productTitle}
+                    variantTitle={variantTitle}
+                    productPrice={productPrice}
+                    quantity={quantity}
+                    onTotalChange={(total: number) => {
+                      setTotalPrice(total);
+                      return true;
+                    }}
+                  />
+                </div>
+              )}
             </div>
-
-            <button
-              type="submit"
-              disabled={!selectedCard}
-              className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 disabled:bg-sky-700/50 rounded-md"
-            >
-              Pay now
-            </button>
-            <Link
-              href="/pdp2"
-              className="w-full h-[56px] text-xl font-semibold text-sky-700 bg-white border-2 border-sky-700 hover:bg-sky-50 rounded-md flex items-center justify-center transition-colors"
-            >
-              Back to Products
-            </Link>
-          </form>
-
-          <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-            <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
-              Privacy policy
-            </a>
-            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
-              Terms of service
-            </a>
-          </footer>
-        </section>
+          </div>
+        </div>
       </main>
 
       <Script

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
+import { Lock, Zap } from "lucide-react";
 
 declare global {
   interface Window {
@@ -33,9 +34,30 @@ interface ProductsResponse {
 
 // Function to strip HTML tags for plain text display
 const stripHtmlTags = (html: string): string => {
+  if (typeof document === 'undefined') return html;
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || "";
+};
+
+// Function to remove specification lines (lines starting with ".:") from description
+const stripSpecifications = (html: string): string => {
+  if (typeof document === 'undefined') return html;
+  // Create a temporary element to parse the HTML
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  
+  // Find and remove paragraphs containing specification lines
+  const paragraphs = tmp.querySelectorAll("p");
+  paragraphs.forEach((p) => {
+    const text = p.textContent || "";
+    // Check if the paragraph contains specification lines (starting with ".: ")
+    if (text.includes(".: ") || text.match(/^\s*\.:/) || text.includes("Fabric weight:") || text.includes("Dimensions:")) {
+      p.remove();
+    }
+  });
+  
+  return tmp.innerHTML;
 };
 
 // Function to get a valid image URL
@@ -95,6 +117,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     state?: string;
     zip?: string;
   } | null>(null);
+  const [isCardLoading, setIsCardLoading] = useState(false);
 
   // Function to populate user data from Accelerate
   const maybeUseAccelUser = (user: AccelerateUser) => {
@@ -119,6 +142,9 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     if (user.quickCard) {
       setDefaultCard(user.quickCard);
     }
+    
+    // Card loading is complete (whether we got a card or not)
+    setIsCardLoading(false);
   };
 
   // Unwrap params using React.use()
@@ -141,7 +167,9 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   useEffect(() => {
     if (currentProduct && currentProduct.images && currentProduct.images.length > 0) {
       const validImage = getValidImageUrl(currentProduct.images);
-      setMainImage(validImage);
+      if (validImage && validImage.trim() !== "") {
+        setMainImage(validImage);
+      }
     }
     // If no product images, keep the fallback image that was set in initial state
   }, [currentProduct]);
@@ -185,10 +213,10 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sky-700"></div>
-          <p className="mt-4 text-gray-600">Loading product...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-slate-900"></div>
+          <p className="mt-4 text-slate-600">Loading product...</p>
         </div>
       </div>
     );
@@ -197,13 +225,13 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
           <p className="text-red-600 mb-4">Failed to load product</p>
-          <p className="text-gray-600 mb-8">{error instanceof Error ? error.message : "Unknown error"}</p>
+          <p className="text-slate-600 mb-8">{error instanceof Error ? error.message : "Unknown error"}</p>
           <Link
             href="/pdp2"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block bg-slate-900 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors"
           >
             Back to Products
           </Link>
@@ -215,15 +243,15 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   // Product not found state
   if (!currentProduct) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-8">The product you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Product Not Found</h1>
+          <p className="text-slate-600 mb-8">The product you&apos;re looking for doesn&apos;t exist.</p>
           <Link
             href="/pdp2"
-            className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-block bg-slate-900 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors"
           >
-            Back to Home
+            Back to Products
           </Link>
         </div>
       </div>
@@ -232,9 +260,24 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
   // Get product data
   const productTitle = stripHtmlTags(currentProduct.title);
-  const productDescription = currentProduct.description; // Keep HTML for rendering
+  const productDescription = stripSpecifications(currentProduct.description); // Remove specifications, keep HTML for rendering
   const productImages = getValidImageUrls(currentProduct.images);
-  const productTags = currentProduct.tags || [];
+  
+  // Tags to filter out
+  const excludedTags = [
+    "Valentine's Day",
+    "Valentine's Day Picks",
+    "Valentine's Day promotion",
+    "Spring Essentials",
+    "US Elections Season",
+    "Halloween",
+    "TikTok",
+    "Bestsellers",
+    "Home & Living",
+  ];
+  const productTags = (currentProduct.tags || []).filter(
+    (tag) => !excludedTags.some((excluded) => tag.toLowerCase() === excluded.toLowerCase())
+  );
 
   // Filter enabled variants only
   const enabledVariants = currentProduct.variants?.filter((variant) => variant.is_enabled) || [];
@@ -242,108 +285,178 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   const productPrice = 0.99;
 
   return (
-    <div className="flex overflow-hidden flex-col bg-white min-h-screen">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
-        <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
-          <div className="flex justify-between w-full items-center">
-            <Link href="/pdp2" className="flex gap-3 items-center hover:opacity-80 transition-opacity">
-              <span className="text-3xl font-black text-blue-500">
-                <Image src="/baggslogo.svg" alt="Accelerate Swag Store Logo" width={30} height={30} />
+      <header className="w-full bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <Link href="/pdp2" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                <Image 
+                  src="/avatar-black.png" 
+                  alt="Accelerate Logo" 
+                  width={40} 
+                  height={40} 
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                />
+              </div>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
+              <span className="text-xs text-slate-500 flex items-center gap-1">
+                <Zap className="w-3 h-3 text-amber-500" />
+                Powered by Accelerate Checkout
               </span>
-              <span className="text-2xl font-bold tracking-tighter text-stone-950">Accelerate Swag Store</span>
-            </Link>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" width={30} height={30} className="h-6 w-6" />
-          </div>
+            </div>
+          </Link>
+          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
       </header>
 
       {/* Main Product Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
-        {/* Product Images */}
-        <div className="md:w-2/3 space-y-4">
-          <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
-            <Image src={mainImage} alt="Product Main Image" fill className="object-cover" priority />
-          </div>
-          <div className="grid grid-cols-4 gap-4">
-            {productImages.map((img, i) => (
-              <button
-                key={i}
-                onClick={() => setMainImage(img)}
-                className={`aspect-square relative rounded-lg overflow-hidden bg-gray-100 ${
-                  mainImage === img ? "ring-2 ring-sky-700" : ""
-                }`}
-              >
-                <Image src={img} alt={`Product Image ${i + 1}`} fill className="object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Product Details */}
-        <div className="md:w-1/3 space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{productTitle}</h1>
-            <p className="text-2xl font-semibold text-gray-900 mt-2">${productPrice.toFixed(2)}</p>
-            {productTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {productTags.map((tag, index) => (
-                  <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                    {tag}
-                  </span>
-                ))}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Product Images */}
+          <div className="space-y-4">
+            {mainImage && mainImage.trim() !== "" && (
+              <div className="aspect-square relative rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm">
+                <Image src={mainImage} alt="Product Main Image" fill className="object-cover" priority />
+              </div>
+            )}
+            {productImages.length > 1 && !productTitle.toLowerCase().includes("airpods") && (
+              <div className="grid grid-cols-4 gap-3">
+                {productImages
+                  .filter((img) => img && img.trim() !== "")
+                  .map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setMainImage(img)}
+                      className={`aspect-square relative rounded-lg overflow-hidden bg-slate-100 border-2 transition-all ${
+                        mainImage === img 
+                          ? "border-blue-600 ring-2 ring-blue-200" 
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <Image src={img} alt={`Product Image ${i + 1}`} fill className="object-cover" />
+                    </button>
+                  ))}
               </div>
             )}
           </div>
 
-          {enabledVariants.length > 1 && (
+          {/* Product Details */}
+          <div className="space-y-8">
             <div>
-              <h2 className="text-sm font-medium text-gray-900 mb-2">Product Variant</h2>
-              <select
-                value={selectedVariantIndex}
-                onChange={(e) => setSelectedVariantIndex(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-              >
-                {enabledVariants.map((variant, index) => (
-                  <option key={variant.id} value={index}>
-                    Variant {variant.id} - $0.99
-                  </option>
-                ))}
-              </select>
+              <h1 className="text-4xl font-bold text-slate-900 mb-4">{productTitle}</h1>
+              <div className="flex items-baseline gap-3 mb-4">
+                <p className="text-3xl font-bold text-slate-900">${productPrice.toFixed(2)}</p>
+              </div>
+              {productTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {productTags.map((tag, index) => (
+                    <span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full border border-blue-200">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => handleCheckout(false)}
-              className="w-full h-[56px] text-xl font-semibold text-white bg-green-700 hover:bg-green-800 rounded-md"
-            >
-              Continue to Checkout
-            </button>
-            {defaultCard && (
-              <button
-                onClick={() => handleCheckout(true)}
-                className="w-full h-[56px] px-4 text-white bg-sky-700 hover:bg-sky-800 rounded-md flex items-center justify-center gap-3"
-              >
-                <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
-                <span className="text-lg font-semibold">Buy now ••••{defaultCard.last4}</span>
-              </button>
+            {enabledVariants.length > 1 && (
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <label className="block text-sm font-semibold text-slate-900 mb-2">Product Variant</label>
+                <select
+                  value={selectedVariantIndex}
+                  onChange={(e) => setSelectedVariantIndex(parseInt(e.target.value))}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition text-slate-900"
+                >
+                  {enabledVariants.map((variant, index) => (
+                    <option key={variant.id} value={index}>
+                      Variant {variant.id} - $0.99
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
-          </div>
 
-          <div className="prose prose-sm">
-            <h2 className="text-sm font-medium text-gray-900">Product Description</h2>
-            <div className="text-gray-600" dangerouslySetInnerHTML={{ __html: productDescription }} />
-          </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => handleCheckout(false)}
+                className="w-full h-14 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2"
+              >
+                Continue to Checkout
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+              {isCardLoading ? (
+                <div className="w-full h-14 px-4 bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl shadow-lg shadow-slate-700/20 flex items-center justify-center gap-3">
+                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span className="text-lg font-semibold text-white">Loading payment method...</span>
+                </div>
+              ) : defaultCard ? (
+                <button
+                  onClick={() => handleCheckout(true)}
+                  className="w-full h-14 px-4 text-white bg-gradient-to-r from-slate-600 to-slate-500 rounded-xl hover:from-slate-700 hover:to-slate-600 transition shadow-lg shadow-slate-700/20 flex items-center justify-center gap-3"
+                >
+                  {defaultCard.artUrl && defaultCard.artUrl.trim() !== "" && (
+                    <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
+                  )}
+                  <span className="text-lg font-semibold">Buy now ••••{defaultCard.last4}</span>
+                </button>
+              ) : null}
+            </div>
 
-          <div className="space-y-2">
-            <h2 className="text-sm font-medium text-gray-900">Features</h2>
-            <ul className="list-disc list-inside text-sm text-gray-600">
-              {currentProduct.variants && <li>Available variants: {currentProduct.variants.length}</li>}
-            </ul>
+            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900 mb-3">Product Description</h2>
+              <div className="text-slate-600 text-sm leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: productDescription }} />
+            </div>
           </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white mt-auto">
+        <div className="max-w-7xl mx-auto px-8 py-12">
+          <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8 mb-8">
+            <div className="flex items-center gap-3">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60"></div>
+                <div className="relative bg-white rounded-xl p-1.5 shadow-md">
+                  <Image 
+                    src="/avatar-black.png" 
+                    alt="Accelerate Logo" 
+                    width={40} 
+                    height={40} 
+                    className="w-9 h-9 object-contain"
+                  />
+                </div>
+              </div>
+              <div>
+                <span className="text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-white bg-clip-text text-transparent tracking-tight block">Accelerate Store</span>
+                <p className="text-slate-400 text-xs mt-1">Powered by Accelerate Checkout</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-6 text-sm">
+              <a href="https://weaccelerate.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                About Accelerate
+              </a>
+              <a href="https://www.weaccelerate.com/privacy" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                Privacy Policy
+              </a>
+              <a href="https://www.weaccelerate.com/terms" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+                Terms of Service
+              </a>
+            </div>
+          </div>
+          <div className="border-t border-slate-800 pt-6">
+            <p className="text-center text-sm text-slate-500">
+              © 2026 Accelerate Store. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
 
       <Script
         crossOrigin="anonymous"
@@ -354,6 +467,9 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
           console.log("pdp2-product.onReady");
           // Hardcode the amount to $0.99 for testing
           const hardcodedAmount = 0.99;
+
+          // Start loading state when script is ready
+          setIsCardLoading(true);
 
           window.accelerate.init({
             amount: Math.round(hardcodedAmount * 100), // Convert to cents (99 cents)
