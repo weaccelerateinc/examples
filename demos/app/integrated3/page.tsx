@@ -259,7 +259,7 @@ export default function CheckoutPage() {
                       <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded" />
                     )}
                     <span className="text-lg font-semibold">
-                      Pay now with {defaultCard.cardName} ••••{defaultCard.last4}
+                      Pay now ••••{defaultCard.last4}
                     </span>
                   </button>
                 ) : (
