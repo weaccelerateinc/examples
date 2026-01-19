@@ -7,7 +7,7 @@ export default function Home() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
         <Link 
-          href="/demo" 
+          href="/demo-integrated" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">Integrated Checkout</h2>
@@ -23,7 +23,7 @@ export default function Home() {
         </Link>
         
         <Link 
-          href="/demo-rememberme" 
+          href="/demo-integrated-rememberme" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">Integrated3 Checkout</h2>

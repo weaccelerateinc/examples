@@ -12,11 +12,11 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: "/demo/:path*",
+        source: "/demo-integrated/:path*",
         destination: "/integrated/:path*",
       },
       {
-        source: "/demo-rememberme/:path*",
+        source: "/demo-integrated-rememberme/:path*",
         destination: "/integrated3/:path*",
       },
       {
