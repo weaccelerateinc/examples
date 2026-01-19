@@ -7,7 +7,7 @@ export default function Home() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
         <Link 
-          href="/integrated" 
+          href="/demo" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">Integrated Checkout</h2>
@@ -23,7 +23,7 @@ export default function Home() {
         </Link>
         
         <Link 
-          href="/integrated3" 
+          href="/demo-rememberme" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">Integrated3 Checkout</h2>
@@ -31,11 +31,19 @@ export default function Home() {
         </Link>
         
         <Link 
-          href="/pdp" 
+          href="/products" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">PDP Checkout</h2>
           <p className="text-gray-600">Product detail page with integrated checkout flow</p>
+        </Link>
+        
+        <Link 
+          href="/products-rememberme" 
+          className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+        >
+          <h2 className="text-xl font-semibold mb-2">PDP2 Checkout</h2>
+          <p className="text-gray-600">Product detail page with remember me functionality</p>
         </Link>
       </div>
     </div>
