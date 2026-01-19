@@ -8,7 +8,7 @@ import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
-import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 declare global {
   interface Window {
@@ -59,6 +59,7 @@ function PaymentContent() {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   console.log({
     selectedPayment,
@@ -68,31 +69,38 @@ function PaymentContent() {
     console.log("EVENT", e);
     e.preventDefault();
     if (selectedCard) {
-      const card = await window.accelerate.requestSource(selectedCard);
-      if ("status" in card) {
-        console.log("Error", { card });
-        return;
+      setIsSubmitting(true);
+      try {
+        const card = await window.accelerate.requestSource(selectedCard);
+        if ("status" in card) {
+          console.log("Error", { card });
+          setIsSubmitting(false);
+          return;
+        }
+        console.log({ card: JSON.stringify(card) });
+        router.push(
+          `/integrated/payment/confirmation?` +
+            `firstName=${encodeURIComponent(firstName)}&` +
+            `lastName=${encodeURIComponent(lastName)}&` +
+            `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
+            `shippingAddress=${encodeURIComponent(address)}&` +
+            `${apartment ? `shippingApartment=${encodeURIComponent(apartment)}&` : ""}` +
+            `shippingCity=${encodeURIComponent(city)}&` +
+            `shippingState=${encodeURIComponent(state)}&` +
+            `shippingZip=${encodeURIComponent(zip)}&` +
+            `billingAddress=${encodeURIComponent(billingAddress)}&` +
+            `billingCity=${encodeURIComponent(billingCity)}&` +
+            `billingState=${encodeURIComponent(billingState)}&` +
+            `billingZip=${encodeURIComponent(billingZip)}&` +
+            `shipping=${encodeURIComponent(selectedShipping)}&` +
+            //`cardBrand=${encodeURIComponent(card?.details?.cardIssuer || "")}&` +
+            `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
+            `totalPrice=${encodeURIComponent(totalPrice)}`
+        );
+      } catch (error) {
+        console.error("Payment error:", error);
+        setIsSubmitting(false);
       }
-      console.log({ card: JSON.stringify(card) });
-      router.push(
-        `/integrated/payment/confirmation?` +
-          `firstName=${encodeURIComponent(firstName)}&` +
-          `lastName=${encodeURIComponent(lastName)}&` +
-          `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
-          `shippingAddress=${encodeURIComponent(address)}&` +
-          `${apartment ? `shippingApartment=${encodeURIComponent(apartment)}&` : ""}` +
-          `shippingCity=${encodeURIComponent(city)}&` +
-          `shippingState=${encodeURIComponent(state)}&` +
-          `shippingZip=${encodeURIComponent(zip)}&` +
-          `billingAddress=${encodeURIComponent(billingAddress)}&` +
-          `billingCity=${encodeURIComponent(billingCity)}&` +
-          `billingState=${encodeURIComponent(billingState)}&` +
-          `billingZip=${encodeURIComponent(billingZip)}&` +
-          `shipping=${encodeURIComponent(selectedShipping)}&` +
-          //`cardBrand=${encodeURIComponent(card?.details?.cardIssuer || "")}&` +
-          `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
-          `totalPrice=${encodeURIComponent(totalPrice)}`
-      );
     } else {
       return;
     }
@@ -295,10 +303,17 @@ function PaymentContent() {
 
               <button
                 type="submit"
-                disabled={!selectedCard}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none"
+                disabled={!selectedCard || isSubmitting}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Complete Payment {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>Complete Payment {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}</>
+                )}
               </button>
             </form>
 

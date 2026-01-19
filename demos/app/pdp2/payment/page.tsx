@@ -8,7 +8,7 @@ import { CheckoutSummary } from "../checkout/CheckoutSummary";
 import Image from "next/image";
 import Link from "next/link";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
-import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 declare global {
   interface Window {
@@ -56,6 +56,7 @@ function PaymentContent() {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [accelerateInitialized, setAccelerateInitialized] = useState(false);
   const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     console.log("Form data updated:", {
@@ -98,68 +99,76 @@ function PaymentContent() {
     console.log("EVENT", e);
     e.preventDefault();
     if (selectedCard) {
-      const card = await window.accelerate.requestSource(selectedCard);
-      if ("status" in card) {
-        console.log("Error", { card });
-        return;
-      }
-      console.log({ card: JSON.stringify(card) });
+      setIsSubmitting(true);
+      try {
+        const card = await window.accelerate.requestSource(selectedCard);
+        if ("status" in card) {
+          console.log("Error", { card });
+          setIsSubmitting(false);
+          return;
+        }
+        console.log({ card: JSON.stringify(card) });
 
-      // Call the PDP confirm API
-      const confirmIntent = await fetch("/api/pdp/confirm", {
-        method: "POST",
-        body: JSON.stringify({
-          processorToken: card.processorToken,
-          checkoutId: productId,
-          line_item: {
-            product_id: productId,
-            variant_id: variantId,
-          },
-          customer: {
-            firstName,
-            lastName,
-            email,
-            phone: searchParams.get("phone") || "",
-          },
-          shipTo: {
-            name: `${firstName} ${lastName}`,
-            address: {
-              line1: address,
-              city: city,
-              state: state,
-              postal_code: zip,
+        // Call the PDP confirm API
+        const confirmIntent = await fetch("/api/pdp/confirm", {
+          method: "POST",
+          body: JSON.stringify({
+            processorToken: card.processorToken,
+            checkoutId: productId,
+            line_item: {
+              product_id: productId,
+              variant_id: variantId,
             },
-          },
-        }),
-      });
+            customer: {
+              firstName,
+              lastName,
+              email,
+              phone: searchParams.get("phone") || "",
+            },
+            shipTo: {
+              name: `${firstName} ${lastName}`,
+              address: {
+                line1: address,
+                city: city,
+                state: state,
+                postal_code: zip,
+              },
+            },
+          }),
+        });
 
-      const res = (await confirmIntent.json()) as { status: string; message?: string };
-      if (res.status === "succeeded") {
-        router.push(
-          `/pdp2/payment/confirmation?` +
-            `firstName=${encodeURIComponent(firstName)}&` +
-            `lastName=${encodeURIComponent(lastName)}&` +
-            `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
-            `shippingAddress=${encodeURIComponent(address)}&` +
-            `${apartment ? `shippingApartment=${encodeURIComponent(apartment)}&` : ""}` +
-            `shippingCity=${encodeURIComponent(city)}&` +
-            `shippingState=${encodeURIComponent(state)}&` +
-            `shippingZip=${encodeURIComponent(zip)}&` +
-            `billingAddress=${encodeURIComponent(billingAddress)}&` +
-            `billingCity=${encodeURIComponent(billingCity)}&` +
-            `billingState=${encodeURIComponent(billingState)}&` +
-            `billingZip=${encodeURIComponent(billingZip)}&` +
-            `shipping=standard&` +
-            `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
-            `totalPrice=${encodeURIComponent(totalPrice)}&` +
-            `productId=${encodeURIComponent(productId)}&` +
-            `productTitle=${encodeURIComponent(productTitle)}&` +
-            `variantTitle=${encodeURIComponent(variantTitle)}&` +
-            `quantity=${encodeURIComponent(quantity)}&` +
-            `productImage=${encodeURIComponent(productImage)}`
-        );
-      } else {
-        console.error(res.message || "Unknown error");
+        const res = (await confirmIntent.json()) as { status: string; message?: string };
+        if (res.status === "succeeded") {
+          router.push(
+            `/pdp2/payment/confirmation?` +
+              `firstName=${encodeURIComponent(firstName)}&` +
+              `lastName=${encodeURIComponent(lastName)}&` +
+              `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
+              `shippingAddress=${encodeURIComponent(address)}&` +
+              `${apartment ? `shippingApartment=${encodeURIComponent(apartment)}&` : ""}` +
+              `shippingCity=${encodeURIComponent(city)}&` +
+              `shippingState=${encodeURIComponent(state)}&` +
+              `shippingZip=${encodeURIComponent(zip)}&` +
+              `billingAddress=${encodeURIComponent(billingAddress)}&` +
+              `billingCity=${encodeURIComponent(billingCity)}&` +
+              `billingState=${encodeURIComponent(billingState)}&` +
+              `billingZip=${encodeURIComponent(billingZip)}&` +
+              `shipping=standard&` +
+              `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
+              `totalPrice=${encodeURIComponent(totalPrice)}&` +
+              `productId=${encodeURIComponent(productId)}&` +
+              `productTitle=${encodeURIComponent(productTitle)}&` +
+              `variantTitle=${encodeURIComponent(variantTitle)}&` +
+              `quantity=${encodeURIComponent(quantity)}&` +
+              `productImage=${encodeURIComponent(productImage)}`
+          );
+        } else {
+          console.error(res.message || "Unknown error");
+          setIsSubmitting(false);
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        setIsSubmitting(false);
       }
     } else {
       return;
@@ -342,10 +351,17 @@ function PaymentContent() {
 
               <button
                 type="submit"
-                disabled={!selectedCard}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none"
+                disabled={!selectedCard || isSubmitting}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Complete Payment {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>Complete Payment {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}</>
+                )}
               </button>
             </form>
 
