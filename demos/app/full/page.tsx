@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"; // Hook for programmatic navigation
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types"; // Type definitions for Accelerate API
 import Image from "next/image"; // Next.js component for optimized image loading
 import { AccelerateWallet } from "../../components/AccelerateWallet"; // Component for Accelerate Wallet
+import { Lock, Truck, Zap, CreditCard, Loader2 } from "lucide-react"; // Icons
 
 // Declare global types for the window object
 declare global {
@@ -56,6 +57,8 @@ export default function CheckoutPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   // Add state for different shipping address
   const [useDifferentShipping, setUseDifferentShipping] = useState(false);
+  // Add state for submitting
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Separate billing and shipping address states
   const [billingAddrLine1, setBillingAddrLine1] = useState("");
@@ -93,33 +96,40 @@ export default function CheckoutPage() {
     console.log("EVENT", e);
     e.preventDefault();
     if (selectedCard) {
-      const card = await window.accelerate.requestSource(selectedCard);
-      if ("status" in card) {
-        console.log("Error", { card });
-        return;
+      setIsSubmitting(true);
+      try {
+        const card = await window.accelerate.requestSource(selectedCard);
+        if ("status" in card) {
+          console.log("Error", { card });
+          setIsSubmitting(false);
+          return;
+        }
+        console.log({ card: JSON.stringify(card) });
+        router.push(
+          `/full/payment/confirmation?` +
+            `firstName=${encodeURIComponent(firstName)}&` +
+            `lastName=${encodeURIComponent(lastName)}&` +
+            `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
+            // Billing address parameters
+            `billingAddress=${encodeURIComponent(billingAddrLine1)}&` +
+            `billingCity=${encodeURIComponent(billingAddrCity)}&` +
+            `billingState=${encodeURIComponent(billingAddrState)}&` +
+            `billingZip=${encodeURIComponent(billingAddrZip)}&` +
+            // Shipping address parameters
+            `shippingName=${encodeURIComponent(shippingName)}&` +
+            `shippingAddress=${encodeURIComponent(shippingAddrLine1)}&` +
+            `shippingCity=${encodeURIComponent(shippingAddrCity)}&` +
+            `shippingState=${encodeURIComponent(shippingAddrState)}&` +
+            `shippingZip=${encodeURIComponent(shippingAddrZip)}&` +
+            // Other parameters
+            `shipping=${encodeURIComponent(selectedShipping)}&` +
+            `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
+            `totalPrice=${encodeURIComponent(totalPrice)}`
+        );
+      } catch (error) {
+        console.error("Payment error:", error);
+        setIsSubmitting(false);
       }
-      console.log({ card: JSON.stringify(card) });
-      router.push(
-        `/full/payment/confirmation?` +
-          `firstName=${encodeURIComponent(firstName)}&` +
-          `lastName=${encodeURIComponent(lastName)}&` +
-          `${email ? `email=${encodeURIComponent(email)}&` : ""}` +
-          // Billing address parameters
-          `billingAddress=${encodeURIComponent(billingAddrLine1)}&` +
-          `billingCity=${encodeURIComponent(billingAddrCity)}&` +
-          `billingState=${encodeURIComponent(billingAddrState)}&` +
-          `billingZip=${encodeURIComponent(billingAddrZip)}&` +
-          // Shipping address parameters
-          `shippingName=${encodeURIComponent(shippingName)}&` +
-          `shippingAddress=${encodeURIComponent(shippingAddrLine1)}&` +
-          `shippingCity=${encodeURIComponent(shippingAddrCity)}&` +
-          `shippingState=${encodeURIComponent(shippingAddrState)}&` +
-          `shippingZip=${encodeURIComponent(shippingAddrZip)}&` +
-          // Other parameters
-          `shipping=${encodeURIComponent(selectedShipping)}&` +
-          `cardLast4=${encodeURIComponent(card?.details?.mask || "")}&` +
-          `totalPrice=${encodeURIComponent(totalPrice)}`
-      );
     } else {
       return;
     }
@@ -153,25 +163,327 @@ export default function CheckoutPage() {
 
   // Render the component
   return (
-    <div className="flex overflow-hidden flex-col bg-white">
-      <header className="flex justify-between items-center py-5 w-full whitespace-nowrap border-b border-neutral-200">
-        <div className="flex justify-between items-center mx-auto max-w-[1104px] w-full px-4">
-          <div className="flex justify-between w-full items-center">
-            <div className="flex gap-3 items-center">
-              <span className="text-3xl font-black text-blue-500">
-                <Image src="/baggslogo.svg" alt="Baggs Logo" width={30} height={30} /> {/* Logo */}
-              </span>
-              <span className="text-2xl font-bold tracking-tighter text-stone-950">Baggs</span> {/* Brand name */}
+    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
+      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
+                <Image 
+                  src="/avatar-black.png" 
+                  alt="Accelerate Logo" 
+                  width={40} 
+                  height={40} 
+                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
+                />
+              </div>
             </div>
-            <Image src="/checkoutbag.svg" alt="Checkout Bag" width={30} height={30} className="h-6 w-6" />{" "}
-            {/* Checkout bag icon */}
+            <div className="flex flex-col">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
+              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
+            </div>
           </div>
+          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
       </header>
 
-      <main className="flex flex-wrap md:flex-nowrap md:flex-row-reverse justify-center w-full max-w-7xl mx-auto">
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[520px] md:border-l border-neutral-200">
-          <div className="max-w-[444px] w-full mx-auto">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Checkout</h1>
+          <p className="text-slate-600">Complete your purchase securely</p>
+        </div>
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
+          <div className="space-y-8 order-2 lg:order-1">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Contact Information */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Contact Information</h2>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <input
+                      data-testid="first-name-input"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      onBlur={() => {
+                        maybeLogin(phoneNumber);
+                      }}
+                      placeholder="First name"
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      data-testid="last-name-input"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      onBlur={() => {
+                        maybeLogin(phoneNumber);
+                      }}
+                      placeholder="Last name"
+                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email address"
+                    type="email"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      setPhone(tryFormatPhone(e.target.value));
+                      maybeLogin(e?.target.value);
+                    }}
+                    placeholder="Phone number"
+                    type="tel"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+              </div>
+
+              {/* Billing Information */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Billing Address</h2>
+                <div className="space-y-4">
+                  <input
+                    placeholder="Street address"
+                    value={billingAddrLine1}
+                    onChange={(e) => setBillingAddrLine1(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="Apartment, suite, etc. (optional)"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="City"
+                    value={billingAddrCity}
+                    onChange={(e) => setBillingAddrCity(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="State"
+                    value={billingAddrState}
+                    onChange={(e) => setBillingAddrState(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                  <input
+                    placeholder="ZIP"
+                    value={billingAddrZip}
+                    onChange={(e) => setBillingAddrZip(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  />
+                </div>
+                
+                <div className="mt-6">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useDifferentShipping}
+                      onChange={(e) => setUseDifferentShipping(e.target.checked)}
+                      className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-slate-700">Use a different shipping address</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Shipping Information (conditional) */}
+              {useDifferentShipping && (
+                <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                  <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Address</h2>
+                  <div className="space-y-4">
+                    <input
+                      placeholder="Name (optional)"
+                      value={shippingName}
+                      onChange={(e) => setShippingName(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="Street address"
+                      value={shippingAddrLine1}
+                      onChange={(e) => setShippingAddrLine1(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="Apartment, suite, etc. (optional)"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="City"
+                      value={shippingAddrCity}
+                      onChange={(e) => setShippingAddrCity(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="State"
+                      value={shippingAddrState}
+                      onChange={(e) => setShippingAddrState(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                    <input
+                      placeholder="ZIP"
+                      value={shippingAddrZip}
+                      onChange={(e) => setShippingAddrZip(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Shipping Method */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Method</h2>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="standard"
+                      checked={selectedShipping === "standard"}
+                      onChange={(e) => {
+                        setSelectedShipping(e.target.value);
+                        setShippingCost(0);
+                      }}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <Truck className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900">Standard Shipping</div>
+                      <div className="text-sm text-slate-500">4-10 business days</div>
+                    </div>
+                    <div className="font-semibold text-green-600">FREE</div>
+                  </label>
+
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="express"
+                      checked={selectedShipping === "express"}
+                      onChange={(e) => {
+                        setSelectedShipping(e.target.value);
+                        setShippingCost(9.99);
+                      }}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <Zap className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900">Express Shipping</div>
+                      <div className="text-sm text-slate-500">2-5 business days</div>
+                    </div>
+                    <div className="font-semibold text-slate-900">$9.99</div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Payment Method */}
+              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-slate-900">Payment Method</h2>
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Lock className="w-3 h-3" />
+                    <span>Encrypted & Secure</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={selectedPayment === "card"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <CreditCard className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div className="flex-1 font-medium text-slate-900">Credit Card</div>
+                    <div className="flex gap-2">
+                      <Image src="/visa.svg" alt="Visa" className="h-[21px]" width={31} height={31} />
+                      <Image src="/mastercard.svg" alt="Mastercard" className="h-[21px]" width={31} height={31} />
+                      <Image src="/amex.svg" alt="Amex" className="h-[21px]" width={31} height={31} />
+                    </div>
+                  </label>
+
+                  {selectedPayment === "card" && accelLoaded && isLoggedIn && (
+                    <div className="pt-4 border-t border-slate-200">
+                      <AccelerateWallet />
+                    </div>
+                  )}
+
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="paypal"
+                      checked={selectedPayment === "paypal"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <div className="text-lg font-bold text-blue-600">P</div>
+                    </div>
+                    <div className="flex-1 font-medium text-slate-900">PayPal</div>
+                    <Image src="/paypal.svg" alt="PayPal" className="h-[21px]" width={51} height={51} />
+                  </label>
+
+                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="zip"
+                      checked={selectedPayment === "zip"}
+                      onChange={(e) => setSelectedPayment(e.target.value)}
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
+                      <div className="text-lg font-bold text-slate-600">Z</div>
+                    </div>
+                    <div className="flex-1 font-medium text-slate-900">Zip - Pay in 4 installments</div>
+                    <Image src="/zip.svg" alt="Zip" className="h-[21px]" width={51} height={51} />
+                  </label>
+                </div>
+              </div>
+
+              {errorMessage && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-600 font-medium text-center">
+                  {errorMessage}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!selectedCard || isSubmitting}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>Pay now {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}</>
+                )}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-slate-500">
+              By completing this purchase you agree to our{" "}
+              <a href="https://www.weaccelerate.com/terms" className="text-blue-600 hover:underline">Terms of Service</a>
+              {" "}and{" "}
+              <a href="https://www.weaccelerate.com/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
+            </p>
+          </div>
+
+          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
             <CheckoutSummary
               selectedShipping={selectedShipping === "express"}
               shippingCost={shippingCost}
@@ -181,295 +493,7 @@ export default function CheckoutPage() {
               }}
             />
           </div>
-        </section>
-
-        <section className="flex flex-col p-5 md:p-10 bg-white w-full md:w-[659px]">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {" "}
-            {/* Form for user input */}
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Contact Information</h3>
-              <div className="space-y-3.5">
-                <div className="flex flex-col sm:flex-row gap-3.5">
-                  <input
-                    data-testid="first-name-input"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    onBlur={() => {
-                      maybeLogin(phoneNumber);
-                    }}
-                    placeholder="First name"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    data-testid="last-name-input"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    onBlur={() => {
-                      maybeLogin(phoneNumber);
-                    }}
-                    placeholder="Last name"
-                    className="flex-1 px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    setPhone(tryFormatPhone(e.target.value));
-                    maybeLogin(e?.target.value);
-                  }}
-                  placeholder="Phone number"
-                  type="tel"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-              </div>
-            </div>
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Billing Information</h3>
-              <div className="space-y-3.5">
-                <input
-                  placeholder="Address"
-                  value={billingAddrLine1}
-                  onChange={(e) => setBillingAddrLine1(e.target.value)}
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <input
-                  placeholder="Apartments, suite, etc (optional)"
-                  className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
-                  <input
-                    placeholder="City"
-                    value={billingAddrCity}
-                    onChange={(e) => setBillingAddrCity(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="State"
-                    value={billingAddrState}
-                    onChange={(e) => setBillingAddrState(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="Zip code"
-                    value={billingAddrZip}
-                    onChange={(e) => setBillingAddrZip(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="mt-4">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={useDifferentShipping}
-                  onChange={(e) => setUseDifferentShipping(e.target.checked)}
-                  className="w-4 h-4 text-sky-700 border-neutral-200 rounded focus:ring-sky-700"
-                />
-                <span className="text-sm">Use a different shipping address</span>
-              </label>
-            </div>
-            {useDifferentShipping && (
-              <div className="mb-6">
-                <h3 className="font-semibold mb-4">Shipping Information</h3>
-                <div className="space-y-3.5">
-                  <input
-                    placeholder="Name (optional)"
-                    value={shippingName}
-                    onChange={(e) => setShippingName(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="Address"
-                    value={shippingAddrLine1}
-                    onChange={(e) => setShippingAddrLine1(e.target.value)}
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <input
-                    placeholder="Apartments, suite, etc (optional)"
-                    className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 w-full">
-                    <input
-                      placeholder="City"
-                      value={shippingAddrCity}
-                      onChange={(e) => setShippingAddrCity(e.target.value)}
-                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    />
-                    <input
-                      placeholder="State"
-                      value={shippingAddrState}
-                      onChange={(e) => setShippingAddrState(e.target.value)}
-                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    />
-                    <input
-                      placeholder="Zip code"
-                      value={shippingAddrZip}
-                      onChange={(e) => setShippingAddrZip(e.target.value)}
-                      className="w-full px-3 py-3 border border-neutral-200 rounded-md focus:ring-2 focus:ring-sky-500 outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div className="mb-6">
-              <h3 className="font-semibold mb-4">Shipping Method</h3>
-              <div className="border border-neutral-200 rounded-md overflow-hidden">
-                <label className="flex gap-3 p-3.5 border-b border-neutral-200">
-                  <input
-                    type="radio"
-                    name="shippingMethod"
-                    value="standard"
-                    checked={selectedShipping === "standard"}
-                    onChange={(e) => {
-                      setSelectedShipping(e.target.value);
-                      setShippingCost(0);
-                    }}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-[18px] h-[18px] rounded-full border-2 ${
-                      selectedShipping === "standard" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Standard Shipping</div>
-                    <div className="text-sm text-neutral-500">4-10 business days</div>
-                  </div>
-                  <div className="text-sm">FREE</div>
-                </label>
-
-                <label className="flex gap-3 p-3.5">
-                  <input
-                    type="radio"
-                    name="shippingMethod"
-                    value="express"
-                    checked={selectedShipping === "express"}
-                    onChange={(e) => {
-                      setSelectedShipping(e.target.value);
-                      setShippingCost(9.99);
-                    }}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-[18px] h-[18px] rounded-full border-2 ${
-                      selectedShipping === "express" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">Express Shipping</div>
-                    <div className="text-sm text-neutral-500">2-5 business days</div>
-                  </div>
-                  <div className="text-sm">$9.99</div>
-                </label>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-1.5">Payment</h3>
-              <p className="text-sm text-neutral-500 mb-3.5">All transactions are secure and encrypted</p>
-
-              <div className="border border-neutral-200 rounded-md overflow-hidden">
-                <div className="p-3.5 border-b border-neutral-200">
-                  <label className="flex gap-3 items-center">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="card"
-                      checked={selectedPayment === "card"}
-                      onChange={(e) => setSelectedPayment(e.target.value)}
-                      className="sr-only"
-                    />
-                    <div
-                      className={`w-[18px] h-[18px] rounded-full border-2 ${
-                        selectedPayment === "card" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                      }`}
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm">Credit card</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Image src="/visa.svg" alt="Visa" className="h-[21px]" width={31} height={31} />
-                      <Image src="/mastercard.svg" alt="Mastercard" className="h-[21px]" width={31} height={31} />
-                      <Image src="/amex.svg" alt="Amex" className="h-[21px]" width={31} height={31} />
-                    </div>
-                  </label>
-                  {selectedPayment === "card" && accelLoaded && isLoggedIn && (
-                    <div className="mt-4 w-full">
-                      <AccelerateWallet />
-                    </div>
-                  )}
-                </div>
-
-                <label className="flex gap-3 p-3.5 border-b border-neutral-200">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="paypal"
-                    checked={selectedPayment === "paypal"}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-[18px] h-[18px] rounded-full border-2 ${
-                      selectedPayment === "paypal" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm">PayPal</div>
-                  </div>
-                  <Image src="/paypal.svg" alt="PayPal" className="h-[21px]" width={51} height={51} />
-                </label>
-
-                <label className="flex gap-3 p-3.5">
-                  <input
-                    type="radio"
-                    name="paymentMethod"
-                    value="zip"
-                    checked={selectedPayment === "zip"}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-[18px] h-[18px] rounded-full border-2 ${
-                      selectedPayment === "zip" ? "border-sky-700 bg-sky-700" : "border-neutral-200"
-                    }`}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm">Zip - Pay in 4 installments</div>
-                  </div>
-                  <Image src="/zip.svg" alt="Zip" className="h-[21px]" width={51} height={51} />
-                </label>
-              </div>
-            </div>
-            {errorMessage && <div className="text-red-600 font-medium text-center mb-4">{errorMessage}</div>}{" "}
-            {/* Display error message if exists */}
-            <div className="flex flex-col gap-3">
-              <button
-                type="submit"
-                disabled={!selectedCard}
-                className="w-full h-[56px] text-xl font-semibold text-white bg-sky-700 disabled:bg-sky-700/50 rounded-md"
-              >
-                Pay now
-              </button>
-            </div>
-          </form>
-
-          <footer className="flex flex-wrap gap-3.5 py-5 mt-8 text-sm text-sky-600 border-t border-neutral-200">
-            <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
-              Privacy policy
-            </a>
-            <a href="https://www.weaccelerate.com/terms" className="hover:underline">
-              Terms of service
-            </a>
-          </footer>
-        </section>
+        </div>
       </main>
 
       <Script
