@@ -1,64 +1,29 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
-  Chart, 
-  BarController, 
-  BarElement, 
-  CategoryScale, 
-  LinearScale, 
-  Tooltip, 
-  Legend 
-} from 'chart.js';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Users, Settings, BarChart3, ShieldCheck, FileText, Target, FlaskConical, Sparkles } from 'lucide-react';
 
-// Register Chart.js components
-Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const CASE_DATA = {
-  visitors: {
-    original: 11560,
-    optimized: 11429,
-    label: 'Unique Visitors',
-    title: 'Traffic Volume',
-    desc: 'Accelerate was tested against slightly lower traffic (-1.13%), proving that efficiency lift is independent of volume.',
-    insight: 'Recognition works even on lower-traffic days.',
-    colorOriginal: '#cbd5e1',
-    colorOptimized: '#94a3b8'
-  },
-  conversions: {
-    original: 534,
-    optimized: 556,
-    label: 'Unique Conversions',
-    title: 'Sales Volume',
-    desc: 'Accelerate delivered 22 additional sales by auto-filling shopper info and reducing friction.',
-    insight: 'Higher volume achieved with 131 fewer visitors.',
-    colorOriginal: '#cbd5e1',
-    colorOptimized: '#10b981'
-  },
   cvr: {
     original: 4.62,
-    optimized: 4.86,
+    optimized: 4.89,
     label: 'Conversion Rate',
     title: 'Relative CVR Lift',
-    desc: 'A +5.31% relative lift in conversion efficiency translates to massive revenue gains at scale.',
-    insight: '85% shopper recognition drives frictionless checkout at scale.',
+    desc: 'A +5.89% relative lift in conversion efficiency translates to massive revenue gains at scale.',
+    insight: '87% shopper recognition drives frictionless checkout at scale.',
     colorOriginal: '#cbd5e1',
     colorOptimized: '#059669'
   }
 };
 
 export default function CaseStudyPage() {
-  const [currentMetric, setCurrentMetric] = useState<keyof typeof CASE_DATA>('cvr');
-  const [traffic, setTraffic] = useState<number>(50000);
+  const [traffic, setTraffic] = useState<number>(100000);
   const [aov, setAov] = useState<number>(300);
-  
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
-  const chartInstance = useRef<Chart | null>(null);
 
   // Constants from study
   const RATE_ORIG = 0.0462;
-  const RATE_OPT = 0.0486;
+  const RATE_OPT = 0.0489;
 
   // Simulator calculations
   const simResults = useMemo(() => {
@@ -75,53 +40,6 @@ export default function CaseStudyPage() {
       revDiff: revOpt - revOrig
     };
   }, [traffic, aov]);
-
-  // Handle Chart Lifecycle
-  useEffect(() => {
-    if (chartRef.current) {
-      const ctx = chartRef.current.getContext('2d');
-      if (ctx) {
-        chartInstance.current = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['Optimized Checkout', 'Accelerate Checkout®'],
-            datasets: [{
-              data: [CASE_DATA[currentMetric].original, CASE_DATA[currentMetric].optimized],
-              backgroundColor: [CASE_DATA[currentMetric].colorOriginal, CASE_DATA[currentMetric].colorOptimized],
-              borderRadius: 8,
-              barPercentage: 0.6
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: (context) => {
-                    const val = context.parsed.y;
-                    if (val === null) return '';
-                    return currentMetric === 'cvr' ? `${val}%` : val.toLocaleString();
-                  }
-                }
-              }
-            },
-            scales: {
-              y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
-              x: { grid: { display: false } }
-            }
-          }
-        });
-      }
-    }
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy();
-      }
-    };
-  }, [currentMetric]);
 
   return (
     <div className="min-h-screen w-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
@@ -148,8 +66,8 @@ export default function CaseStudyPage() {
           </div>
           <nav className="hidden md:flex space-x-8 text-sm font-medium text-slate-500">
               <a href="#performance" className="hover:text-emerald-600 transition-colors">Performance</a>
-              <a href="#solution" className="hover:text-emerald-600 transition-colors">The Solution</a>
               <a href="#simulator" className="hover:text-emerald-600 transition-colors">Simulator</a>
+              <a href="#solution" className="hover:text-emerald-600 transition-colors">The Solution</a>
             </nav>
         </div>
       </header>
@@ -162,7 +80,7 @@ export default function CaseStudyPage() {
             Identity-Powered Commerce
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            85% Shopper Recognition.
+            87% Shopper Recognition.
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-slate-600">
             How one merchant used Accelerate Checkout to turn identity into their most powerful growth engine.
@@ -171,12 +89,12 @@ export default function CaseStudyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col items-center justify-center">
               <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">CVR Lift</span>
-              <span className="text-4xl font-bold text-emerald-600 mt-2">+5.31%</span>
+              <span className="text-4xl font-bold text-emerald-600 mt-2">+5.89%</span>
               <span className="text-sm text-slate-500 mt-1">Relative Efficiency</span>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col items-center justify-center">
               <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Shopper Recognition</span>
-              <span className="text-4xl font-bold text-slate-700 mt-2">85%+</span>
+              <span className="text-4xl font-bold text-slate-700 mt-2">87%+</span>
               <span className="text-sm text-slate-500 mt-1">US Coverage</span>
             </div>
           </div>
@@ -193,7 +111,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold text-slate-900">Overview</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              A leading e-commerce ticketing merchant integrated Accelerate Checkout to streamline their purchase flow and boost conversion performance. The control was an already hyper-optimized checkout—proving that Accelerate delivers gains even against best-in-class experiences.
+              A leading e-commerce ticketing merchant using <span className="font-semibold">Braintree</span> integrated Accelerate&apos;s <span className="font-semibold">modal implementation</span> in just <span className="font-semibold">2 weeks</span> across two flows: <span className="font-semibold">guest checkout</span> and <span className="font-semibold">logged-in users</span>. The control was already hyper-optimized—returning customers had vaulted cards via tokenization.
             </p>
           </div>
 
@@ -219,7 +137,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold text-slate-900">Method</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              The merchant ran a controlled A/B comparison between their original checkout experience and an Accelerate-powered flow, measuring performance across identical purchase events.
+              A controlled A/B test compared the tokenized Braintree checkout against Accelerate. The control defaulted to vaulted cards for returning users—Accelerate only appeared for new card entries, isolating its impact on guest and new-card transactions.
             </p>
           </div>
 
@@ -238,64 +156,64 @@ export default function CaseStudyPage() {
         </section>
 
         {/* Performance Dashboard */}
-        <section id="performance" className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden scroll-mt-20">
-          <div className="p-8 md:p-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">Performance Benchmark</h2>
-                <p className="text-slate-500 mt-1">Accelerate vs. Optimized Checkout</p>
-              </div>
-              
-              <div className="mt-4 md:mt-0 bg-stone-100 p-1 rounded-lg inline-flex">
-                {(['visitors', 'conversions', 'cvr'] as const).map((key) => (
-                  <button 
-                    key={key}
-                    onClick={() => setCurrentMetric(key)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                      currentMetric === key 
-                        ? "bg-white text-emerald-700 shadow-sm" 
-                        : "text-slate-600 hover:text-slate-900"
-                    }`}
-                  >
-                    {key === 'cvr' ? 'CVR' : key.charAt(0).toUpperCase() + key.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
+        <section id="performance" className="scroll-mt-20">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-slate-900">Performance Benchmark</h2>
+            <p className="text-slate-500 mt-2">Accelerate vs. Optimized Checkout</p>
+          </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-              <div className="lg:col-span-2">
-                <div className="relative w-full h-[350px] bg-stone-50 rounded-xl border border-stone-100 p-4">
-                  <canvas ref={chartRef}></canvas>
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+              {/* Left Side - Comparison */}
+              <div className="p-10 space-y-8">
+                {/* Optimized */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-slate-500">Optimized Checkout</span>
+                    <span className="text-3xl font-bold text-slate-500">{CASE_DATA.cvr.original}%</span>
+                  </div>
+                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-slate-300 rounded-full" style={{ width: '46.2%' }}></div>
+                  </div>
+                </div>
+
+                {/* Accelerate */}
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-emerald-600">Accelerate Checkout</span>
+                    <span className="text-4xl font-bold text-emerald-600">{CASE_DATA.cvr.optimized}%</span>
+                  </div>
+                  <div className="h-6 bg-emerald-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full shadow-lg" style={{ width: '95%' }}></div>
+                  </div>
+                </div>
+
+                {/* Comparison Arrow */}
+                <div className="flex items-center gap-4 pt-4">
+                  <div className="flex-1 border-t-2 border-dashed border-emerald-200"></div>
+                  <div className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-full shadow-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <span className="font-bold">+5.89% Lift</span>
+                  </div>
+                  <div className="flex-1 border-t-2 border-dashed border-emerald-200"></div>
                 </div>
               </div>
-              
-              <div className="flex flex-col justify-center space-y-6">
+
+              {/* Right Side - Details */}
+              <div className="p-10 flex flex-col justify-center space-y-6 bg-white">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{CASE_DATA[currentMetric].title}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{CASE_DATA.cvr.title}</h3>
                   <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                    {CASE_DATA[currentMetric].desc}
+                    {CASE_DATA.cvr.desc}
                   </p>
                   <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
                     <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Accelerate Advantage</p>
-                    <p className="text-sm text-emerald-900 mt-1">{CASE_DATA[currentMetric].insight}</p>
+                    <p className="text-sm text-emerald-900 mt-1">{CASE_DATA.cvr.insight}</p>
                   </div>
                 </div>
 
-                <div className="border-t border-stone-100 pt-6 grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <p className="text-xs text-slate-400 uppercase">Optimized</p>
-                    <p className="text-xl font-bold text-slate-700">
-                      {CASE_DATA[currentMetric].original.toLocaleString()}{currentMetric === 'cvr' ? '%' : ''}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 uppercase">Accelerate</p>
-                    <p className="text-xl font-bold text-emerald-600">
-                      {CASE_DATA[currentMetric].optimized.toLocaleString()}{currentMetric === 'cvr' ? '%' : ''}
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -304,8 +222,8 @@ export default function CaseStudyPage() {
         {/* Impact Simulator */}
         <section id="simulator" className="bg-white rounded-3xl border border-stone-200 p-8 md:p-12 shadow-sm scroll-mt-20">
           <div className="mb-10 text-center md:text-left">
-            <h2 className="text-2xl font-bold text-slate-900">Efficiency Scalability Simulator</h2>
-            <p className="text-slate-500">Model the impact of Accelerate&apos;s conversion lift on your monthly volume.</p>
+            <h2 className="text-2xl font-bold text-slate-900">Revenue Impact Calculator</h2>
+            <p className="text-slate-500">See how Accelerate&apos;s conversion lift translates to your bottom line.</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -317,9 +235,9 @@ export default function CaseStudyPage() {
                 </div>
                 <input 
                   type="range" 
-                  min="5000" 
-                  max="100000" 
-                  step="1000" 
+                  min="100000" 
+                  max="1000000" 
+                  step="10000" 
                   value={traffic} 
                   onChange={(e) => setTraffic(parseInt(e.target.value))}
                   className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-emerald-600" 
@@ -341,11 +259,11 @@ export default function CaseStudyPage() {
               <div className="space-y-6">
                 <div className="flex justify-between items-end border-b border-white/20 pb-4">
                   <div>
-                    <p className="text-xs opacity-70 mb-1">Optimized Revenue</p>
+                    <p className="text-xs opacity-70 mb-1">Without Accelerate</p>
                     <p className="text-xl font-medium">${Math.round(simResults.revOrig).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs opacity-70 mb-1">Accelerate Revenue</p>
+                    <p className="text-xs opacity-70 mb-1">With Accelerate</p>
                     <p className="text-3xl font-bold">${Math.round(simResults.revOpt).toLocaleString()}</p>
                   </div>
                 </div>
@@ -381,14 +299,14 @@ export default function CaseStudyPage() {
         {/* The Solution Section */}
         <section id="solution" className="space-y-12 scroll-mt-20">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-slate-900">The Accelerate Solution Ecosystem</h2>
+            <h2 className="text-3xl font-bold text-slate-900">The Accelerate Solution</h2>
             <p className="text-slate-500 mt-2">Magic auto-fill meets intelligent card management.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <SolutionCard 
               icon={<Users className="w-5 h-5 text-emerald-600" />} 
-              title="85% Recognition" 
+              title="87% Recognition" 
               text="Recognizes shoppers across the network, auto-filling payment/shipping info from just a name and phone number." 
             />
             <SolutionCard 
@@ -415,7 +333,7 @@ export default function CaseStudyPage() {
                 <div className="space-y-6">
                   <AdvantageItem title="Merchant of Record" text="Retain full control over funds and processing with no downstream changes." />
                   <AdvantageItem title="Universal Card Coverage" text="Access to all major networks—Amex, Visa, and Mastercard—for every user." />
-                  <AdvantageItem title="Network Recognition" text="Identify 85% of shoppers even if they've never visited your store before." />
+                  <AdvantageItem title="Network Recognition" text="Identify 87% of shoppers even if they've never visited your store before." />
                 </div>
               </div>
               <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
