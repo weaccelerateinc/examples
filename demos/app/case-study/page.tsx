@@ -124,7 +124,7 @@ export default function CaseStudyPage() {
   }, [currentMetric]);
 
   return (
-    <div className="min-h-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800">
+    <div className="min-h-screen w-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
       {/* Navigation - Branded Header */}
       <header className="w-full bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
