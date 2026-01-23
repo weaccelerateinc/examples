@@ -10,6 +10,7 @@ import {
   Legend 
 } from 'chart.js';
 import Image from 'next/image';
+import { Users, Settings, BarChart3, ShieldCheck, FileText, Target, FlaskConical, Sparkles } from 'lucide-react';
 
 // Register Chart.js components
 Chart.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -126,7 +127,7 @@ export default function CaseStudyPage() {
     <div className="min-h-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800">
       {/* Navigation - Branded Header */}
       <header className="w-full bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
@@ -153,7 +154,7 @@ export default function CaseStudyPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
         
         {/* Hero Section */}
         <section className="text-center space-y-6">
@@ -161,11 +162,10 @@ export default function CaseStudyPage() {
             Identity-Powered Commerce
           </div>
           <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            85% Shopper Recognition.<br />
-            <span className="text-emerald-600">5.31% Conversion Lift.</span>
+            85% Shopper Recognition.
           </h1>
           <p className="max-w-2xl mx-auto text-lg text-slate-600">
-            How one merchant used Accelerate Checkout® to turn identity into their most powerful growth engine.
+            How one merchant used Accelerate Checkout to turn identity into their most powerful growth engine.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
@@ -188,7 +188,7 @@ export default function CaseStudyPage() {
           <div className="bg-white rounded-2xl p-8 border border-stone-200 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <span className="text-emerald-600 text-lg">📋</span>
+                <FileText className="w-5 h-5 text-emerald-600" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Overview</h3>
             </div>
@@ -201,7 +201,7 @@ export default function CaseStudyPage() {
           <div className="bg-white rounded-2xl p-8 border border-stone-200 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <span className="text-blue-600 text-lg">🎯</span>
+                <Target className="w-5 h-5 text-blue-600" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Objective</h3>
             </div>
@@ -214,7 +214,7 @@ export default function CaseStudyPage() {
           <div className="bg-white rounded-2xl p-8 border border-stone-200 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                <span className="text-purple-600 text-lg">🔬</span>
+                <FlaskConical className="w-5 h-5 text-purple-600" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">Method</h3>
             </div>
@@ -227,7 +227,7 @@ export default function CaseStudyPage() {
           <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-8 text-white shadow-lg">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <span className="text-white text-lg">✨</span>
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
               <h3 className="text-lg font-bold">Conclusion</h3>
             </div>
@@ -387,22 +387,22 @@ export default function CaseStudyPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <SolutionCard 
-              icon="👤" 
+              icon={<Users className="w-5 h-5 text-emerald-600" />} 
               title="85% Recognition" 
               text="Recognizes shoppers across the network, auto-filling payment/shipping info from just a name and phone number." 
             />
             <SolutionCard 
-              icon="⚙️" 
+              icon={<Settings className="w-5 h-5 text-emerald-600" />} 
               title="Full Control" 
               text="Merchants remain the 'Merchant of Record.' No changes to payment processing or downstream workflows." 
             />
             <SolutionCard 
-              icon="📊" 
+              icon={<BarChart3 className="w-5 h-5 text-emerald-600" />} 
               title="Stack-Ranked Cards" 
               text="Prioritizes customer cards based on usage frequency and balance depth to maximize success rates." 
             />
             <SolutionCard 
-              icon="🔐" 
+              icon={<ShieldCheck className="w-5 h-5 text-emerald-600" />} 
               title="Tokenized Security" 
               text="Uses secure tokens for credential transmission and updates card access to reduce failed transactions." 
             />
@@ -443,9 +443,11 @@ export default function CaseStudyPage() {
   );
 }
 
-const SolutionCard: React.FC<{ icon: string; title: string; text: string }> = ({ icon, title, text }) => (
+const SolutionCard: React.FC<{ icon: React.ReactNode; title: string; text: string }> = ({ icon, title, text }) => (
   <div className="bg-white p-6 rounded-2xl border border-stone-200 hover:shadow-md transition-shadow">
-    <div className="text-2xl mb-4 text-emerald-600">{icon}</div>
+    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center mb-4">
+      {icon}
+    </div>
     <h4 className="font-bold text-slate-900 mb-2">{title}</h4>
     <p className="text-sm text-slate-600 leading-relaxed">{text}</p>
   </div>
