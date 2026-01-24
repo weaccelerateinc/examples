@@ -108,7 +108,7 @@ export default function CaseStudyPage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
                 <FileText className="w-5 h-5 text-emerald-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Overview</h3>
+              <h3 className="text-lg font-bold text-slate-900">Overview & Implementation</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
               A leading e-commerce ticketing merchant using <span className="font-semibold">Braintree</span> integrated Accelerate&apos;s <span className="font-semibold">modal implementation</span> in just <span className="font-semibold">2 weeks</span> across two flows: <span className="font-semibold">guest checkout</span> and <span className="font-semibold">logged-in users</span>. The control was already hyper-optimized—returning customers had vaulted cards via tokenization.
@@ -124,7 +124,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold text-slate-900">Objective</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Increase conversion rate (CVR) for purchase completions while maintaining stable visitor traffic—without disrupting the existing optimized experience.
+              Inflect conversion rate (CVR) by expanding access to an accelerated checkout experience for customers beyond tokenization and existing wallet options. A large portion of customers required card credential updates despite having past payment details tokenized.
             </p>
           </div>
 
@@ -134,10 +134,10 @@ export default function CaseStudyPage() {
               <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
                 <FlaskConical className="w-5 h-5 text-purple-600" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">Method</h3>
+              <h3 className="text-lg font-bold text-slate-900">Test Method</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              A controlled A/B test compared the tokenized Braintree checkout against Accelerate. The control defaulted to vaulted cards for returning users—Accelerate only appeared for new card entries, isolating its impact on guest and new-card transactions.
+              The merchant ran a controlled A/B comparison between their original checkout experience and an Accelerate-powered flow, measuring performance across identical purchase events. Accelerate was activated only when the &apos;add card&apos; radio button was selected given PayPal default selection.
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold">Conclusion</h3>
             </div>
             <p className="text-emerald-50 text-sm leading-relaxed">
-              By reducing friction at the point of purchase, Accelerate delivered a meaningful lift in conversions and revenue efficiency. Even modest improvements in checkout flow translated into measurable gains at scale.
+              The improved checkout journey enabled by Accelerate - faster and less data entry - delivered meaningful conversion lift and revenue efficiency, without requiring changes to the payment stack. Even modest improvements in checkout flow translated into measurable gains at scale.
             </p>
           </div>
         </section>
