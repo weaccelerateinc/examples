@@ -5,19 +5,22 @@ import { Users, Settings, BarChart3, ShieldCheck, FileText, Target, FlaskConical
 
 
 export default function CaseStudyPage() {
-  const [traffic, setTraffic] = useState<number>(1000000);
-  const [aov, setAov] = useState<number>(300);
-
-  // Constants from study
-  const RATE_ORIG = 0.0462;
-  const RATE_OPT = 0.0462 * 1.059; // 5.9% relative lift
+  const [traffic, setTraffic] = useState<number>(2000000);
+  const [aov, setAov] = useState<string>("300");
+  const [baselineConversion, setBaselineConversion] = useState<string>("2");
+  const [cvrLift, setCvrLift] = useState<string>("5.9");
 
   // Simulator calculations
   const simResults = useMemo(() => {
-    const convOrig = Math.round(traffic * RATE_ORIG);
-    const convOpt = Math.round(traffic * RATE_OPT);
-    const revOrig = convOrig * aov;
-    const revOpt = convOpt * aov;
+    const aovNum = parseFloat(aov) || 0;
+    const baselineNum = parseFloat(baselineConversion) || 0;
+    const liftNum = parseFloat(cvrLift) || 0;
+    const baselineRate = baselineNum / 100;
+    const liftMultiplier = 1 + (liftNum / 100);
+    const convOrig = Math.round(traffic * baselineRate);
+    const convOpt = Math.round(traffic * baselineRate * liftMultiplier);
+    const revOrig = convOrig * aovNum;
+    const revOpt = convOpt * aovNum;
     return {
       convOrig,
       convOpt,
@@ -26,7 +29,7 @@ export default function CaseStudyPage() {
       revOpt,
       revDiff: revOpt - revOrig
     };
-  }, [traffic, aov, RATE_OPT]);
+  }, [traffic, aov, baselineConversion, cvrLift]);
 
   return (
     <div className="min-h-screen w-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
@@ -97,7 +100,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold text-slate-900">Overview & Implementation</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              A leading e-commerce ticketing merchant using <span className="font-semibold">Braintree</span> integrated Accelerate&apos;s <span className="font-semibold">modal implementation</span> in just <span className="font-semibold">2 weeks</span> across two flows: <span className="font-semibold">guest checkout</span> and <span className="font-semibold">logged-in users</span>. The control was already hyper-optimized—returning customers had vaulted cards via tokenization.
+              A leading e-commerce ticketing merchant using <span className="font-semibold">Braintree</span> integrated Accelerate&apos;s <span className="font-semibold">modal implementation</span> in just <span className="font-semibold">2 weeks</span> across two flows: <span className="font-semibold">guest checkout</span> and <span className="font-semibold">logged-in users</span>. The control checkout exhibited an already optimized flow designed to minimize field entry, and leveraged <span className="font-semibold">card tokenization</span> for returning customers. The merchant offered a variety of payment options including <span className="font-semibold">PayPal</span>, <span className="font-semibold">Klarna</span>, <span className="font-semibold">Google Pay</span>, and <span className="font-semibold">pay by bank</span>.
             </p>
           </div>
 
@@ -143,16 +146,16 @@ export default function CaseStudyPage() {
 
         {/* Impact Simulator */}
         <section id="simulator" className="bg-white rounded-3xl border border-stone-200 p-8 md:p-12 shadow-sm scroll-mt-20">
-          <div className="mb-10 text-center md:text-left">
+          <div className="mb-4 text-center md:text-left">
             <h2 className="text-2xl font-bold text-slate-900">Revenue Impact Calculator</h2>
             <p className="text-slate-500">See how Accelerate&apos;s conversion lift translates to your bottom line.</p>
             <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-200">
-              <span className="text-xs font-semibold text-emerald-700">Based on +5.9% CVR Lift</span>
+              <span className="text-xs font-semibold text-emerald-700">Based on +{cvrLift}% CVR Lift</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <label className="text-sm font-medium text-slate-600">Monthly Traffic</label>
@@ -160,7 +163,7 @@ export default function CaseStudyPage() {
                 </div>
                 <input 
                   type="range" 
-                  min="1000000" 
+                  min="100000" 
                   max="30000000" 
                   step="100000" 
                   value={traffic} 
@@ -171,30 +174,63 @@ export default function CaseStudyPage() {
               <div>
                 <label className="text-sm font-medium text-slate-600 mb-2 block">Average Order Value ($)</label>
                 <input 
-                  type="number" 
+                  type="text" 
+                  inputMode="decimal"
                   value={aov} 
-                  onChange={(e) => setAov(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-stone-50 border border-stone-200 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" 
+                  onChange={(e) => setAov(e.target.value)}
+                  className="w-full bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" 
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-600 mb-2 block">Baseline Conversion (%)</label>
+                  <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={baselineConversion} 
+                    onChange={(e) => setBaselineConversion(e.target.value)}
+                    className="w-full bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" 
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600 mb-2 block">CVR Lift (%)</label>
+                  <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={cvrLift} 
+                    onChange={(e) => setCvrLift(e.target.value)}
+                    className="w-full bg-emerald-50 border border-emerald-200 rounded-lg p-3 text-slate-900 focus:ring-2 focus:ring-emerald-500 outline-none" 
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="bg-emerald-600 rounded-2xl p-8 text-white shadow-xl">
-              <h4 className="text-sm font-bold uppercase tracking-widest opacity-80 mb-6">Projected Revenue Lift</h4>
-              <div className="space-y-6">
-                <div className="flex justify-between items-end border-b border-white/20 pb-4">
-                  <div>
-                    <p className="text-xs opacity-70 mb-1">Without Accelerate</p>
-                    <p className="text-xl font-medium">${Math.round(simResults.revOrig).toLocaleString()}</p>
+            <div className="bg-stone-100 rounded-3xl overflow-hidden border border-stone-200">
+              <div className="px-6 py-4 border-b border-stone-200">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Projected Revenue Lift</h4>
+              </div>
+              
+              <div className="p-6 space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-xl p-4 border border-stone-200">
+                    <p className="text-[11px] uppercase tracking-wider text-slate-400 mb-1">Without Accelerate (Annual)</p>
+                    <p className="text-xl font-semibold text-slate-600">${Math.round(simResults.revOrig * 12).toLocaleString()}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs opacity-70 mb-1">With Accelerate</p>
-                    <p className="text-3xl font-bold">${Math.round(simResults.revOpt).toLocaleString()}</p>
+                  <div className="bg-emerald-50 rounded-xl p-4 ring-1 ring-emerald-200">
+                    <p className="text-[11px] uppercase tracking-wider text-emerald-600/70 mb-1">With Accelerate (Annual)</p>
+                    <p className="text-xl font-semibold text-emerald-600">${Math.round(simResults.revOpt * 12).toLocaleString()}</p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-bold">Monthly Gain</p>
-                  <p className="text-2xl font-bold">+${Math.round(simResults.revDiff).toLocaleString()}</p>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-slate-500">Monthly Gain</span>
+                    <span className="text-lg font-bold text-slate-800">+${Math.round(simResults.revDiff).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-500">Annual Gain</span>
+                    <span className="text-2xl font-bold text-emerald-600">+${Math.round(simResults.revDiff * 12).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
             </div>
