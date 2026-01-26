@@ -15,27 +15,11 @@ export default function Home() {
         </Link>
         
         <Link 
-          href="/integrated2" 
-          className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-        >
-          <h2 className="text-xl font-semibold mb-2">Demo Integrated with Voice Checkout</h2>
-          <p className="text-gray-600">Duplicate of integrated payment flow with speech-to-text</p>
-        </Link>
-        
-        <Link 
           href="/demo-integrated-rememberme" 
           className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 className="text-xl font-semibold mb-2">Demo with Remember Me Checkout</h2>
           <p className="text-gray-600">Integrated payment flow with cookies to persist login</p>
-        </Link>
-        
-        <Link 
-          href="/products" 
-          className="p-6 border border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
-        >
-          <h2 className="text-xl font-semibold mb-2">Products Checkout</h2>
-          <p className="text-gray-600">Product detail page with integrated checkout flow</p>
         </Link>
         
         <Link 
