@@ -4,26 +4,13 @@ import Image from 'next/image';
 import { Users, Settings, BarChart3, ShieldCheck, FileText, Target, FlaskConical, Sparkles } from 'lucide-react';
 
 
-const CASE_DATA = {
-  cvr: {
-    original: 4.62,
-    optimized: 4.89,
-    label: 'Conversion Rate',
-    title: 'Relative CVR Lift',
-    desc: 'A +5.89% relative lift in conversion efficiency translates to massive revenue gains at scale.',
-    insight: '87% shopper recognition drives frictionless checkout at scale.',
-    colorOriginal: '#cbd5e1',
-    colorOptimized: '#059669'
-  }
-};
-
 export default function CaseStudyPage() {
-  const [traffic, setTraffic] = useState<number>(100000);
+  const [traffic, setTraffic] = useState<number>(1000000);
   const [aov, setAov] = useState<number>(300);
 
   // Constants from study
   const RATE_ORIG = 0.0462;
-  const RATE_OPT = 0.0489;
+  const RATE_OPT = 0.0462 * 1.059; // 5.9% relative lift
 
   // Simulator calculations
   const simResults = useMemo(() => {
@@ -39,7 +26,7 @@ export default function CaseStudyPage() {
       revOpt,
       revDiff: revOpt - revOrig
     };
-  }, [traffic, aov]);
+  }, [traffic, aov, RATE_OPT]);
 
   return (
     <div className="min-h-screen w-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
@@ -65,7 +52,6 @@ export default function CaseStudyPage() {
             </div>
           </div>
           <nav className="hidden md:flex space-x-8 text-sm font-medium text-slate-500">
-              <a href="#performance" className="hover:text-emerald-600 transition-colors">Performance</a>
               <a href="#simulator" className="hover:text-emerald-600 transition-colors">Simulator</a>
               <a href="#solution" className="hover:text-emerald-600 transition-colors">The Solution</a>
             </nav>
@@ -89,7 +75,7 @@ export default function CaseStudyPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 max-w-3xl mx-auto">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col items-center justify-center">
               <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">CVR Lift</span>
-              <span className="text-4xl font-bold text-emerald-600 mt-2">+5.89%</span>
+              <span className="text-4xl font-bold text-emerald-600 mt-2">+5.9%</span>
               <span className="text-sm text-slate-500 mt-1">Relative Efficiency</span>
             </div>
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col items-center justify-center">
@@ -124,7 +110,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold text-slate-900">Objective</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Inflect conversion rate (CVR) by expanding access to an accelerated checkout experience for customers beyond tokenization and existing wallet options. A large portion of customers required card credential updates despite having past payment details tokenized.
+              Inflect conversion rate (CVR) by expanding access to an accelerated checkout experience for customers beyond the client&apos;s tokenization and existing wallet options. A large portion of customers required card credential updates despite having past payment details tokenized.
             </p>
           </div>
 
@@ -155,75 +141,14 @@ export default function CaseStudyPage() {
           </div>
         </section>
 
-        {/* Performance Dashboard */}
-        <section id="performance" className="scroll-mt-20">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-slate-900">Performance Benchmark</h2>
-            <p className="text-slate-500 mt-2">Accelerate vs. Optimized Checkout</p>
-          </div>
-
-          <div className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              {/* Left Side - Comparison */}
-              <div className="p-10 space-y-8">
-                {/* Optimized */}
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-medium text-slate-500">Optimized Checkout</span>
-                    <span className="text-3xl font-bold text-slate-500">{CASE_DATA.cvr.original}%</span>
-                  </div>
-                  <div className="h-4 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-slate-300 rounded-full" style={{ width: '46.2%' }}></div>
-                  </div>
-                </div>
-
-                {/* Accelerate */}
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold text-emerald-600">Accelerate Checkout</span>
-                    <span className="text-4xl font-bold text-emerald-600">{CASE_DATA.cvr.optimized}%</span>
-                  </div>
-                  <div className="h-6 bg-emerald-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full shadow-lg" style={{ width: '95%' }}></div>
-                  </div>
-                </div>
-
-                {/* Comparison Arrow */}
-                <div className="flex items-center gap-4 pt-4">
-                  <div className="flex-1 border-t-2 border-dashed border-emerald-200"></div>
-                  <div className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-full shadow-lg">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                    </svg>
-                    <span className="font-bold">+5.89% Lift</span>
-                  </div>
-                  <div className="flex-1 border-t-2 border-dashed border-emerald-200"></div>
-                </div>
-              </div>
-
-              {/* Right Side - Details */}
-              <div className="p-10 flex flex-col justify-center space-y-6 bg-white">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{CASE_DATA.cvr.title}</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                    {CASE_DATA.cvr.desc}
-                  </p>
-                  <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
-                    <p className="text-xs font-bold text-emerald-800 uppercase tracking-wide">Accelerate Advantage</p>
-                    <p className="text-sm text-emerald-900 mt-1">{CASE_DATA.cvr.insight}</p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Impact Simulator */}
         <section id="simulator" className="bg-white rounded-3xl border border-stone-200 p-8 md:p-12 shadow-sm scroll-mt-20">
           <div className="mb-10 text-center md:text-left">
             <h2 className="text-2xl font-bold text-slate-900">Revenue Impact Calculator</h2>
             <p className="text-slate-500">See how Accelerate&apos;s conversion lift translates to your bottom line.</p>
+            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-200">
+              <span className="text-xs font-semibold text-emerald-700">Based on +5.9% CVR Lift</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -235,9 +160,9 @@ export default function CaseStudyPage() {
                 </div>
                 <input 
                   type="range" 
-                  min="100000" 
-                  max="1000000" 
-                  step="10000" 
+                  min="1000000" 
+                  max="30000000" 
+                  step="100000" 
                   value={traffic} 
                   onChange={(e) => setTraffic(parseInt(e.target.value))}
                   className="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-emerald-600" 
