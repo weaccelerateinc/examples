@@ -4,19 +4,6 @@ import Image from 'next/image';
 import { Users, Settings, BarChart3, ShieldCheck, FileText, Target, FlaskConical, Sparkles } from 'lucide-react';
 
 
-const CASE_DATA = {
-  cvr: {
-    original: 4.62,
-    optimized: 4.89,
-    label: 'Conversion Rate',
-    title: 'Relative CVR Lift',
-    desc: 'A +5.9% relative lift in conversion efficiency translates to massive revenue gains at scale.',
-    insight: '87% shopper recognition drives frictionless checkout at scale.',
-    colorOriginal: '#cbd5e1',
-    colorOptimized: '#059669'
-  }
-};
-
 export default function CaseStudyPage() {
   const [traffic, setTraffic] = useState<number>(1000000);
   const [aov, setAov] = useState<number>(300);
@@ -39,7 +26,7 @@ export default function CaseStudyPage() {
       revOpt,
       revDiff: revOpt - revOrig
     };
-  }, [traffic, aov]);
+  }, [traffic, aov, RATE_OPT]);
 
   return (
     <div className="min-h-screen w-screen bg-stone-50 text-slate-800 antialiased selection:bg-emerald-100 selection:text-emerald-800 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
@@ -123,7 +110,7 @@ export default function CaseStudyPage() {
               <h3 className="text-lg font-bold text-slate-900">Objective</h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Inflect conversion rate (CVR) by expanding access to an accelerated checkout experience for customers beyond the client's tokenization and existing wallet options. A large portion of customers required card credential updates despite having past payment details tokenized.
+              Inflect conversion rate (CVR) by expanding access to an accelerated checkout experience for customers beyond the client&apos;s tokenization and existing wallet options. A large portion of customers required card credential updates despite having past payment details tokenized.
             </p>
           </div>
 
