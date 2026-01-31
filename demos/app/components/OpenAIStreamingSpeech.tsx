@@ -12,7 +12,7 @@ import {
   resetStreamingParser,
 } from "../utils/voiceProviders";
 
-interface OpenAIStreamingSpeechProps extends VoiceProviderCallbacks {}
+type OpenAIStreamingSpeechProps = VoiceProviderCallbacks;
 
 // OpenAI Realtime model
 const OPENAI_REALTIME_MODEL = "gpt-realtime";

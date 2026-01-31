@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { VoiceProviderCallbacks, FieldType } from "../utils/voiceProviders";
 
-interface WhisperGPTSpeechProps extends VoiceProviderCallbacks {}
+type WhisperGPTSpeechProps = VoiceProviderCallbacks;
 
 export default function WhisperGPTSpeech({
   onCardNumberChange,

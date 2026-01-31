@@ -4,23 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { VoiceProviderCallbacks, FieldType } from "../utils/voiceProviders";
 import { createPCMAudioProcessor } from "../utils/audioUtils";
 
-interface DeepgramStreamingSpeechProps extends VoiceProviderCallbacks {}
-
-const CARD_EXTRACTION_SYSTEM_PROMPT = `Extract credit card information from the transcribed speech.
-Return ONLY valid JSON in this exact format:
-{
-  "cardNumber": "extracted 16-digit card number or null",
-  "expiry": "MM/YY format or null", 
-  "cvv": "3-4 digit CVV or null",
-  "currentField": "cardNumber" | "expiry" | "cvv" | "complete" | "unclear"
-}
-
-Rules:
-- cardNumber: Extract digits only, ignore spaces/dashes. Must be 13-19 digits.
-- expiry: Convert to MM/YY format (e.g., "January 2025" → "01/25", "August 27" → "08/27")
-- cvv: 3-4 digits only
-- Parse spoken numbers like "four one two three" as "4123"
-- Only return JSON, no other text`;
+type DeepgramStreamingSpeechProps = VoiceProviderCallbacks;
 
 export default function DeepgramStreamingSpeech({
   onCardNumberChange,
