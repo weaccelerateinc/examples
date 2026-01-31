@@ -6,14 +6,17 @@
  * Create a PCM audio processor that captures raw audio data directly from microphone
  * @param stream - MediaStream from getUserMedia
  * @param onAudioData - Callback function to receive PCM data chunks
+ * @param sampleRate - Sample rate in Hz (16000 for Gemini, 24000 for OpenAI)
  * @returns AudioContext and cleanup function
  */
 export function createPCMAudioProcessor(
   stream: MediaStream,
-  onAudioData: (pcmData: ArrayBuffer) => void
+  onAudioData: (pcmData: ArrayBuffer) => void,
+  sampleRate: number = 16000
 ): { audioContext: AudioContext; cleanup: () => void } {
-  // Create audio context at 16kHz (required by Live API)
-  const audioContext = new AudioContext({ sampleRate: 16000 });
+  // Create audio context at specified sample rate
+  // Gemini Live API uses 16kHz, OpenAI Realtime uses 24kHz
+  const audioContext = new AudioContext({ sampleRate });
 
   // Create media source from stream
   const source = audioContext.createMediaStreamSource(stream);

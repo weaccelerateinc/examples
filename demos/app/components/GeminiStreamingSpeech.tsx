@@ -5,26 +5,20 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Mic, MicOff, Loader2 } from "lucide-react";
 import { GoogleGenAI, Session } from "@google/genai";
 import { createPCMAudioProcessor, checkAudioSupport } from "../utils/audioUtils";
+import {
+  VoiceProviderCallbacks,
+  FieldType,
+  CARD_EXTRACTION_SYSTEM_PROMPT,
+  parseStreamingJson,
+  resetStreamingParser,
+} from "../utils/voiceProviders";
 
-interface GeminiStreamingSpeechProps {
-  onCardNumberChange: (value: string) => void;
-  onExpiryChange: (value: string) => void;
-  onCvvChange: (value: string) => void;
-  onCurrentFieldChange: (field: "cardNumber" | "expiry" | "cvv" | "listening") => void;
-  onActiveFieldChange?: (field: "cardNumber" | "expiry" | "cvv" | "listening" | null) => void;
+interface GeminiStreamingSpeechProps extends VoiceProviderCallbacks {
+  modelName?: string;
 }
 
-let accText = "";
-const processTextStream = (incoming: string) => {
-  accText += incoming;
-  try {
-    const response = JSON.parse(accText.replaceAll("```", "").replaceAll("json", ""));
-    accText = "";
-    return response as { card_number?: string; expiry?: string; cvv?: string };
-  } catch {
-    return null;
-  }
-};
+// Default model name for Live API (supports bidiGenerateContent)
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash-native-audio-latest";
 
 export function GeminiStreamingSpeech({
   onCardNumberChange,
@@ -32,6 +26,7 @@ export function GeminiStreamingSpeech({
   onCvvChange,
   onCurrentFieldChange,
   onActiveFieldChange,
+  modelName = DEFAULT_GEMINI_MODEL,
 }: GeminiStreamingSpeechProps) {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
@@ -42,7 +37,7 @@ export function GeminiStreamingSpeech({
     expiry: false,
     cvv: false,
   });
-  const [activeField, setActiveField] = useState<"cardNumber" | "expiry" | "cvv" | "listening" | null>(null);
+  const [activeField, setActiveField] = useState<FieldType | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
   const liveSessionRef = useRef<Session | null>(null);
@@ -62,37 +57,57 @@ export function GeminiStreamingSpeech({
       setIsConnecting(true);
       setError(null);
 
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Google Gemini API key not configured");
-      }
+      console.log("🔗 Fetching Gemini token from backend...");
 
-      console.log("🔗 Connecting to Gemini Live API...");
-
-      // Initialize GoogleGenAI client
-      const genai = new GoogleGenAI({
-        apiKey: apiKey,
+      // Fetch token from our backend (keeps API key secure)
+      const tokenResponse = await fetch("/api/voice/gemini-token", {
+        method: "POST",
       });
 
-      // Connect to Live API
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.json();
+        throw new Error(errorData.error || "Failed to get Gemini token");
+      }
+
+      const { token, isApiKey } = await tokenResponse.json();
+      if (!token) {
+        throw new Error("No token received from server");
+      }
+
+      console.log("🔗 Connecting to Gemini Live API...", { isApiKey, model: modelName });
+
+      // Initialize GoogleGenAI client with token or API key
+      // If isApiKey is true, this is a fallback using the API key directly
+      const genai = new GoogleGenAI(
+        isApiKey ? { apiKey: token } : { apiKey: token } // SDK uses apiKey for both cases currently
+      );
+
+      // Connect to Live API using the provided model name
+      // Native audio models require AUDIO in responseModalities
+      const isNativeAudioModel = modelName.includes("native-audio");
       const liveSession = await genai.live.connect({
-        model: "gemini-2.0-flash-live-001",
+        model: modelName,
         config: {
-          responseModalities: ["TEXT" as any],
+          responseModalities: isNativeAudioModel ? ["AUDIO" as any, "TEXT" as any] : ["TEXT" as any],
           systemInstruction: {
             parts: [
               {
-                text: `
-                You are a credit card information extraction assistant.
-                The user is going to speak their credit card number, expiry, and cvv.
-                The audio portion will be the user's speech and the text portion you receive will be the current state of the card information. Return a JSON payload
-                describing edits to this information that should be made given their speech.
-                The payload should meet the spec { card_number?: string, expiry?: string, cvv?: string }.
-                When the user is speaking their expiry they may say something like "August 27" which means 8/27. They will always say a month and a year so interpret their speech accordingly.
-                They may also say something like "June 2028" which means 6/28. Always return the 2 digit year.`,
+                text: CARD_EXTRACTION_SYSTEM_PROMPT + (isNativeAudioModel 
+                  ? "\n\nIMPORTANT: Respond ONLY with the JSON object. Do not speak or add any audio narration. Just output the raw JSON text."
+                  : ""),
               },
             ],
           },
+          // For native audio models, configure speech settings
+          ...(isNativeAudioModel && {
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Puck", // Use a preset voice
+                },
+              },
+            },
+          }),
         },
         callbacks: {
           onopen: () => {
@@ -104,11 +119,32 @@ export function GeminiStreamingSpeech({
             // Add detailed logging for LiveServerMessage
             console.log("📨 Detailed Live API response:", JSON.stringify(message, null, 2));
 
-            // Check if the response contains the expected structure
-            if (message.serverContent?.modelTurn?.parts?.[0]?.text) {
-              const text = message.serverContent.modelTurn.parts[0].text;
+            // Extract text from various response structures
+            let text: string | null = null;
+            
+            // Check standard structure
+            if (message.serverContent?.modelTurn?.parts) {
+              for (const part of message.serverContent.modelTurn.parts) {
+                if (part.text) {
+                  text = part.text;
+                  break;
+                }
+              }
+            }
+            
+            // Check for transcript in audio responses
+            if (!text && message.serverContent?.modelTurn?.parts) {
+              for (const part of message.serverContent.modelTurn.parts) {
+                if (part.inlineData?.mimeType?.startsWith("audio/")) {
+                  // Audio data - check for accompanying transcript
+                  console.log("🔊 Audio data received, looking for transcript...");
+                }
+              }
+            }
+
+            if (text) {
               console.log("🔍 Processing text:", text);
-              const jres = processTextStream(text);
+              const jres = parseStreamingJson(text);
               
               // Update field status and notify parent component
               if (jres?.card_number) {
@@ -167,7 +203,7 @@ export function GeminiStreamingSpeech({
       setIsConnecting(false);
       liveSessionRef.current = null;
     }
-  }, [isListening, onCardNumberChange, onCvvChange, onExpiryChange]);
+  }, [isListening, onCardNumberChange, onCvvChange, onExpiryChange, modelName]);
 
   // Send PCM audio data to Live API
   const sendPCMToLiveAPI = useCallback(
@@ -209,6 +245,7 @@ export function GeminiStreamingSpeech({
       setError(null);
 
       // Reset accumulated data
+      resetStreamingParser();
       accumulatedDigitsRef.current = {
         cardNumber: "",
         expiry: "",
