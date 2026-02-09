@@ -81,7 +81,6 @@ function ConfirmationContent() {
             <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? "max-h-0 overflow-hidden" : "max-h-[2000px]"}`}>
               <div className="p-0">
                 <CheckoutSummary
-                  selectedShipping={selectedShipping === "express"}
                   shippingCost={shippingCost}
                   onTotalChange={(total) => {
                     console.log("Total changed:", total);
@@ -208,7 +207,6 @@ function ConfirmationContent() {
           {/* Order Summary - Desktop: Right Side, Always Visible */}
           <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
             <CheckoutSummary
-              selectedShipping={selectedShipping === "express"}
               shippingCost={shippingCost}
               onTotalChange={(total) => {
                 console.log("Total changed:", total);
