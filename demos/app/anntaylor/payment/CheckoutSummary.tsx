@@ -53,7 +53,6 @@ const ProductItem = ({
 export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: CheckoutSummaryProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState("SHIP895");
 
   const product = {
     imageSrc: "/858065_020234.webp",
@@ -66,8 +65,9 @@ export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: Ch
   };
 
   const subtotal = 129.00;
-  const estimatedTax = 0; // TBD
-  const total = subtotal + (shippingCost || 0) + estimatedTax;
+  const estimatedTax = 13.45;
+  const shipping = shippingCost || 8.95;
+  const total = subtotal + shipping + estimatedTax;
 
   React.useEffect(() => {
     if (onTotalChange) onTotalChange(total);
@@ -75,13 +75,9 @@ export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: Ch
 
   const handleApplyPromo = () => {
     if (promoCode.trim()) {
-      setAppliedPromo(promoCode.trim().toUpperCase());
+      // Promo code applied logic here
       setPromoCode("");
     }
-  };
-
-  const handleRemovePromo = () => {
-    setAppliedPromo("");
   };
 
   return (
@@ -121,14 +117,14 @@ export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: Ch
                 Taxes
                 <Info className="w-3 h-3 text-gray-400" />
               </span>
-              <span>TBD</span>
+              <span>$13.45</span>
             </div>
             <div className="flex justify-between text-sm text-black">
               <span className="flex items-center gap-1">
-                Shipping & Processing Fee (TBD)
+                Shipping & Processing Fee
                 <Info className="w-3 h-3 text-gray-400" />
               </span>
-              <span>TBD</span>
+              <span>$8.95</span>
             </div>
             <div className="flex justify-between text-base font-bold text-black pt-2 border-t border-gray-200">
               <span>Order Total</span>
@@ -158,17 +154,6 @@ export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: Ch
                 Apply
               </button>
             </div>
-            {appliedPromo && (
-              <div className="flex items-center gap-2 text-xs text-black">
-                <span>{appliedPromo} APPLIED</span>
-                <button
-                  onClick={handleRemovePromo}
-                  className="text-gray-600 hover:text-black underline"
-                >
-                  Remove
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="text-xs text-gray-600">

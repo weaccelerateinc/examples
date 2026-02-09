@@ -309,7 +309,7 @@ export default function CheckoutPage() {
                 </div>
                 <button
                   type="button"
-                  className="w-full bg-black text-white py-2 px-4 text-sm font-semibold hover:bg-gray-800 mb-2"
+                  className="w-full bg-black text-white py-2 px-4 text-sm font-semibold hover:bg-gray-800 mb-2 rounded-sm"
                 >
                   Redeem $15 Bonus
                 </button>
@@ -482,9 +482,8 @@ export default function CheckoutPage() {
                     <div className="flex items-center gap-4 py-3 border-t border-b border-gray-200">
                       <button
                         type="button"
-                        className="bg-pink-100 border border-gray-300 py-2 px-4 text-sm text-black hover:bg-pink-200 flex items-center gap-2 flex-shrink-0"
+                        className="border border-gray-300 h-10 px-4 text-xs font-semibold text-black hover:bg-gray-50 flex items-center justify-center gap-2 flex-shrink-0 rounded-sm w-32 whitespace-nowrap"
                       >
-                        <Image src="/avatar-black.png" alt="Ann Taylor" width={16} height={16} />
                         Account Lookup
                       </button>
                       <p className="text-xs text-black">
@@ -497,7 +496,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedPayment("paypal")}
-                        className="border border-gray-300 py-2 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0"
+                        className="border border-gray-300 h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
                       >
                         <Image src="/paypal.svg" alt="PayPal" width={80} height={20} />
                       </button>
@@ -513,7 +512,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedPayment("klarna")}
-                        className="border border-gray-300 py-2 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0"
+                        className="border border-gray-300 h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
                       >
                         <span className="text-sm font-semibold text-black">Klarna</span>
                       </button>
@@ -529,7 +528,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedPayment("applepay")}
-                        className="border border-gray-300 py-2 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0"
+                        className="border border-gray-300 h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
                       >
                         <span className="text-sm font-semibold text-black">Apple Pay</span>
                       </button>
@@ -551,7 +550,7 @@ export default function CheckoutPage() {
                   <button
                     type="submit"
                     disabled={!selectedCard || isSubmitting}
-                    className="w-full bg-black text-white font-semibold py-4 text-sm hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-black text-white font-semibold py-4 text-sm hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 rounded-sm"
                   >
                     {isSubmitting ? (
                       <>

@@ -98,7 +98,7 @@ function ConfirmationContent() {
             {/* Success Confirmation */}
             <div className="bg-white border border-gray-200 p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-[#cf9489] flex items-center justify-center flex-shrink-0">
                   <CheckCircle2 className="w-6 h-6 text-white" />
                 </div>
                 <div>
