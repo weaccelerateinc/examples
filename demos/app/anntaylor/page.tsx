@@ -33,8 +33,8 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("card");
-  const [selectedShipping, setSelectedShipping] = useState("standard");
-  const [shippingCost, setShippingCost] = useState(0);
+  const [selectedShipping] = useState("standard");
+  const [shippingCost] = useState(0);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [accelLoaded, setAccelerateLoaded] = useState(false);
@@ -54,7 +54,7 @@ export default function CheckoutPage() {
   const [shippingAddrCity, setShippingAddrCity] = useState("");
   const [shippingAddrZip, setShippingAddrZip] = useState("");
 
-  const [shippingName, setShippingName] = useState("");
+  const [shippingName] = useState("");
 
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user?.addresses[0]) {

@@ -67,7 +67,6 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange,
 
   const subtotal = 129.00;
   const estimatedTax = 0; // TBD
-  const shipping = selectedShipping === undefined ? "TBD" : shippingCost === 0 ? "TBD" : `$${shippingCost.toFixed(2)}`;
   const total = subtotal + (shippingCost || 0) + estimatedTax;
 
   React.useEffect(() => {
