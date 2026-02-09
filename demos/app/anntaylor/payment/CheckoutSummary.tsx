@@ -50,7 +50,7 @@ const ProductItem = ({
   </div>
 );
 
-export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange, hideHeading }: CheckoutSummaryProps) {
+export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: CheckoutSummaryProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState("SHIP895");
@@ -181,7 +181,6 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange,
 }
 
 interface CheckoutSummaryProps {
-  selectedShipping?: boolean | undefined;
   shippingCost: number;
   onTotalChange: (total: number) => void;
   hideHeading?: boolean;

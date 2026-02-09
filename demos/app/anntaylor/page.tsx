@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   const [phoneNumber, setPhone] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedPayment, setSelectedPayment] = useState("card");
   const [selectedShipping] = useState("standard");
@@ -584,7 +584,6 @@ export default function CheckoutPage() {
           {/* Right Column - Order Summary */}
           <div className="lg:sticky lg:top-8 h-fit">
             <CheckoutSummary
-              selectedShipping={selectedShipping === "express"}
               shippingCost={shippingCost}
               onTotalChange={(total: number) => {
                 setTotalPrice(total);
