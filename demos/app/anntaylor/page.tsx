@@ -68,7 +68,7 @@ function FloatingLabelInput({
         }}
         onFocus={() => setIsFocused(true)}
         placeholder={placeholder}
-        className={`w-full px-3 pt-5 pb-3 border border-black text-sm focus:outline-none focus:border-black ${className}`}
+        className={`w-full px-3 pt-5 pb-3 border border-[#979797] text-sm focus:outline-none focus:border-[#979797] ${className}`}
       />
       <label
         htmlFor={id}
@@ -117,7 +117,7 @@ function FloatingLabelSelect({
         onChange={onChange}
         onBlur={() => setIsFocused(false)}
         onFocus={() => setIsFocused(true)}
-        className={`w-full px-3 pt-5 pb-3 border border-black text-sm focus:outline-none focus:border-black bg-white appearance-none ${className}`}
+        className={`w-full px-3 pt-5 pb-3 border border-[#979797] text-sm focus:outline-none focus:border-[#979797] bg-white appearance-none ${className}`}
         style={{
           WebkitAppearance: 'none',
           MozAppearance: 'none',
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
           <div className="space-y-6 lg:col-span-3">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 1. Shipping Section */}
-              <div className="bg-white border border-black">
+              <div className="bg-white border border-[#979797]">
                 <div className="bg-[#757575] px-4 py-2 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-white">1. Shipping</h2>
                 </div>
@@ -414,7 +414,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Capital One Shopping Promotion */}
-              <div className="bg-white border border-black p-4">
+              <div className="bg-white border border-[#979797] p-4">
                 <h3 className="text-sm font-semibold text-black mb-2">
                   Get coupon codes instantly added to future orders.
                 </h3>
@@ -439,7 +439,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* 2. Payment Section */}
-              <div className="bg-white border border-black">
+              <div className="bg-white border border-[#979797]">
                 <div className="bg-[#757575] px-4 py-2 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-white">2. Payment</h2>
                 </div>
@@ -462,7 +462,7 @@ export default function CheckoutPage() {
                       )}
                     </button>
                     {showGiftCard && (
-                      <div className="mt-2 p-3 bg-gray-50 border border-black space-y-4">
+                      <div className="mt-2 p-3 bg-gray-50 border border-[#979797] space-y-4">
                         <FloatingLabelInput
                           id="gift-card-number"
                           label="Gift card number"
@@ -503,7 +503,7 @@ export default function CheckoutPage() {
                             <select 
                               value={cardExpMonth}
                               onChange={(e) => setCardExpMonth(e.target.value)}
-                              className="w-full px-3 py-3 border border-black text-sm focus:outline-none focus:border-black bg-white appearance-none"
+                              className="w-full px-3 py-3 border border-[#979797] text-sm focus:outline-none focus:border-[#979797] bg-white appearance-none"
                               style={{
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',
@@ -520,7 +520,7 @@ export default function CheckoutPage() {
                             <select 
                               value={cardExpYear}
                               onChange={(e) => setCardExpYear(e.target.value)}
-                              className="w-full px-3 py-3 border border-black text-sm focus:outline-none focus:border-black bg-white appearance-none"
+                              className="w-full px-3 py-3 border border-[#979797] text-sm focus:outline-none focus:border-[#979797] bg-white appearance-none"
                               style={{
                                 WebkitAppearance: 'none',
                                 MozAppearance: 'none',
@@ -546,7 +546,7 @@ export default function CheckoutPage() {
                             type="text"
                             value={cardCvv}
                             onChange={(e) => setCardCvv(e.target.value)}
-                            className="w-full px-3 py-3 border border-black text-sm focus:outline-none focus:border-black pr-8"
+                            className="w-full px-3 py-3 border border-[#979797] text-sm focus:outline-none focus:border-[#979797] pr-8"
                           />
                         </div>
                       </div>
