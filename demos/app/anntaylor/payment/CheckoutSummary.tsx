@@ -23,14 +23,17 @@ const ProductItem = ({
   quantity?: number;
 }) => (
   <div className="flex gap-4 mb-4">
-    <div className="w-24 h-32 rounded border border-gray-200 flex items-center justify-center bg-white flex-shrink-0 overflow-hidden">
-      <Image
-        src={imageSrc}
-        alt={name}
-        width={96}
-        height={128}
-        className="w-full h-full object-cover"
-      />
+    <div className="flex-shrink-0">
+      <div className="w-32 h-40 rounded border border-gray-200 flex items-center justify-center bg-white overflow-hidden mb-2">
+        <Image
+          src={imageSrc}
+          alt={name}
+          width={128}
+          height={160}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <span className="text-xs text-black">Best Seller</span>
     </div>
     <div className="flex-1">
       <div className="flex items-start justify-between mb-1">
@@ -41,11 +44,10 @@ const ProductItem = ({
       </div>
       <p className="text-xs text-gray-600 mb-1">STYLE #{styleNumber}</p>
       <p className="text-xs text-black font-medium mb-1">${price.toFixed(2)}</p>
-      <p className="text-xs text-gray-600 mb-1">{color}</p>
-      <p className="text-xs text-gray-600 mb-1">{sizeType}</p>
-      <p className="text-xs text-gray-600 mb-1">Size: {size}</p>
-      <p className="text-xs text-gray-600">QTY: {quantity}</p>
-      <span className="inline-block mt-2 text-xs font-semibold text-black bg-yellow-100 px-2 py-0.5">Best Seller</span>
+      <p className="text-xs text-gray-600 mb-1"><span className="font-bold">COLOR:</span> {color}</p>
+      <p className="text-xs text-gray-600 mb-1"><span className="font-bold">SIZE TYPE:</span> {sizeType}</p>
+      <p className="text-xs text-gray-600 mb-1"><span className="font-bold">SIZE:</span> {size}</p>
+      <p className="text-xs text-gray-600"><span className="font-bold">QTY:</span> {quantity}</p>
     </div>
   </div>
 );
@@ -53,6 +55,7 @@ const ProductItem = ({
 export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: CheckoutSummaryProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [promoCode, setPromoCode] = useState("");
+  const [isPromoFocused, setIsPromoFocused] = useState(false);
 
   const product = {
     imageSrc: "/858065_020234.webp",
@@ -103,10 +106,6 @@ export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: Ch
             <ProductItem {...product} quantity={1} />
           </div>
 
-          <div className="mb-4 text-xs text-black font-semibold">
-            EXTRA 25% OFF YOUR $175+ PURCHASE
-          </div>
-
           <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
             <div className="flex justify-between text-sm text-black">
               <span>Merchandise Subtotal</span>
@@ -134,22 +133,32 @@ export function CheckoutSummary({ shippingCost, onTotalChange, hideHeading }: Ch
 
           {/* Promo Code Section */}
           <div className="mb-4">
-            <div className="flex items-center gap-1 mb-2">
-              <label className="text-sm text-black">Promo Code</label>
-              <Info className="w-3 h-3 text-gray-400" />
-            </div>
             <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                placeholder="Enter promo code"
-                className="flex-1 px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
-              />
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  id="promo-code"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  onFocus={() => setIsPromoFocused(true)}
+                  onBlur={() => setIsPromoFocused(false)}
+                  className="w-full px-3 pt-5 pb-3 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                />
+                <label
+                  htmlFor="promo-code"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+                    promoCode.length > 0 || isPromoFocused
+                      ? "top-1.5 text-sm text-gray-600"
+                      : "top-3.5 text-base text-gray-400"
+                  }`}
+                >
+                  Promo Code
+                </label>
+              </div>
               <button
                 type="button"
                 onClick={handleApplyPromo}
-                className="px-4 py-2 bg-black text-white text-sm hover:bg-gray-800"
+                className="px-4 py-3 bg-black text-white text-sm hover:bg-gray-800"
               >
                 Apply
               </button>

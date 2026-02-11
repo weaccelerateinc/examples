@@ -24,6 +24,123 @@ function tryFormatPhone(pn: string): string {
   return `${last10.slice(0, 3)}-${last10.slice(3, 6)}-${last10.slice(6)}`;
 }
 
+// Floating Label Input Component
+interface FloatingLabelInputProps {
+  id?: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onBlur?: () => void;
+  type?: string;
+  placeholder?: string;
+  required?: boolean;
+  "data-testid"?: string;
+  className?: string;
+}
+
+function FloatingLabelInput({
+  id,
+  label,
+  value,
+  onChange,
+  onBlur,
+  type = "text",
+  placeholder,
+  required = false,
+  "data-testid": dataTestId,
+  className = "",
+}: FloatingLabelInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasValue = value.length > 0;
+  const shouldFloat = hasValue || isFocused;
+
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        data-testid={dataTestId}
+        type={type}
+        value={value}
+        onChange={onChange}
+        onBlur={(e) => {
+          setIsFocused(false);
+          onBlur?.();
+        }}
+        onFocus={() => setIsFocused(true)}
+        placeholder={placeholder}
+        className={`w-full px-3 pt-5 pb-3 border border-black text-sm focus:outline-none focus:border-black ${className}`}
+      />
+      <label
+        htmlFor={id}
+        className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+          shouldFloat
+            ? "top-1.5 text-xs text-gray-600"
+            : "top-3.5 text-sm text-gray-400"
+        }`}
+      >
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </label>
+    </div>
+  );
+}
+
+// Floating Label Select Component
+interface FloatingLabelSelectProps {
+  id?: string;
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  required?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}
+
+function FloatingLabelSelect({
+  id,
+  label,
+  value,
+  onChange,
+  required = false,
+  className = "",
+  children,
+}: FloatingLabelSelectProps) {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasValue = value.length > 0;
+  const shouldFloat = hasValue || isFocused;
+
+  return (
+    <div className="relative">
+      <select
+        id={id}
+        value={value}
+        onChange={onChange}
+        onBlur={() => setIsFocused(false)}
+        onFocus={() => setIsFocused(true)}
+        className={`w-full px-3 pt-5 pb-3 border border-black text-sm focus:outline-none focus:border-black bg-white appearance-none ${className}`}
+        style={{
+          WebkitAppearance: 'none',
+          MozAppearance: 'none',
+          appearance: 'none',
+        }}
+      >
+        {children}
+      </select>
+      <label
+        htmlFor={id}
+        className={`absolute left-3 transition-all duration-200 pointer-events-none ${
+          shouldFloat
+            ? "top-1.5 text-xs text-gray-600"
+            : "top-3.5 text-sm text-gray-400"
+        }`}
+      >
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </label>
+    </div>
+  );
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
 
@@ -45,11 +162,20 @@ export default function CheckoutPage() {
   const [poBox, setPoBox] = useState(false);
 
   const [billingAddrLine1, setBillingAddrLine1] = useState("");
+  const [billingAddrLine2, setBillingAddrLine2] = useState("");
   const [billingAddrState, setBillingAddrState] = useState("");
   const [billingAddrCity, setBillingAddrCity] = useState("");
   const [billingAddrZip, setBillingAddrZip] = useState("");
+  
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpMonth, setCardExpMonth] = useState("");
+  const [cardExpYear, setCardExpYear] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [giftCardNumber, setGiftCardNumber] = useState("");
+  const [giftCardPin, setGiftCardPin] = useState("");
 
   const [shippingAddrLine1, setShippingAddrLine1] = useState("");
+  const [shippingAddrLine2, setShippingAddrLine2] = useState("");
   const [shippingAddrState, setShippingAddrState] = useState("");
   const [shippingAddrCity, setShippingAddrCity] = useState("");
   const [shippingAddrZip, setShippingAddrZip] = useState("");
@@ -145,7 +271,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen w-screen bg-white ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
       {/* Header */}
-      <header className="w-full bg-white border-b border-gray-200">
+      <header className="w-full bg-white border-b border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Image src="/logo.svg" alt="Ann Taylor" width={212} height={19} className="h-5" />
           <div className="flex items-center gap-3">
@@ -160,117 +286,110 @@ export default function CheckoutPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-5 gap-8">
           {/* Left Column - Checkout Form */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:col-span-3">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 1. Shipping Section */}
-              <div className="bg-white border border-gray-200">
-                <div className="bg-gray-200 px-4 py-2 border-b border-gray-200">
-                  <h2 className="text-base font-semibold text-black">1. Shipping</h2>
+              <div className="bg-white border border-black">
+                <div className="bg-[#757575] px-4 py-2 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-white">1. Shipping</h2>
                 </div>
                 <div className="p-4 space-y-4">
                   <h3 className="text-sm font-semibold text-black">Ship To:</h3>
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs text-black mb-1">
-                        First Name<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        data-testid="first-name-input"
+                      <FloatingLabelInput
+                        id="first-name"
+                        label="First Name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         onBlur={() => {
                           maybeLogin(phoneNumber);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                        required
+                        data-testid="first-name-input"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-black mb-1">
-                        Last Name<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        data-testid="last-name-input"
+                      <FloatingLabelInput
+                        id="last-name"
+                        label="Last Name"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         onBlur={() => {
                           maybeLogin(phoneNumber);
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                        required
+                        data-testid="last-name-input"
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs text-black mb-1 flex items-center gap-1">
-                      Phone Number<span className="text-red-500">*</span>
-                      <Info className="w-3 h-3 text-gray-400" />
-                    </label>
-                    <input
+                  <div className="relative">
+                    <FloatingLabelInput
+                      id="phone-number"
+                      label="Phone Number"
                       value={phoneNumber}
                       onChange={(e) => {
                         setPhone(tryFormatPhone(e.target.value));
                         maybeLogin(e?.target.value);
                       }}
-                      placeholder="Phone number"
                       type="tel"
-                      className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                      required
+                      className="pr-8"
                     />
+                    <Info className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <label className="block text-xs text-black">
-                        Address 1<span className="text-red-500">*</span>
-                      </label>
-                      <label className="flex items-center gap-1 text-xs text-black cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={poBox}
-                          onChange={(e) => setPoBox(e.target.checked)}
-                          className="w-3 h-3"
-                        />
-                        PO Box
-                      </label>
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <FloatingLabelInput
+                        id="address-1"
+                        label="Address 1"
+                        value={shippingAddrLine1}
+                        onChange={(e) => setShippingAddrLine1(e.target.value)}
+                        required
+                      />
                     </div>
-                    <input
-                      placeholder="Street address"
-                      value={shippingAddrLine1}
-                      onChange={(e) => setShippingAddrLine1(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
-                    />
+                    <label className="flex items-center gap-1 text-xs text-black cursor-pointer mt-3 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        checked={poBox}
+                        onChange={(e) => setPoBox(e.target.checked)}
+                        className="w-3 h-3"
+                      />
+                      PO Box
+                    </label>
                   </div>
 
                   <div>
-                    <label className="block text-xs text-black mb-1">Address 2</label>
-                    <input
-                      placeholder="Apartment, suite, etc. (optional)"
-                      className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                    <FloatingLabelInput
+                      id="address-2"
+                      label="Address 2"
+                      value={shippingAddrLine2}
+                      onChange={(e) => setShippingAddrLine2(e.target.value)}
                     />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-2">
-                      <label className="block text-xs text-black mb-1">
-                        City<span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        placeholder="City"
+                      <FloatingLabelInput
+                        id="city"
+                        label="City"
                         value={shippingAddrCity}
                         onChange={(e) => setShippingAddrCity(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-black mb-1">
-                        State<span className="text-red-500">*</span>
-                      </label>
-                      <select
+                      <FloatingLabelSelect
+                        id="state"
+                        label="State"
                         value={shippingAddrState}
                         onChange={(e) => setShippingAddrState(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black bg-white"
+                        required
                       >
                         <option value="">Select</option>
                         {usStates.map((state) => (
@@ -278,26 +397,24 @@ export default function CheckoutPage() {
                             {state}
                           </option>
                         ))}
-                      </select>
+                      </FloatingLabelSelect>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs text-black mb-1">
-                      Zip Code<span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      placeholder="Zip Code"
+                    <FloatingLabelInput
+                      id="zip-code"
+                      label="Zip Code"
                       value={shippingAddrZip}
                       onChange={(e) => setShippingAddrZip(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                      required
                     />
                   </div>
                 </div>
               </div>
 
               {/* Capital One Shopping Promotion */}
-              <div className="bg-white border border-gray-200 p-4">
+              <div className="bg-white border border-black p-4">
                 <h3 className="text-sm font-semibold text-black mb-2">
                   Get coupon codes instantly added to future orders.
                 </h3>
@@ -322,9 +439,9 @@ export default function CheckoutPage() {
               </div>
 
               {/* 2. Payment Section */}
-              <div className="bg-white border border-gray-200">
-                <div className="bg-gray-200 px-4 py-2 border-b border-gray-200">
-                  <h2 className="text-base font-semibold text-black">2. Payment</h2>
+              <div className="bg-white border border-black">
+                <div className="bg-[#757575] px-4 py-2 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-white">2. Payment</h2>
                 </div>
                 <div className="p-4 space-y-4">
                   {/* Gift Card Section */}
@@ -345,16 +462,18 @@ export default function CheckoutPage() {
                       )}
                     </button>
                     {showGiftCard && (
-                      <div className="mt-2 p-3 bg-gray-50 border border-gray-200">
-                        <input
-                          type="text"
-                          placeholder="Gift card number"
-                          className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black mb-2"
+                      <div className="mt-2 p-3 bg-gray-50 border border-black space-y-4">
+                        <FloatingLabelInput
+                          id="gift-card-number"
+                          label="Gift card number"
+                          value={giftCardNumber}
+                          onChange={(e) => setGiftCardNumber(e.target.value)}
                         />
-                        <input
-                          type="text"
-                          placeholder="PIN"
-                          className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                        <FloatingLabelInput
+                          id="gift-card-pin"
+                          label="PIN"
+                          value={giftCardPin}
+                          onChange={(e) => setGiftCardPin(e.target.value)}
                         />
                       </div>
                     )}
@@ -366,31 +485,49 @@ export default function CheckoutPage() {
                   {!(accelLoaded && isLoggedIn) && (
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-xs text-black mb-1">
-                          Card Number<span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          placeholder="Card number"
-                          className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                        <FloatingLabelInput
+                          id="card-number"
+                          label="Card Number"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          required
                         />
                       </div>
 
                       <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2">
-                          <label className="block text-xs text-black mb-1">
+                          <label className="block text-xs text-black mb-1 font-semibold">
                             Exp. Date<span className="text-red-500">*</span>
                           </label>
                           <div className="grid grid-cols-2 gap-2">
-                            <select className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black bg-white">
-                              <option>Month</option>
+                            <select 
+                              value={cardExpMonth}
+                              onChange={(e) => setCardExpMonth(e.target.value)}
+                              className="w-full px-3 py-3 border border-black text-sm focus:outline-none focus:border-black bg-white appearance-none"
+                              style={{
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'none',
+                                appearance: 'none',
+                              }}
+                            >
+                              <option value="">Month</option>
                               {months.map((month) => (
                                 <option key={month} value={month}>
                                   {month.toString().padStart(2, "0")}
                                 </option>
                               ))}
                             </select>
-                            <select className="px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black bg-white">
-                              <option>Year</option>
+                            <select 
+                              value={cardExpYear}
+                              onChange={(e) => setCardExpYear(e.target.value)}
+                              className="w-full px-3 py-3 border border-black text-sm focus:outline-none focus:border-black bg-white appearance-none"
+                              style={{
+                                WebkitAppearance: 'none',
+                                MozAppearance: 'none',
+                                appearance: 'none',
+                              }}
+                            >
+                              <option value="">Year</option>
                               {years.map((year) => (
                                 <option key={year} value={year}>
                                   {year}
@@ -399,14 +536,17 @@ export default function CheckoutPage() {
                             </select>
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-xs text-black mb-1 flex items-center gap-1">
+                        <div className="relative">
+                          <label className="block text-xs text-black mb-1 flex items-center font-semibold">
                             CVV<span className="text-red-500">*</span>
-                            <Info className="w-3 h-3 text-gray-400" />
+                            <Info className="ml-1 w-3 h-3 text-gray-400" />
                           </label>
                           <input
-                            placeholder="CVV"
-                            className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                            id="cvv"
+                            type="text"
+                            value={cardCvv}
+                            onChange={(e) => setCardCvv(e.target.value)}
+                            className="w-full px-3 py-3 border border-black text-sm focus:outline-none focus:border-black pr-8"
                           />
                         </div>
                       </div>
@@ -433,30 +573,33 @@ export default function CheckoutPage() {
 
                   {useDifferentShipping && (
                     <div className="space-y-4 pt-2 border-t border-gray-200">
-                      <input
-                        placeholder="Street address"
+                      <FloatingLabelInput
+                        id="billing-address-1"
+                        label="Street address"
                         value={billingAddrLine1}
                         onChange={(e) => setBillingAddrLine1(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
                       />
-                      <input
-                        placeholder="Apartment, suite, etc. (optional)"
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
+                      <FloatingLabelInput
+                        id="billing-address-2"
+                        label="Apartment, suite, etc. (optional)"
+                        value={billingAddrLine2}
+                        onChange={(e) => setBillingAddrLine2(e.target.value)}
                       />
                       <div className="grid grid-cols-3 gap-4">
                         <div className="col-span-2">
-                          <input
-                            placeholder="City"
+                          <FloatingLabelInput
+                            id="billing-city"
+                            label="City"
                             value={billingAddrCity}
                             onChange={(e) => setBillingAddrCity(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
                           />
                         </div>
                         <div>
-                          <select
+                          <FloatingLabelSelect
+                            id="billing-state"
+                            label="State"
                             value={billingAddrState}
                             onChange={(e) => setBillingAddrState(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black bg-white"
                           >
                             <option value="">State</option>
                             {usStates.map((state) => (
@@ -464,14 +607,14 @@ export default function CheckoutPage() {
                                 {state}
                               </option>
                             ))}
-                          </select>
+                          </FloatingLabelSelect>
                         </div>
                       </div>
-                      <input
-                        placeholder="ZIP"
+                      <FloatingLabelInput
+                        id="billing-zip"
+                        label="ZIP"
                         value={billingAddrZip}
                         onChange={(e) => setBillingAddrZip(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-black"
                       />
                     </div>
                   )}
@@ -479,10 +622,10 @@ export default function CheckoutPage() {
                   {/* Payment Options */}
                   <div className="pt-4">
                     {/* Account Lookup */}
-                    <div className="flex items-center gap-4 py-3 border-t border-b border-gray-200">
+                    <div className="flex items-center gap-4 py-3 border-t border-b border-black">
                       <button
                         type="button"
-                        className="border border-gray-300 h-10 px-4 text-xs font-semibold text-black hover:bg-gray-50 flex items-center justify-center gap-2 flex-shrink-0 rounded-sm w-32 whitespace-nowrap"
+                        className="border border-black h-10 px-4 text-xs font-semibold text-black hover:bg-gray-50 flex items-center justify-center gap-2 flex-shrink-0 rounded-sm w-32 whitespace-nowrap"
                       >
                         Account Lookup
                       </button>
@@ -492,11 +635,11 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* PayPal */}
-                    <div className="flex items-center gap-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center gap-4 py-3 border-b border-black">
                       <button
                         type="button"
                         onClick={() => setSelectedPayment("paypal")}
-                        className="border border-gray-300 h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
+                        className="border border-black h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
                       >
                         <Image src="/paypal.svg" alt="PayPal" width={80} height={20} />
                       </button>
@@ -508,11 +651,11 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Klarna */}
-                    <div className="flex items-center gap-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center gap-4 py-3 border-b border-black">
                       <button
                         type="button"
                         onClick={() => setSelectedPayment("klarna")}
-                        className="border border-gray-300 h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
+                        className="border border-black h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
                       >
                         <span className="text-sm font-semibold text-black">Klarna</span>
                       </button>
@@ -524,11 +667,11 @@ export default function CheckoutPage() {
                     </div>
 
                     {/* Apple Pay */}
-                    <div className="flex items-center gap-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center gap-4 py-3 border-b border-black">
                       <button
                         type="button"
                         onClick={() => setSelectedPayment("applepay")}
-                        className="border border-gray-300 h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
+                        className="border border-black h-10 px-4 hover:bg-gray-50 flex items-center justify-center flex-shrink-0 rounded-sm w-32"
                       >
                         <span className="text-sm font-semibold text-black">Apple Pay</span>
                       </button>
@@ -540,7 +683,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Order Agreement */}
-                  <p className="text-xs text-gray-600 text-center pt-4 border-t border-gray-200">
+                  <p className="text-xs text-black text-center pt-4 border-t border-gray-200">
                     By placing your order, you agree to our{" "}
                     <a href="#" className="underline">Privacy Policy</a> and{" "}
                     <a href="#" className="underline">Terms of Use</a>.
@@ -562,7 +705,7 @@ export default function CheckoutPage() {
                     )}
                   </button>
 
-                  <p className="text-xs text-gray-600 text-center">
+                  <p className="text-xs text-black text-center">
                     Please make sure all details are correct before submitting order. Each time Place Order is clicked, your credit card will be authorized. Orders cannot be modified once placed and submitted for processing.
                   </p>
 
@@ -581,7 +724,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* Right Column - Order Summary */}
-          <div className="lg:sticky lg:top-8 h-fit">
+          <div className="lg:sticky lg:top-8 h-fit lg:col-span-2">
             <CheckoutSummary
               shippingCost={shippingCost}
               onTotalChange={(total: number) => {
