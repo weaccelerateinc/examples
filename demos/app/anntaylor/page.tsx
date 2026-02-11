@@ -62,7 +62,7 @@ function FloatingLabelInput({
         type={type}
         value={value}
         onChange={onChange}
-        onBlur={(e) => {
+        onBlur={() => {
           setIsFocused(false);
           onBlur?.();
         }}
