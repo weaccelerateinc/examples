@@ -503,7 +503,7 @@ function CheckoutPageContent() {
               {/* Continue to Payment Button */}
               <button
                 type="submit"
-                className="w-full max-w-[320px] mx-auto block bg-[#D5225B] text-white font-bold py-3.5 text-sm tracking-[0.15em] uppercase hover:bg-[#B91D4E] transition"
+                className="w-full max-w-[320px] mx-auto block bg-[#FCE4EC] text-black font-bold py-3.5 text-sm tracking-[0.15em] uppercase hover:bg-[#f8b8cc] transition"
               >
                 Continue to Payment
               </button>

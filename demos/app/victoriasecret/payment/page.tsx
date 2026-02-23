@@ -220,7 +220,7 @@ function PaymentContent() {
                       />
                       <button
                         type="button"
-                        className="w-full max-w-[280px] bg-black text-white font-bold py-3 text-sm tracking-[0.15em] uppercase hover:bg-gray-800 transition"
+                        className="w-full max-w-[280px] bg-[#FCE4EC] text-black font-bold py-3 text-sm tracking-[0.15em] uppercase hover:bg-[#f8b8cc] transition"
                       >
                         Apply Offers
                       </button>
@@ -442,7 +442,7 @@ function PaymentContent() {
                 <button
                   type="submit"
                   disabled={!selectedCard || isSubmitting}
-                  className="w-full max-w-[320px] mx-auto block bg-[#D5225B] text-white font-bold py-3.5 text-sm tracking-[0.15em] uppercase hover:bg-[#B91D4E] transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full max-w-[320px] mx-auto block bg-[#FCE4EC] text-black font-bold py-3.5 text-sm tracking-[0.15em] uppercase hover:bg-[#f8b8cc] transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>

@@ -3,9 +3,8 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckoutSummary } from "../CheckoutSummary";
-import Image from "next/image";
 import { Suspense, useState } from "react";
-import { Lock, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
@@ -53,27 +52,25 @@ function ConfirmationContent() {
 
   return (
     <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
-      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
+      <header className="w-full bg-white border-b border-gray-200">
+        <div className="max-w-[960px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
-              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                <Image 
-                  src="/avatar-black.png" 
-                  alt="Accelerate Logo" 
-                  width={40} 
-                  height={40} 
-                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
-                />
-              </div>
+            <div className="border-r border-gray-300 pr-3">
+              <span
+                className="text-[11px] tracking-[0.15em] uppercase leading-tight block text-center text-black"
+                style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+              >
+                <span className="block">VICTORIA&apos;S</span>
+                <span className="block">SECRET</span>
+              </span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
-              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
-            </div>
+            <span
+              className="text-sm font-bold tracking-[0.2em] uppercase text-black"
+              style={{ fontFamily: "Arial, Helvetica, sans-serif" }}
+            >
+              PINK
+            </span>
           </div>
-          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
         </div>
       </header>
 
