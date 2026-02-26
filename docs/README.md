@@ -31,4 +31,6 @@ The following steps are provided as a way to organize integrating with Accelerat
 
 [Checkout.com](integrations/checkoutdotcom.md)
 
+[ACP (mock merchant)](integrations/acp.md)
+
 [Direct handoff](integrations/handoffdirect.md)
