@@ -254,8 +254,7 @@ export default function CheckoutPage() {
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            checkoutMode: "ACPToken" as any, // TODO: Fix typing
+            checkoutMode: "StripeToken", // TODO: Fix typing
             onLoginSuccess: (user) => {
               console.log("Accelerate user logged in", { user });
               maybeUseAccelUser(user);

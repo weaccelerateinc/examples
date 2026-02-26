@@ -2,52 +2,51 @@
 icon: credit-card
 ---
 
-# ACP (mock merchant) integration
+# ACP integration (Stripe-aligned)
 
-This integration is intended for internal payment-system testing in the examples app.
+This demo now aligns to the Agentic Commerce Protocol checkout model from the ACP spec repo, using the `2026-01-30` protocol version.
 
-Frontend example pages:
+Canonical endpoints in this project:
 
-- [ACP inline flow](../../demos/app/test/acp/inline/page.tsx)
-- [ACP inline payment flow](../../demos/app/test/acp/inline-payment/page.tsx)
+- `POST /api/acp/checkout_sessions`
+- `GET /api/acp/checkout_sessions/{checkout_session_id}`
+- `POST /api/acp/checkout_sessions/{checkout_session_id}`
+- `POST /api/acp/checkout_sessions/{checkout_session_id}/complete`
+- `POST /api/acp/checkout_sessions/{checkout_session_id}/cancel`
 
-Backend route:
+Compatibility aliases are also available under `/api/acp/checkouts/...`.
 
-- [ACP confirm API route](../../demos/app/api/acp/confirm/route.ts)
+## Implementation files
 
-## Assumptions used for this example
+- [ACP store and schema-aligned model](../../demos/app/api/acp/_lib/store.ts)
+- [Create session route](../../demos/app/api/acp/checkout_sessions/route.ts)
+- [Get/Update session route](../../demos/app/api/acp/checkout_sessions/[id]/route.ts)
+- [Complete session route](../../demos/app/api/acp/checkout_sessions/[id]/complete/route.ts)
+- [Cancel session route](../../demos/app/api/acp/checkout_sessions/[id]/cancel/route.ts)
 
-1. ACP should be runnable without any external dependencies, so the server route defaults to local mock behavior.
-2. The Accelerate checkout mode string for ACP is `ACPToken` (casted in TypeScript where needed).
-3. Optional reporting back to Accelerate should follow the same pattern as other handoff processors by calling `/reporting/acp` when `ACCELERATE_SERVER_URL` and `ACCELERATE_WH_KEY` are configured.
-4. Teams that want real ACP calls can disable mock mode and pass through to an upstream ACP service.
+## Required request headers
 
-## Environment variables
+- `API-Version: 2026-01-30`
+- `Authorization: Bearer <token>` when `ACP_BEARER_TOKEN` is configured
 
-- `ACP_MOCK_MODE`: defaults to `true` (any value other than `false` keeps mock mode enabled)
-- `ACP_API_URL`: required only when `ACP_MOCK_MODE=false`
-- `ACP_API_KEY`: required only when `ACP_MOCK_MODE=false`
-- `ACCELERATE_SERVER_URL`: optional for reporting
-- `ACCELERATE_WH_KEY`: optional for reporting
+## Supported ACP semantics in this demo
 
-## Request contract
+1. Checkout session lifecycle: create, retrieve, update, complete, cancel.
+2. `payment_data` on complete with Stripe-style tokenized instrument (`credential.type: spt`, token value in `credential.token`).
+3. `authentication_result` handling for mock 3DS-required flows.
+4. Optional `intent_trace` body accepted on cancel.
+5. Idempotency replay support via `Idempotency-Key` for create/update/complete.
 
-`POST /api/acp/confirm`
+## Mock behavior for testing
 
-Body:
+- Complete request returns `400` with `requires_3ds` when token contains `requires3ds` or `3ds_required` and no `authentication_result` is provided.
+- Complete request returns `400` with `payment_declined` when token contains `decline`, `fail`, or `insufficient`.
+- Otherwise completion succeeds and returns a `completed` checkout session with an attached order object.
 
-```json
-{
-  "processorToken": "token-from-accelerate",
-  "cartId": "some-cart",
-  "amount": "65.40",
-  "currency": "USD"
-}
-```
+## Legacy ACP confirm route
 
-## Mock behavior
+A legacy helper route remains available for existing demo flows:
 
-- Returns `authorized` by default.
-- Returns `declined` when `processorToken` contains `decline`, `fail`, or `insufficient`.
+- [Legacy confirm route](../../demos/app/api/acp/confirm/route.ts)
 
-This gives internal teams a deterministic way to test both success and failure handling in checkout flows.
+This route is not the canonical ACP checkout-session API and exists only for backward compatibility with earlier demo pages.
