@@ -115,6 +115,8 @@ This callback is called whenever the user has selected a new payment instrument.
 
 `checkoutMode` and `checkoutFlow` should both be provided - see [Modes](../modes.md)
 
+You can also provide `universalAuth: true` to allow Accelerate to restore an existing session during initialization and call `onLoginSuccess` automatically when a valid session exists. See [Authentication and Session](./authentication-and-session.md#using-universalauth) for setup details.
+
 ## Adding the Wallet iframe element
 
 The Accelerate wallet will render as an iframe on your page if you have chosen an inline flow. To control where Accelerate renders simply add a div to your layout at the appropriate place:

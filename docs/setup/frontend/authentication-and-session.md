@@ -50,6 +50,32 @@ const handlePhoneChange = async (phone) => {
 
 Implementing `accelerate.checkPhone` is optional; generally, invoking `accelerate.login` is sufficient.
 
+### Using `universalAuth`
+
+`universalAuth` is an `init` option that allows Accelerate to restore an existing user session automatically.
+
+When `universalAuth: true` is set, Accelerate attempts to restore the session in the background during initialization. If a valid session is found, `onLoginSuccess` is called without showing the login modal.
+
+```
+window.accelerate.init({
+  merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+  amount: 999,
+  checkoutFlow: "Inline",
+  checkoutMode: "StripeToken",
+  universalAuth: true,
+  onLoginSuccess: (user) => {
+    console.log("Accelerate user restored or logged in", user);
+  },
+});
+```
+
+`universalAuth` does not replace `accelerate.login` for new or expired sessions. If no active session is found, continue your normal login flow and call `accelerate.login` after collecting user details.
+
+For real usage examples with `universalAuth: true`, see:
+
+- [Integrated demo](../../../demos/app/integrated3/page.tsx#L322)
+- [PDP checkout demo](../../../demos/app/pdp2/checkout/page.tsx#L324)
+
 ### Session Duration
 
 After a successful 2FA, the Accelerate login session lasts for 30 minutes. For an example of handling session duration, see the [example](../../../demos/app/test/checkoutdotcom/inline/page.tsx#L145).
