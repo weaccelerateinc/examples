@@ -133,6 +133,69 @@ export default function SidelineSwapCheckout() {
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-6">Shipping</h1>
 
+            {/* Accelerate Init & Auto-fill Callout */}
+            <div className="border border-blue-200 bg-blue-50 rounded-lg overflow-hidden mb-6">
+              <button
+                type="button"
+                onClick={() => setInitCalloutExpanded(!initCalloutExpanded)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-4 h-4 text-blue-700" />
+                  <span className="text-[13px] font-semibold text-blue-900">Accelerate: Init & Auto-fill Shipping</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${initCalloutExpanded ? "rotate-180" : ""}`} />
+              </button>
+              {initCalloutExpanded && (
+                <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
+                  <p>
+                    Call <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.init()</code> on page load with{" "}
+                    <code className="bg-blue-100 px-1 rounded text-[11px]">universalAuth: true</code>.
+                    If the customer has verified before, a persistent cookie allows{" "}
+                    <code className="bg-blue-100 px-1 rounded text-[11px]">onLoginSuccess</code> to fire automatically — no user interaction needed.
+                    Use the returned user data to <strong>pre-fill name, phone, and address fields</strong> instantly.
+                  </p>
+                  <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
+                    <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
+{`window.accelerate.init({
+  amount: 15000,       // amount in cents
+  merchantId: "your-merchant-id",
+  checkoutFlow: "Inline",
+  checkoutMode: "BraintreeNonce",
+  universalAuth: true, // enables cookie-based recognition
+
+  onLoginSuccess: (user) => {
+    // Auto-fill form fields with user data
+    if (user.firstName) setFirstName(user.firstName);
+    if (user.lastName)  setLastName(user.lastName);
+    if (user.phoneNumber) setPhone(user.phoneNumber);
+
+    // Auto-fill address from stored addresses
+    if (user.addresses?.[0]) {
+      setAddrLine1(user.addresses[0].line1);
+      setAddrCity(user.addresses[0].city);
+      setAddrState(user.addresses[0].state);
+      setAddrZip(user.addresses[0].postalCode);
+    }
+
+    // If user has a quick card, enable one-click pay
+    if (user.quickCard) setDefaultCard(user.quickCard);
+  },
+});`}
+                    </pre>
+                  </div>
+                  <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800">
+                    <p>
+                      <strong><code className="bg-blue-100 px-1 rounded">universalAuth: true</code></strong> — Enables cookie-based recognition across sessions.
+                      Once a customer verifies via 2FA, Accelerate sets a persistent cookie. On return visits,{" "}
+                      <code className="bg-blue-100 px-1 rounded">onLoginSuccess</code> fires automatically during{" "}
+                      <code className="bg-blue-100 px-1 rounded">init()</code>, giving instant access to their stored cards, addresses, and identity — no 2FA needed.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -198,10 +261,11 @@ export default function SidelineSwapCheckout() {
                   {loginCalloutExpanded && (
                     <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
                       <p>
-                        As the customer fills in their name and phone number, call{" "}
+                        Once the customer has entered their name and phone number, you can call{" "}
                         <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.isLoggedIn()</code> to check if they&apos;re already recognized.
                         If not, call <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.login()</code> to trigger 2FA via SMS.
-                        This happens on <strong>field blur</strong> and <strong>phone input change</strong> — the customer never has to click a separate button.
+                        In this example, we&apos;ve wired it to <strong>field blur</strong> and <strong>phone input change</strong> so the login
+                        triggers automatically — but you can call these methods at whatever point in your flow makes sense (e.g., on a button click, on form submit, etc.).
                       </p>
                       <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                         <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
@@ -227,81 +291,24 @@ export default function SidelineSwapCheckout() {
   });
 }
 
-// Attach to form fields:
-// <input onBlur={() => maybeLogin(phoneNumber)} />  (name fields)
-// <input onChange={(e) => maybeLogin(e.target.value)} />  (phone)`}
+// When to call maybeLogin() is up to you:
+// Option A: on field blur / phone change (as shown here)
+// <input onBlur={() => maybeLogin(phoneNumber)} />
+// <input onChange={(e) => maybeLogin(e.target.value)} />
+//
+// Option B: on a button click or form submit
+// <button onClick={() => maybeLogin(phoneNumber)}>
+//   Verify Identity
+// </button>`}
                         </pre>
                       </div>
                       <p className="text-[11px] text-blue-700">
                         By calling <code className="bg-blue-100 px-1 rounded">isLoggedIn()</code> first, you avoid triggering duplicate 2FA for customers who are already verified.
-                        The login happens inline — no redirects or popups.
+                        The login happens inline — no redirects or popups. You decide when in your checkout flow to call these methods.
                       </p>
                     </div>
                   )}
                 </div>
-              </div>
-
-              {/* Accelerate Init & Auto-fill Callout */}
-              <div className="border border-blue-200 bg-blue-50 rounded-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setInitCalloutExpanded(!initCalloutExpanded)}
-                  className="w-full flex items-center justify-between px-4 py-2.5 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <Code2 className="w-4 h-4 text-blue-700" />
-                    <span className="text-[13px] font-semibold text-blue-900">Accelerate: Init & Auto-fill Shipping</span>
-                  </div>
-                  <ChevronDown className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${initCalloutExpanded ? "rotate-180" : ""}`} />
-                </button>
-                {initCalloutExpanded && (
-                  <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
-                    <p>
-                      Call <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.init()</code> on page load with{" "}
-                      <code className="bg-blue-100 px-1 rounded text-[11px]">universalAuth: true</code>.
-                      If the customer has verified before, a persistent cookie allows{" "}
-                      <code className="bg-blue-100 px-1 rounded text-[11px]">onLoginSuccess</code> to fire automatically — no user interaction needed.
-                      Use the returned user data to <strong>pre-fill name, phone, and address fields</strong> instantly.
-                    </p>
-                    <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
-                      <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
-{`window.accelerate.init({
-  amount: 15000,       // amount in cents
-  merchantId: "your-merchant-id",
-  checkoutFlow: "Inline",
-  checkoutMode: "BraintreeNonce",
-  universalAuth: true, // enables cookie-based recognition
-
-  onLoginSuccess: (user) => {
-    // Auto-fill form fields with user data
-    if (user.firstName) setFirstName(user.firstName);
-    if (user.lastName)  setLastName(user.lastName);
-    if (user.phoneNumber) setPhone(user.phoneNumber);
-
-    // Auto-fill address from stored addresses
-    if (user.addresses?.[0]) {
-      setAddrLine1(user.addresses[0].line1);
-      setAddrCity(user.addresses[0].city);
-      setAddrState(user.addresses[0].state);
-      setAddrZip(user.addresses[0].postalCode);
-    }
-
-    // If user has a quick card, enable one-click pay
-    if (user.quickCard) setDefaultCard(user.quickCard);
-  },
-});`}
-                      </pre>
-                    </div>
-                    <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800">
-                      <p>
-                        <strong><code className="bg-blue-100 px-1 rounded">universalAuth: true</code></strong> — Enables cookie-based recognition across sessions.
-                        Once a customer verifies via 2FA, Accelerate sets a persistent cookie. On return visits,{" "}
-                        <code className="bg-blue-100 px-1 rounded">onLoginSuccess</code> fires automatically during{" "}
-                        <code className="bg-blue-100 px-1 rounded">init()</code>, giving instant access to their stored cards, addresses, and identity — no 2FA needed.
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Country */}
@@ -373,13 +380,13 @@ export default function SidelineSwapCheckout() {
               {/* Buttons */}
               <div className="flex gap-4 pt-1">
                 {defaultCard ? (
-                  <div className="flex flex-col w-full gap-3">
+                  <div className="flex flex-col w-full gap-4">
                     <button
                       type="submit"
-                      className="flex-1 h-[44px] px-4 text-white bg-[#2DB87D] hover:bg-[#259968] rounded-sm flex items-center justify-center gap-3 transition font-semibold text-sm"
+                      className="h-[52px] px-6 text-white bg-[#1d3d2e] hover:bg-[#162f23] rounded-lg flex items-center justify-center gap-3 transition-all font-semibold text-[15px] shadow-md hover:shadow-lg"
                     >
                       {defaultCard.artUrl && (
-                        <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-7 w-auto rounded" />
+                        <img src={defaultCard.artUrl} alt={defaultCard.cardName} className="h-8 w-auto rounded-md shadow-sm" />
                       )}
                       <span>Pay now ••••{defaultCard.last4}</span>
                     </button>
@@ -389,9 +396,9 @@ export default function SidelineSwapCheckout() {
                         setDefaultCard(null);
                         handleSubmit(false);
                       }}
-                      className="flex-1 h-[44px] border border-gray-300 bg-white hover:bg-gray-50 text-gray-500 rounded-sm transition font-semibold text-sm"
+                      className="h-[44px] border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 rounded-lg transition font-medium text-sm hover:border-gray-300"
                     >
-                      Continue with a different card
+                      Use a different payment method
                     </button>
                   </div>
                 ) : (
@@ -465,7 +472,6 @@ export default function SidelineSwapCheckout() {
                     </div>
                     <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800 space-y-1">
                       <p><strong>Conversion Boost:</strong> Quick Card lets returning customers pay in one click without navigating to a separate payment page, significantly reducing checkout abandonment.</p>
-                      <p><strong>Fallback:</strong> A &quot;Continue with a different card&quot; option is always available for customers who want to use a different payment method.</p>
                     </div>
                   </div>
                 )}
