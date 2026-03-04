@@ -464,46 +464,67 @@ function handleChangePayment() {
                   {tokenCalloutExpanded && (
                     <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
                       <p>
-                        When the customer clicks <strong>&quot;Complete Purchase&quot;</strong>, call{" "}
-                        <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.requestSource(cardId)</code> with the tokenized card ID
-                        from the wallet selection. Accelerate returns a Braintree nonce that you pass
-                        to your payment processor to charge the card.
+                        When the customer clicks <strong>&quot;Pay Now&quot;</strong>, fetch a Braintree client token from your server, then call{" "}
+                        <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.requestSource(cardId, {"{"} braintree {"}"} )</code> to
+                        retrieve a processor token. Pass that token to your backend to confirm the transaction.
                       </p>
                       <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                         <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
-{`async function handleCompletePurchase() {
-  setIsSubmitting(true);
-  try {
-    // Request a payment source from Accelerate
-    const card = await window.accelerate
-      .requestSource(selectedCardId);
+{`<button
+  disabled={cardId == null}
+  className={buttonStyle}
+  onClick={async () => {
+    if (!cardId) return;
 
-    // Check for errors (e.g. card declined, 3DS failure)
-    if ("status" in card) {
-      // Handle error — show message to customer
-      setIsSubmitting(false);
+    // Your implementation should fetch a client token from your server, this is
+    // a mock!
+    const clientToken = await fetch("/api/braintree/get-client-token");
+    const clientTokenJson = (await clientToken.json()) as { token: string };
+
+    const source = await window.accelerate.requestSource(cardId, {
+      braintree: {
+        clientToken: clientTokenJson.token,
+      },
+    });
+
+    console.log("Source", { source });
+    if ("status" in source) {
+      if (source.status == 401) {
+        console.log("User session expired!");
+        window.accelerate.closeWallet();
+        window.accelerate.login({
+          firstName,
+          lastName,
+          phoneNumber,
+          email: "test@weaccelerate.com",
+        });
+      }
       return;
     }
-
-    // card.details contains:
-    //   .mask  — last 4 digits (e.g. "4705")
-    //   .token — Braintree nonce
-
-    // Pass the token to your backend to process payment
-    // await chargeCard(card.details.token, totalAmount);
-
-    // Navigate to success page
-    router.push("/success?totalPrice=" + total);
-  } catch (error) {
-    console.error("Payment error:", error);
-    setIsSubmitting(false);
-  }
-}`}
+    const confirmIntent = await fetch("/api/braintree/confirm", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: "10.00",
+        processorToken: source.processorToken,
+        cartId: "some-cart",
+      }),
+    });
+    const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
+    if (res.status === "authorized") {
+      router.push(\`/completion?status=succeeded&token=\${res.token}\`);
+    } else {
+      setErrorMessage(res.message || "Unknown error");
+    }
+  }}
+>
+  Pay Now
+</button>`}
                         </pre>
                       </div>
                       <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800 space-y-1">
                         <p><strong>checkoutMode: BraintreeNonce</strong></p>
-                        <p>&bull; Returns a nonce you pass to <code className="bg-blue-100 px-1 rounded">gateway.transaction.sale()</code></p>
+                        <p>&bull; Fetches a client token, then calls <code className="bg-blue-100 px-1 rounded">requestSource(cardId, {"{"} braintree {"}"} )</code> to get a processor token</p>
+                        <p>&bull; Pass the processor token to <code className="bg-blue-100 px-1 rounded">/api/braintree/confirm</code> to authorize the charge</p>
                         <p className="mt-1"><strong>No card data on your servers:</strong> The token is single-use and processor-specific. Your backend never sees raw card numbers.</p>
                       </div>
                     </div>
