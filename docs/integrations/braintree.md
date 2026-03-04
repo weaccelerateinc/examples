@@ -30,7 +30,7 @@ const source = await window.accelerate.requestSource(cardId, {
 
 See the [Transaction.sale docs](https://developer.paypal.com/braintree/docs/reference/request/transaction/sale) for more information on using them.
 
-![Braintree handoff diagram](../braintree_handoff.png)
+![Braintree handoff diagram](../.gitbook/assets/braintree_handoff.png)
 
 [Braintree basic example frontend code](../../demos/app/test/braintree/inline/page.tsx)\
 [Braintree basic example backend code](../../demos/app/api/braintree/confirm/route.ts)
@@ -66,7 +66,7 @@ headers: {
 
 An open api specification file is available for this endpoint [here](https://sbx.api.weaccelerate.com/swagger/reporting/swagger.json)
 
-A minimal example of executing this is shown in [the examples repo](https://github.com/weaccelerateinc/examples/blob/main/demos/app/api/braintree/confirm/route.ts)
+A minimal example of executing this is shown in [the examples repo](../../demos/app/api/braintree/confirm/route.ts)
 
 Details of the payload body:
 

@@ -14,11 +14,11 @@ The following steps are provided as a way to organize integrating with Accelerat
 
 ## Handoff flow
 
-![Handoff diagram](handoff.png)
+![Handoff diagram](.gitbook/assets/handoff.png)
 
 ## Gateway flow
 
-![Gateway diagram](gateway.png)
+![Gateway diagram](.gitbook/assets/gateway.png)
 
 2. Choose a frontend style, either inline or modal: [Modes](setup/modes.md) and [Frontend](setup/frontend/)
 3. Test transactions in our sandbox environment: [Testing](setup/testing.md)

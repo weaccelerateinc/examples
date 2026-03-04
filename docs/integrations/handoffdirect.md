@@ -13,7 +13,7 @@ checkoutFlow: "Inline"
 
 Currently only the inline checkout flow is supported for the direct handoff.
 
-![Direct handoff diagram](../handoff_direct.png)
+![Direct handoff diagram](../.gitbook/assets/handoff_direct.png)
 
 Accelerate will vault all user card credentials for further use and create network tokens with the appropriate network processors when available.
 
