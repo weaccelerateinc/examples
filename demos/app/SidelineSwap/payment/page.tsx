@@ -338,41 +338,30 @@ window.accelerate.closeWallet();`}
                     <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
                       <p>
                         The <code className="bg-blue-100 px-1 rounded text-[11px]">onLoginSuccess</code> callback returns the user&apos;s billing address via{" "}
-                        <code className="bg-blue-100 px-1 rounded text-[11px]">user.addresses</code>. If the billing address differs from the shipping address,
-                        you can automatically select <strong>&quot;Use a different billing address&quot;</strong> and pre-fill the fields.
+                        <code className="bg-blue-100 px-1 rounded text-[11px]">user.addresses</code>. If the customer selects{" "}
+                        <strong>&quot;Use a different billing address&quot;</strong>, you can pre-fill the billing fields with the address from Accelerate — saving
+                        them from re-entering it manually.
                       </p>
                       <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                         <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
 {`onLoginSuccess: (user) => {
-  const shipping = { line1: address, city, state, zip };
-
   // user.addresses contains all stored addresses
   // including billing addresses from past purchases
   const billing = user.addresses?.[0];
 
   if (billing) {
-    const isSame =
-      billing.line1 === shipping.line1 &&
-      billing.city === shipping.city &&
-      billing.state === shipping.state &&
-      billing.postalCode === shipping.zip;
-
-    if (!isSame) {
-      // Auto-select "Use a different billing address"
-      setBillingOption("different");
-
-      // Pre-fill the billing address fields
-      setBillingLine1(billing.line1);
-      setBillingCity(billing.city);
-      setBillingState(billing.state);
-      setBillingZip(billing.postalCode);
-    }
+    // Store the billing address so it's ready if the
+    // customer picks "Use a different billing address"
+    setBillingLine1(billing.line1);
+    setBillingCity(billing.city);
+    setBillingState(billing.state);
+    setBillingZip(billing.postalCode);
   }
 }`}
                         </pre>
                       </div>
                       <p className="text-[11px] text-blue-700">
-                        This removes friction for returning customers whose billing and shipping addresses differ — no manual re-entry needed.
+                        This is only relevant when the customer chooses <strong>&quot;Use a different billing address&quot;</strong> — pre-fill the fields so they don&apos;t have to re-enter their billing info manually.
                       </p>
                     </div>
                   )}
