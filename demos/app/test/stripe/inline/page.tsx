@@ -224,7 +224,7 @@ export default function CheckoutPage() {
           console.log("[test/stripe/inline] SDK ready", {
             script: process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT,
             methodAvailability,
-            accelerateJsTypesVersion: "0.9.0",
+            accelerateJsTypesVersion: "0.10.0",
           });
 
           window.accelerate.init({
@@ -236,8 +236,8 @@ export default function CheckoutPage() {
               console.log("[test/stripe/inline] onLoginSuccess", { user });
               maybeUseAccelUser(user);
             },
-            onCardSelected: (id) => {
-              console.log("[test/stripe/inline] onCardSelected", { cardId: id });
+            onCardSelected: (id, details) => {
+              console.log("[test/stripe/inline] onCardSelected", { cardId: id, details });
               setCardId(id);
             },
             onLogout: () => {
