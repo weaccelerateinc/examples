@@ -132,11 +132,12 @@ export default function CheckoutPage() {
           className="btn btn-blue disabled:bg-blue-400/50"
           onClick={async () => {
             const src = await window.accelerate.requestSource(cardId!);
+            console.log("[test/stripe/inline] requestSource response", { src });
             if ("status" in src) {
-              console.log("Error", { src });
+              console.log("[test/stripe/inline] requestSource error", { src });
               return;
             }
-            console.log({ src });
+            console.log("[test/stripe/inline] requestSource success", { processorToken: src.processorToken });
             const confirmIntent = await fetch("/api/stripe/confirm", {
               method: "POST",
               body: JSON.stringify({
@@ -216,17 +217,31 @@ export default function CheckoutPage() {
         src={process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT}
         strategy="afterInteractive"
         onReady={() => {
+          const sdkMethods = ["init", "login", "checkPhone", "isLoggedIn", "openWallet", "requestSource", "logout"] as const;
+          const methodAvailability = Object.fromEntries(
+            sdkMethods.map((method) => [method, typeof window.accelerate?.[method] === "function"])
+          );
+          console.log("[test/stripe/inline] SDK ready", {
+            script: process.env.NEXT_PUBLIC_ACCELERATE_VERIFY_JS_SCRIPT,
+            methodAvailability,
+            accelerateJsTypesVersion: "0.10.0",
+          });
+
           window.accelerate.init({
             amount: stripeOptions.amount,
             merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
             checkoutFlow: "Inline",
             checkoutMode: "StripeToken",
             onLoginSuccess: (user) => {
-              console.log("Accelerate user logged in", { user });
+              console.log("[test/stripe/inline] onLoginSuccess", { user });
               maybeUseAccelUser(user);
             },
-            onCardSelected: (id) => {
+            onCardSelected: (id, details) => {
+              console.log("[test/stripe/inline] onCardSelected", { cardId: id, details });
               setCardId(id);
+            },
+            onLogout: () => {
+              console.log("[test/stripe/inline] onLogout");
             },
           });
         }}
