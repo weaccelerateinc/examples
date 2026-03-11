@@ -38,13 +38,16 @@ function CheckoutContent() {
   const [cardLast4, setCardLast4] = useState("4705");
   const [cardExpiry] = useState("06/2030");
 
+  const [showPaymentPicker, setShowPaymentPicker] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("paypal");
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [modalFirstName, setModalFirstName] = useState("");
   const [modalLastName, setModalLastName] = useState("");
   const [modalPhone, setModalPhone] = useState("");
   const [accelLoggedIn, setAccelLoggedIn] = useState(false);
-  const [codeCalloutExpanded, setCodeCalloutExpanded] = useState(true);
-  const [tokenCalloutExpanded, setTokenCalloutExpanded] = useState(true);
+  const [codeCalloutExpanded, setCodeCalloutExpanded] = useState(false);
+  const [tokenCalloutExpanded, setTokenCalloutExpanded] = useState(false);
 
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user.emailAddress) setContactEmail(user.emailAddress);
@@ -108,12 +111,20 @@ function CheckoutContent() {
   };
 
   const handleChangePayment = () => {
+    setShowPaymentPicker(!showPaymentPicker);
+  };
+
+  const handleAddNewPayment = () => {
     if (accelLoggedIn) {
       const nameParts = fullName.split(" ");
       navigateToPaymentPage(nameParts[0] || "", nameParts.slice(1).join(" ") || "");
     } else {
       setShowPaymentModal(true);
     }
+  };
+
+  const handlePaymentPickerContinue = () => {
+    setShowPaymentPicker(false);
   };
 
   const handlePaymentModalSubmit = () => {
@@ -261,8 +272,7 @@ function CheckoutContent() {
                     {codeCalloutExpanded && (
                       <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
                         <p>
-                          When a customer clicks <strong>&quot;Change&quot;</strong>, pass the customer&apos;s identity to Accelerate.
-                          If a cookie is already present, <code className="bg-blue-100 px-1 rounded text-[11px]">onLoginSuccess</code> fires automatically on init and you can skip the 2FA prompt entirely.
+                          When a customer clicks <strong>&quot;Change&quot;</strong> and <strong>&quot;Add New&quot;</strong>, pass the customer&apos;s identity to Accelerate in the following page.
                         </p>
                         <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                           <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
@@ -373,16 +383,77 @@ function handleChangePayment() {
                   </div>
                 )}
 
-                {/* Card on file */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-7 bg-[#1a1f71] rounded flex items-center justify-center">
-                    <span className="text-white text-[10px] font-bold italic tracking-tight">VISA</span>
-                  </div>
+                {/* Payment methods */}
+                {showPaymentPicker ? (
                   <div>
-                    <p className="text-[14px] font-semibold text-gray-900">ending in {cardLast4}</p>
-                    <p className="text-[12px] text-gray-400">expires {cardExpiry}</p>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden mb-4">
+                      <label className="flex items-center gap-3 px-4 py-3.5 cursor-pointer border-b border-gray-200 hover:bg-gray-50 transition">
+                        <input
+                          type="radio"
+                          name="paymentPicker"
+                          value="paypal"
+                          checked={selectedPaymentMethod === "paypal"}
+                          onChange={() => setSelectedPaymentMethod("paypal")}
+                          className="w-4 h-4 accent-[#2DB87D]"
+                        />
+                        <Image src="/paypal.svg" alt="PayPal" width={80} height={20} className="h-5 w-auto" />
+                        <span className="text-[14px] text-gray-900">gchao3@ucla.edu</span>
+                      </label>
+                      <label className="flex items-center gap-3 px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition">
+                        <input
+                          type="radio"
+                          name="paymentPicker"
+                          value="visa"
+                          checked={selectedPaymentMethod === "visa"}
+                          onChange={() => setSelectedPaymentMethod("visa")}
+                          className="w-4 h-4 accent-[#2DB87D]"
+                        />
+                        <div className="w-10 h-7 bg-[#1a1f71] rounded flex items-center justify-center shrink-0">
+                          <span className="text-white text-[10px] font-bold italic tracking-tight">VISA</span>
+                        </div>
+                        <div>
+                          <span className="text-[14px] font-semibold text-gray-900">ending in {cardLast4}</span>
+                          <span className="text-[12px] text-gray-400 ml-2">expires {cardExpiry}</span>
+                        </div>
+                      </label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={handleAddNewPayment}
+                        className="h-10 border border-gray-300 rounded text-[14px] font-medium text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        Add New
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handlePaymentPickerContinue}
+                        className="h-10 rounded text-[14px] font-medium bg-[#1d3d2e] text-white hover:bg-[#162f23] transition"
+                      >
+                        Continue
+                      </button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    {selectedPaymentMethod === "paypal" ? (
+                      <>
+                        <Image src="/paypal.svg" alt="PayPal" width={80} height={20} className="h-5 w-auto" />
+                        <span className="text-[14px] text-gray-900">gchao3@ucla.edu</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-10 h-7 bg-[#1a1f71] rounded flex items-center justify-center">
+                          <span className="text-white text-[10px] font-bold italic tracking-tight">VISA</span>
+                        </div>
+                        <div>
+                          <p className="text-[14px] font-semibold text-gray-900">ending in {cardLast4}</p>
+                          <p className="text-[12px] text-gray-400">expires {cardExpiry}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </section>
             </div>
 

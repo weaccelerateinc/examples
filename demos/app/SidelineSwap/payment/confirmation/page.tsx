@@ -42,7 +42,7 @@ function ConfirmationContent() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accelLoaded, setAccelerateLoaded] = useState(false);
-  const [tokenCalloutExpanded, setTokenCalloutExpanded] = useState(true);
+  const [tokenCalloutExpanded, setTokenCalloutExpanded] = useState(false);
 
   const handleCompletePurchase = async () => {
     if (!selectedCardId) return;

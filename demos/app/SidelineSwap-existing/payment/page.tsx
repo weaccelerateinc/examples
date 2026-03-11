@@ -41,8 +41,8 @@ function PaymentContent() {
   const [, setCardArtUrl] = useState("");
   const [worryFreeReturns, setWorryFreeReturns] = useState(true);
   const [billingOption, setBillingOption] = useState("same");
-  const [billingCalloutExpanded, setBillingCalloutExpanded] = useState(true);
-  const [walletCalloutExpanded, setWalletCalloutExpanded] = useState(true);
+  const [billingCalloutExpanded, setBillingCalloutExpanded] = useState(false);
+  const [walletCalloutExpanded, setWalletCalloutExpanded] = useState(false);
 
   const worryFreeReturnsCost = worryFreeReturns ? 4.91 : 0;
   const shipping = 11.58;

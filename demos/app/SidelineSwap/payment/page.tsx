@@ -46,8 +46,8 @@ function PaymentContent() {
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [worryFreeReturns, setWorryFreeReturns] = useState(true);
   const [billingOption, setBillingOption] = useState("same");
-  const [walletCalloutExpanded, setWalletCalloutExpanded] = useState(true);
-  const [billingCalloutExpanded, setBillingCalloutExpanded] = useState(true);
+  const [walletCalloutExpanded, setWalletCalloutExpanded] = useState(false);
+  const [billingCalloutExpanded, setBillingCalloutExpanded] = useState(false);
 
   const worryFreeReturnsCost = worryFreeReturns ? 6.75 : 0;
 

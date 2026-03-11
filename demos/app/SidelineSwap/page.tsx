@@ -52,9 +52,9 @@ export default function SidelineSwapCheckout() {
     last4: string;
   } | null>(null);
 
-  const [initCalloutExpanded, setInitCalloutExpanded] = useState(true);
-  const [loginCalloutExpanded, setLoginCalloutExpanded] = useState(true);
-  const [quickCardCalloutExpanded, setQuickCardCalloutExpanded] = useState(true);
+  const [initCalloutExpanded, setInitCalloutExpanded] = useState(false);
+  const [loginCalloutExpanded, setLoginCalloutExpanded] = useState(false);
+  const [quickCardCalloutExpanded, setQuickCardCalloutExpanded] = useState(false);
 
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user.firstName) setFirstName(user.firstName);
