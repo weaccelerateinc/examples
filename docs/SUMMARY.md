@@ -18,6 +18,7 @@
 * [Stripe](integrations/stripe.md)
 * [Braintree](integrations/braintree.md)
 * [Checkout.com](integrations/checkoutdotcom.md)
+* [ACP (mock merchant)](integrations/acp.md)
 * [Handoff flow for direct processing](integrations/handoffdirect.md)
 
 ***
