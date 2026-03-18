@@ -153,7 +153,7 @@ export default function TicketNetworkCheckout() {
     >
       {/* Header */}
       <header className="w-full" style={{ backgroundColor: "#1a90ff" }}>
-        <div className="max-w-[960px] mx-auto px-4 py-3.5 flex justify-between items-center">
+        <div className="max-w-[960px] mx-auto px-4 py-[17px] flex justify-between items-center">
           <Image src="/ticketnetwork-logo.png" alt="TicketNetwork" width={195} height={23} className="h-[23px] w-auto" />
           <div className="text-white text-[16px] font-bold flex items-center gap-1.5">
             <span className="text-[15px]">&#9742;</span>
@@ -695,6 +695,14 @@ export default function TicketNetworkCheckout() {
           </div>
         </div>
       </footer>
+
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      `}</style>
 
       <Script
         crossOrigin="anonymous"

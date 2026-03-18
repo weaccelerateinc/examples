@@ -185,6 +185,14 @@ function ConfirmationContent() {
           </p>
         </div>
       </footer>
+
+      <style jsx global>{`
+        html,
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      `}</style>
     </div>
   );
 }
