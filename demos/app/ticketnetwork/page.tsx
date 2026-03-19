@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types";
 import Image from "next/image";
 import { AccelerateWallet } from "../../components/AccelerateWallet";
-import { Loader2 } from "lucide-react";
+import { Loader2, Code2, ChevronDown } from "lucide-react";
 
 declare global {
   interface Window {
@@ -55,6 +55,10 @@ export default function TicketNetworkCheckout() {
   const [accelLoaded, setAccelerateLoaded] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [initCalloutExpanded, setInitCalloutExpanded] = useState(false);
+  const [loginCalloutExpanded, setLoginCalloutExpanded] = useState(false);
+  const [walletIframeCalloutExpanded, setWalletIframeCalloutExpanded] = useState(false);
+  const [braintreeCalloutExpanded, setBraintreeCalloutExpanded] = useState(false);
 
   const [country, setCountry] = useState("United States of America");
   const [billingAddrLine1, setBillingAddrLine1] = useState("");
@@ -218,6 +222,54 @@ export default function TicketNetworkCheckout() {
                     <span className="text-[31px] text-black font-normal leading-none">Payment</span>
                   </div>
 
+                  {/* Developer Guide: Init + Autofill */}
+                  <div className="pl-[26px] pb-4">
+                    <div className="border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setInitCalloutExpanded(!initCalloutExpanded)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Code2 className="w-4 h-4 text-blue-700" />
+                          <span className="text-[12px] font-semibold text-blue-900">Developer Guide: Accelerate init + auto-fill</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${initCalloutExpanded ? "rotate-180" : ""}`} />
+                      </button>
+                      {initCalloutExpanded && (
+                        <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
+                          <p>
+                            Initialize Accelerate on checkout load and hydrate billing fields in{" "}
+                            <code className="bg-blue-100 px-1 rounded">onLoginSuccess</code>. With{" "}
+                            <code className="bg-blue-100 px-1 rounded">universalAuth: true</code>, Accelerate stores a persistent recognition cookie
+                            after successful verification so returning users can be recognized automatically and pre-filled. For Braintree flows,
+                            set <code className="bg-blue-100 px-1 rounded">checkoutMode: "BraintreeNonce"</code>.
+                          </p>
+                          <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
+                            <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
+{`window.accelerate.init({
+  amount: stripeOptions.amount,
+  merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+  checkoutFlow: "Inline",
+  checkoutMode: "BraintreeNonce",
+  universalAuth: true, // enables cookie-based returning user recognition
+  onLoginSuccess: (user) => {
+    if (user.addresses?.[0]) {
+      setBillingAddrLine1(user.addresses[0].line1 || "");
+      setBillingAddrCity(user.addresses[0].city || "");
+      setBillingAddrState(user.addresses[0].state || "Alabama");
+      setBillingAddrZip(user.addresses[0].postalCode || "");
+    }
+    setIsLoggedIn(true);
+  },
+});`}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="pl-[26px] pb-4">
                     <button type="button" className="text-[11px] text-[#2d8fd4] hover:underline flex items-center gap-1">
                       <span className="text-[9px] text-[#cc4a4a]">&#9658;</span>
@@ -286,6 +338,49 @@ export default function TicketNetworkCheckout() {
                                 <circle cx="7" cy="7" r="7" fill="#37a245" />
                                 <path d="M3.9 7L5.8 8.9L10 4.8" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                               </svg>
+                            </div>
+                          </td>
+                        </tr>
+
+                        <tr>
+                          <td />
+                          <td>
+                            <div className="border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() => setLoginCalloutExpanded(!loginCalloutExpanded)}
+                                className="w-full flex items-center justify-between px-3 py-2 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Code2 className="w-4 h-4 text-blue-700" />
+                                  <span className="text-[12px] font-semibold text-blue-900">Developer Guide: smart login trigger</span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${loginCalloutExpanded ? "rotate-180" : ""}`} />
+                              </button>
+                              {loginCalloutExpanded && (
+                                <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
+                                  <p>
+                                    Trigger <code className="bg-blue-100 px-1 rounded">accelerate.login()</code> only after basic validation to avoid
+                                    sending repeated 2FA challenges while users type.
+                                  </p>
+                                  <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
+                                    <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
+{`const maybeLogin = (phoneValue: string) => {
+  if (!firstName || !lastName) return;
+  const cleanedPhone = phoneValue.replace(/\\D/g, "");
+  if (!/^(1\\d{10}|[2-9]\\d{9})$/.test(cleanedPhone)) return;
+
+  window.accelerate.login({
+    firstName,
+    lastName,
+    phoneNumber: cleanedPhone.slice(-10),
+    email,
+  });
+};`}
+                                    </pre>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -475,6 +570,86 @@ export default function TicketNetworkCheckout() {
                         <AccelerateWallet />
                       </div>
                     )}
+
+                    <div className="mt-3 border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setWalletIframeCalloutExpanded(!walletIframeCalloutExpanded)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Code2 className="w-4 h-4 text-blue-700" />
+                          <span className="text-[12px] font-semibold text-blue-900">Developer Guide: display cards via iframe</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${walletIframeCalloutExpanded ? "rotate-180" : ""}`} />
+                      </button>
+                      {walletIframeCalloutExpanded && (
+                        <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
+                          <p>
+                            Render saved cards inside your checkout using the Accelerate wallet iframe container. The iframe is mounted by{" "}
+                            <code className="bg-blue-100 px-1 rounded">openWallet()</code> and cleaned up with{" "}
+                            <code className="bg-blue-100 px-1 rounded">closeWallet()</code>.
+                          </p>
+                          <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
+                            <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
+{`export const AccelerateWallet = ({ defaultCardId }) => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (containerRef.current?.children?.length === 0) {
+      // mounts the wallet iframe into #accelerate-wallet
+      window.accelerate.openWallet({ defaultCardId });
+    }
+
+    return () => {
+      // removes iframe when component unmounts
+      window.accelerate.closeWallet();
+    };
+  }, []);
+
+  return <div ref={containerRef} id="accelerate-wallet" />;
+};
+`}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-3 border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setBraintreeCalloutExpanded(!braintreeCalloutExpanded)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Code2 className="w-4 h-4 text-blue-700" />
+                          <span className="text-[12px] font-semibold text-blue-900">Developer Guide: Braintree tokenization</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${braintreeCalloutExpanded ? "rotate-180" : ""}`} />
+                      </button>
+                      {braintreeCalloutExpanded && (
+                        <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
+                          <p>
+                            Tokenize the selected wallet card with{" "}
+                            <code className="bg-blue-100 px-1 rounded">requestSource(cardId)</code>, then send the returned nonce to your backend for
+                            Braintree transaction creation.
+                          </p>
+                          <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
+                            <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
+{`const source = await window.accelerate.requestSource(selectedCard);
+await fetch("/api/braintree/confirm", {
+  method: "POST",
+  body: JSON.stringify({
+    paymentMethodNonce: source.processorToken,
+    cartId: "some-cart",
+  }),
+});`}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
