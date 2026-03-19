@@ -243,7 +243,7 @@ export default function TicketNetworkCheckout() {
                             <code className="bg-blue-100 px-1 rounded">onLoginSuccess</code>. With{" "}
                             <code className="bg-blue-100 px-1 rounded">universalAuth: true</code>, Accelerate stores a persistent recognition cookie
                             after successful verification so returning users can be recognized automatically and pre-filled. For Braintree flows,
-                            set <code className="bg-blue-100 px-1 rounded">checkoutMode: "BraintreeNonce"</code>.
+                            set <code className="bg-blue-100 px-1 rounded">checkoutMode: &quot;BraintreeNonce&quot;</code>.
                           </p>
                           <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                             <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
