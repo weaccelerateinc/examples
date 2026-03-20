@@ -57,8 +57,8 @@ export default function TicketNetworkCheckout() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [initCalloutExpanded, setInitCalloutExpanded] = useState(false);
   const [loginCalloutExpanded, setLoginCalloutExpanded] = useState(false);
-  const [walletIframeCalloutExpanded, setWalletIframeCalloutExpanded] = useState(false);
-  const [braintreeCalloutExpanded, setBraintreeCalloutExpanded] = useState(false);
+  const [walletCalloutExpanded, setWalletCalloutExpanded] = useState(false);
+  const [tokenCalloutExpanded, setTokenCalloutExpanded] = useState(false);
 
   const [country, setCountry] = useState("United States of America");
   const [billingAddrLine1, setBillingAddrLine1] = useState("");
@@ -222,7 +222,7 @@ export default function TicketNetworkCheckout() {
                     <span className="text-[31px] text-black font-normal leading-none">Payment</span>
                   </div>
 
-                  {/* Developer Guide: Init + Autofill */}
+                  {/* Accelerate Init & Auto-fill Callout */}
                   <div className="pl-[26px] pb-4">
                     <div className="border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
                       <button
@@ -232,38 +232,55 @@ export default function TicketNetworkCheckout() {
                       >
                         <div className="flex items-center gap-2">
                           <Code2 className="w-4 h-4 text-blue-700" />
-                          <span className="text-[12px] font-semibold text-blue-900">Developer Guide: Accelerate init + auto-fill</span>
+                          <span className="text-[13px] font-semibold text-blue-900">Accelerate: Init & Auto-fill Shipping</span>
                         </div>
                         <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${initCalloutExpanded ? "rotate-180" : ""}`} />
                       </button>
                       {initCalloutExpanded && (
                         <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
                           <p>
-                            Initialize Accelerate on checkout load and hydrate billing fields in{" "}
-                            <code className="bg-blue-100 px-1 rounded">onLoginSuccess</code>. With{" "}
-                            <code className="bg-blue-100 px-1 rounded">universalAuth: true</code>, Accelerate stores a persistent recognition cookie
-                            after successful verification so returning users can be recognized automatically and pre-filled. For Braintree flows,
-                            set <code className="bg-blue-100 px-1 rounded">checkoutMode: &quot;BraintreeNonce&quot;</code>.
+                            Call <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.init()</code> on page load with{" "}
+                            <code className="bg-blue-100 px-1 rounded text-[11px]">universalAuth: true</code>.
+                            If the customer has verified before, a persistent cookie allows{" "}
+                            <code className="bg-blue-100 px-1 rounded text-[11px]">onLoginSuccess</code> to fire automatically - no user interaction needed.
+                            Use the returned user data to <strong>pre-fill name, phone, and address fields</strong> instantly.
                           </p>
                           <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                             <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
 {`window.accelerate.init({
-  amount: stripeOptions.amount,
-  merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+  amount: 15000,       // amount in cents
+  merchantId: "your-merchant-id",
   checkoutFlow: "Inline",
   checkoutMode: "BraintreeNonce",
-  universalAuth: true, // enables cookie-based returning user recognition
+  universalAuth: true, // enables cookie-based recognition
+
   onLoginSuccess: (user) => {
+    // Auto-fill form fields with user data
+    if (user.firstName) setFirstName(user.firstName);
+    if (user.lastName)  setLastName(user.lastName);
+    if (user.phoneNumber) setPhone(user.phoneNumber);
+
+    // Auto-fill address from stored addresses
     if (user.addresses?.[0]) {
-      setBillingAddrLine1(user.addresses[0].line1 || "");
-      setBillingAddrCity(user.addresses[0].city || "");
-      setBillingAddrState(user.addresses[0].state || "Alabama");
-      setBillingAddrZip(user.addresses[0].postalCode || "");
+      setAddrLine1(user.addresses[0].line1);
+      setAddrCity(user.addresses[0].city);
+      setAddrState(user.addresses[0].state);
+      setAddrZip(user.addresses[0].postalCode);
     }
-    setIsLoggedIn(true);
+
+    // If user has a quick card, enable one-click pay
+    if (user.quickCard) setDefaultCard(user.quickCard);
   },
 });`}
                             </pre>
+                          </div>
+                          <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800">
+                            <p>
+                              <strong><code className="bg-blue-100 px-1 rounded">universalAuth: true</code></strong> - Enables cookie-based recognition across sessions.
+                              Once a customer verifies via 2FA, Accelerate sets a persistent cookie. On return visits,{" "}
+                              <code className="bg-blue-100 px-1 rounded">onLoginSuccess</code> fires automatically during{" "}
+                              <code className="bg-blue-100 px-1 rounded">init()</code>, giving instant access to their stored cards, addresses, and identity - no 2FA needed.
+                            </p>
                           </div>
                         </div>
                       )}
@@ -353,32 +370,60 @@ export default function TicketNetworkCheckout() {
                               >
                                 <div className="flex items-center gap-2">
                                   <Code2 className="w-4 h-4 text-blue-700" />
-                                  <span className="text-[12px] font-semibold text-blue-900">Developer Guide: smart login trigger</span>
+                                  <span className="text-[13px] font-semibold text-blue-900">Accelerate: Smart Login Trigger</span>
                                 </div>
                                 <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${loginCalloutExpanded ? "rotate-180" : ""}`} />
                               </button>
                               {loginCalloutExpanded && (
                                 <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
                                   <p>
-                                    Trigger <code className="bg-blue-100 px-1 rounded">accelerate.login()</code> only after basic validation to avoid
-                                    sending repeated 2FA challenges while users type.
+                                    Once the customer has entered their name and phone number, you can call{" "}
+                                    <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.isLoggedIn()</code> to check if they&apos;re already recognized.
+                                    If not, call <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.login()</code> to trigger 2FA via SMS.
+                                    After successful verification, Accelerate sets a persistent recognition cookie, so returning users can often pass{" "}
+                                    <code className="bg-blue-100 px-1 rounded text-[11px]">isLoggedIn()</code> immediately without another SMS challenge.
+                                    In this example, we&apos;ve wired it to <strong>field blur</strong> and <strong>phone input change</strong> so the login
+                                    triggers automatically - but you can call these methods at whatever point in your flow makes sense (e.g., on a button click, on form submit, etc.).
                                   </p>
                                   <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                                     <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
-{`const maybeLogin = (phoneValue: string) => {
-  if (!firstName || !lastName) return;
-  const cleanedPhone = phoneValue.replace(/\\D/g, "");
-  if (!/^(1\\d{10}|[2-9]\\d{9})$/.test(cleanedPhone)) return;
-
-  window.accelerate.login({
-    firstName,
-    lastName,
-    phoneNumber: cleanedPhone.slice(-10),
+{`async function maybeLogin(phoneValue: string) {
+  // Check if already logged in - avoids duplicate 2FA
+  const isLoggedIn = await window.accelerate.isLoggedIn({
+    firstName, lastName,
+    phoneNumber: phoneValue,
     email,
   });
-};`}
+  if (isLoggedIn) return;
+
+  // Validate inputs before triggering 2FA
+  if (!firstName || !lastName) return;
+  const cleaned = phoneValue.replace(/\\D/g, "");
+  if (!/^(1\\d{10}|[2-9]\\d{9})$/.test(cleaned)) return;
+
+  // Trigger 2FA - customer receives an SMS code
+  window.accelerate.login({
+    firstName, lastName,
+    phoneNumber: cleaned.slice(-10),
+    email,
+  });
+}
+
+// When to call maybeLogin() is up to you:
+// Option A: on field blur / phone change (as shown here)
+// <input onBlur={() => maybeLogin(phoneNumber)} />
+// <input onChange={(e) => maybeLogin(e.target.value)} />
+//
+// Option B: on a button click or form submit
+// <button onClick={() => maybeLogin(phoneNumber)}>
+//   Verify Identity
+// </button>`}
                                     </pre>
                                   </div>
+                                  <p className="text-[11px] text-blue-700">
+                                    By calling <code className="bg-blue-100 px-1 rounded">isLoggedIn()</code> first, you avoid triggering duplicate 2FA for customers who are already verified.
+                                    The login happens inline - no redirects or popups. You decide when in your checkout flow to call these methods.
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -574,82 +619,62 @@ export default function TicketNetworkCheckout() {
                     <div className="mt-3 border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
                       <button
                         type="button"
-                        onClick={() => setWalletIframeCalloutExpanded(!walletIframeCalloutExpanded)}
+                        onClick={() => setWalletCalloutExpanded(!walletCalloutExpanded)}
                         className="w-full flex items-center justify-between px-3 py-2 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
                       >
                         <div className="flex items-center gap-2">
                           <Code2 className="w-4 h-4 text-blue-700" />
-                          <span className="text-[12px] font-semibold text-blue-900">Developer Guide: display cards via iframe</span>
+                          <span className="text-[13px] font-semibold text-blue-900">Accelerate: Wallet Iframe</span>
                         </div>
-                        <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${walletIframeCalloutExpanded ? "rotate-180" : ""}`} />
+                        <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${walletCalloutExpanded ? "rotate-180" : ""}`} />
                       </button>
-                      {walletIframeCalloutExpanded && (
+                      {walletCalloutExpanded && (
                         <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
                           <p>
-                            Render saved cards inside your checkout using the Accelerate wallet iframe container. The iframe is mounted by{" "}
-                            <code className="bg-blue-100 px-1 rounded">openWallet()</code> and cleaned up with{" "}
-                            <code className="bg-blue-100 px-1 rounded">closeWallet()</code>.
+                            The card selector above is an <strong>Accelerate-hosted iframe</strong> rendered by calling{" "}
+                            <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.openWallet()</code>.
+                            It displays the customer&apos;s stored payment methods securely - SidelineSwap never handles or stores any card data.
                           </p>
+                          <div className="space-y-1.5">
+                            <p className="font-semibold text-blue-800">How it works:</p>
+                            <ol className="list-decimal list-inside space-y-1 text-[11px] text-blue-800">
+                              <li>Add an empty <code className="bg-blue-100 px-1 rounded">{'<div id="accelerate-wallet">'}</code> container where you want the wallet to appear.</li>
+                              <li>After <code className="bg-blue-100 px-1 rounded">accelerate.init()</code> completes, call <code className="bg-blue-100 px-1 rounded">accelerate.openWallet()</code> - Accelerate injects a secure iframe into the container.</li>
+                              <li>The iframe renders the customer&apos;s saved cards (pulled from their Accelerate profile after 2FA). Card art, last 4 digits, and expiry are shown.</li>
+                              <li>When the customer selects a card, the <code className="bg-blue-100 px-1 rounded">onCardSelected(cardId)</code> callback fires with a tokenized card ID - no raw card numbers ever touch your domain.</li>
+                              <li>On cleanup (e.g., page navigation), call <code className="bg-blue-100 px-1 rounded">accelerate.closeWallet()</code> to tear down the iframe.</li>
+                            </ol>
+                          </div>
                           <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
                             <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
-{`export const AccelerateWallet = ({ defaultCardId }) => {
-  const containerRef = useRef(null);
+{`// 1. Add an empty container in your HTML/JSX
+<div id="accelerate-wallet"></div>
 
-  useEffect(() => {
-    if (containerRef.current?.children?.length === 0) {
-      // mounts the wallet iframe into #accelerate-wallet
-      window.accelerate.openWallet({ defaultCardId });
-    }
+// 2. After init(), open the wallet iframe
+//    Optionally pass a defaultCardId to pre-select a card
+window.accelerate.openWallet({
+  defaultCardId: "card_abc123" // optional
+});
 
-    return () => {
-      // removes iframe when component unmounts
-      window.accelerate.closeWallet();
-    };
-  }, []);
+// 3. The iframe renders inside #accelerate-wallet
+//    Customer sees their saved cards and selects one
+//    -> onCardSelected(cardId) fires with a token
 
-  return <div ref={containerRef} id="accelerate-wallet" />;
-};
-`}
+// 4. Use the cardId token to process the payment
+//    via your payment processor (Braintree)
+
+// 5. On unmount / navigation, tear down the iframe
+window.accelerate.closeWallet();`}
                             </pre>
+                          </div>
+                          <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800 space-y-1">
+                            <p><strong>PCI Compliance:</strong> Since the card data lives entirely within the Accelerate iframe, your site stays out of PCI scope. You only receive a tokenized card ID - never raw card numbers, CVVs, or expiry dates.</p>
+                            <p><strong>Braintree Compatible:</strong> The returned token is a Braintree nonce you pass directly to <code className="bg-blue-100 px-1 rounded">gateway.transaction.sale()</code>. No changes to your payment processor required.</p>
                           </div>
                         </div>
                       )}
                     </div>
-
-                    <div className="mt-3 border border-blue-200 bg-blue-50 rounded-md overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => setBraintreeCalloutExpanded(!braintreeCalloutExpanded)}
-                        className="w-full flex items-center justify-between px-3 py-2 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Code2 className="w-4 h-4 text-blue-700" />
-                          <span className="text-[12px] font-semibold text-blue-900">Developer Guide: Braintree tokenization</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-blue-700 transition-transform ${braintreeCalloutExpanded ? "rotate-180" : ""}`} />
-                      </button>
-                      {braintreeCalloutExpanded && (
-                        <div className="px-3 py-3 text-[11px] text-blue-900 space-y-2">
-                          <p>
-                            Tokenize the selected wallet card with{" "}
-                            <code className="bg-blue-100 px-1 rounded">requestSource(cardId)</code>, then send the returned nonce to your backend for
-                            Braintree transaction creation.
-                          </p>
-                          <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
-                            <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
-{`const source = await window.accelerate.requestSource(selectedCard);
-await fetch("/api/braintree/confirm", {
-  method: "POST",
-  body: JSON.stringify({
-    paymentMethodNonce: source.processorToken,
-    cartId: "some-cart",
-  }),
-});`}
-                            </pre>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    {/* End of Wallet Iframe Callout */}
                   </div>
                 </div>
               </div>
@@ -773,6 +798,88 @@ await fetch("/api/braintree/confirm", {
                     "Place Order"
                   )}
                 </button>
+
+                <div className="mt-4 border border-blue-200 bg-blue-50 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setTokenCalloutExpanded(!tokenCalloutExpanded)}
+                    className="w-full flex items-center justify-between px-4 py-2.5 bg-blue-100/60 hover:bg-blue-100 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Code2 className="w-4 h-4 text-blue-700" />
+                      <span className="text-[13px] font-semibold text-blue-900">Accelerate: Tokenize &amp; Complete Purchase</span>
+                    </div>
+                    <ChevronDown className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${tokenCalloutExpanded ? "rotate-180" : ""}`} />
+                  </button>
+                  {tokenCalloutExpanded && (
+                    <div className="px-4 py-3 text-[12px] text-blue-900 space-y-2">
+                      <p>
+                        When the customer clicks <strong>&quot;Place Order&quot;</strong>, fetch a Braintree client token from your server, then call{" "}
+                        <code className="bg-blue-100 px-1 rounded text-[11px]">accelerate.requestSource(cardId, {"{"} braintree {"}"} )</code> to
+                        retrieve a processor token. Pass that token to your backend to confirm the transaction.
+                      </p>
+                      <div className="bg-[#1e293b] rounded-md p-3 overflow-x-auto">
+                        <pre className="text-[11px] leading-relaxed font-mono text-gray-300">
+{`<button
+  disabled={!selectedCard}
+  className={buttonStyle}
+  onClick={async () => {
+    if (!selectedCard) return;
+
+    // Your implementation should fetch a client token from your server, this is
+    // a mock!
+    const clientToken = await fetch("/api/braintree/get-client-token");
+    const clientTokenJson = (await clientToken.json()) as { token: string };
+
+    const source = await window.accelerate.requestSource(selectedCard, {
+      braintree: {
+        clientToken: clientTokenJson.token,
+      },
+    });
+
+    console.log("Source", { source });
+    if ("status" in source) {
+      if (source.status == 401) {
+        console.log("User session expired!");
+        window.accelerate.closeWallet();
+        window.accelerate.login({
+          firstName,
+          lastName,
+          phoneNumber,
+          email,
+        });
+      }
+      return;
+    }
+    const confirmIntent = await fetch("/api/braintree/confirm", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: totalPrice.toFixed(2),
+        processorToken: source.processorToken,
+        checkoutId: "some-cart",
+      }),
+    });
+    const res = (await confirmIntent.json()) as { status: string; token: string; message?: string };
+    if (res.status === "authorized") {
+      router.push(\`/completion?status=succeeded&token=\${res.token}\`);
+    } else {
+      setErrorMessage(res.message || "Unknown error");
+    }
+  }}
+>
+  Place Order
+</button>`}
+                        </pre>
+                      </div>
+                      <div className="bg-blue-100/50 rounded p-2.5 text-[11px] text-blue-800 space-y-1">
+                        <p><strong>checkoutMode: BraintreeNonce</strong></p>
+                        <p>&bull; Fetches a client token, then calls <code className="bg-blue-100 px-1 rounded">requestSource(cardId, {"{"} braintree {"}"} )</code> to get a processor token</p>
+                        <p>&bull; Pass the processor token to <code className="bg-blue-100 px-1 rounded">/api/braintree/confirm</code> to authorize the charge</p>
+                        <p className="mt-1"><strong>No card data on your servers:</strong> The token is single-use and processor-specific. Your backend never sees raw card numbers.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {errorMessage && (
