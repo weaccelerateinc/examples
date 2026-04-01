@@ -5,11 +5,13 @@ import braintree from "braintree";
 type BTTransaction = {
   id: string;
   status: string;
-  amount: string;
+  amount_subtotal: string;
+  amount_total: string;
   processorResponseText: string;
 };
 type BraintreeReport = {
   accelerateToken: string;
+  userEmail?: string;
   transaction: BTTransaction;
 };
 
@@ -40,7 +42,8 @@ export async function POST(request: NextRequest) {
     transaction: {
       id: result.transaction.id,
       status: result.transaction.status,
-      amount: result.transaction.amount,
+      amount_subtotal: result.transaction.amount,
+      amount_total: result.transaction.amount,
       processorResponseText: result.transaction.processorResponseText,
     },
   };

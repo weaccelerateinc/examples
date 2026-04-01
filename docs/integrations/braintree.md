@@ -75,10 +75,14 @@ Details of the payload body:
 // This is the nonce value used to execute the transaction and is used by Accelerate to associate the result with the original request
   "accelerateToken": "string",
 
+// Optional email address associated with the user who completed the transaction
+  "userEmail": "string",
+
 // The fields in the transaction block should be copied from the result of the transaction.sale call
   "transaction": {
     "id": "string",
-    "amount": "string",
+    "amount_subtotal": "string",
+    "amount_total": "string",
     "status": "string",
     "processorResponseText": "string"
   }
