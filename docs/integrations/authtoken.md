@@ -8,7 +8,7 @@ This flow is for processor integrations (for example, Aurus) where the merchant 
 
 The merchant's browser and backend only ever hold the opaque token — the clear PAN travels exactly once, from Accelerate to the processor, over an authenticated back channel. This keeps the clear card data out of the merchant's environment and shrinks their PCI scope.
 
-A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. It is short-lived (default 5 minutes, configurable per merchant) and can be redeemed exactly once — any further redemption is rejected. It is bound to a specific `{ user, payment source, merchant, amount, currency }`, and the issue response itself contains no card data.
+A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. It is short-lived (currently a global default of 5 minutes) and can be redeemed exactly once — any further redemption is rejected. It is bound to a specific `{ user, payment source, merchant, amount, currency }`, and the issue response itself contains no card data.
 
 ## Flow overview
 
@@ -46,7 +46,7 @@ The response contains the opaque token and some display-only metadata — but no
 }
 ```
 
-Issue the token at "Pay now", not at card selection. The token TTL (default 5 minutes) is shorter than the shopper session, so issuing it at pay-time avoids the token expiring while the shopper is still deciding.
+Issue the token at "Pay now", not at card selection. The token TTL (currently a global default of 5 minutes) is shorter than the shopper session, so issuing it at pay-time avoids the token expiring while the shopper is still deciding.
 
 ## Forwarding the token to the processor
 
@@ -87,8 +87,8 @@ The redeem request and response field format shown here is illustrative for the 
 
 The redeem call is strict and single-use, so error handling matters. Errors are returned as standard problem responses:
 
-- `401` — processor authentication failed. Check credentials and the IP allowlist.
-- `403` — token revoked, processor↔merchant mismatch, or amount mismatch. Do not retry; start a new checkout.
+- `401` — processor identity or authentication failed. Check credentials.
+- `403` — token revoked, processor↔merchant mismatch, amount mismatch, or source IP not on the merchant's allowlist. Do not retry; start a new checkout.
 - `404` — unknown token. Do not retry.
 - `409` — token already redeemed (single-use). Do not retry; the card was already released once.
 - `410` — token expired. Ask the merchant to re-issue a token.
@@ -102,7 +102,7 @@ The `/processor/*` endpoints authenticate the processor's identity, not an end u
 - **mTLS client certificate (preferred).** The processor presents a client certificate whose thumbprint is on the allowlist for that processor.
 - **HMAC signature (fallback).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body keyed with the shared secret.
 
-In addition, an optional source IP allowlist is applied per merchant (configurable from the merchant dashboard). A processor may only redeem tokens for merchants that are mapped to it.
+In addition, a source IP allowlist is applied per merchant. A processor may only redeem tokens for merchants that are mapped to it.
 
 ## CVV handling
 
