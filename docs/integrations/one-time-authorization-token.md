@@ -4,7 +4,7 @@ icon: coin
 
 # One-time authorization token
 
-This flow is for processor integrations (for example, Aurus) where the merchant should never hold the clear card details. Instead of returning a clear PAN or network token to the merchant after card selection, Accelerate returns a single-use, short-lived, opaque authorization token. The merchant forwards that token to the processor, and the processor redeems it server-to-server with Accelerate to obtain the clear card details for the authorization.
+This flow is for processor integrations where it is preferred for payment token or PAN details to be shared server to server as opposed to within the existing payment flow. Instead of returning a clear PAN or network token to the merchant after card selection, Accelerate returns a single-use, short-lived, opaque authorization token. The merchant forwards that token to the processor, and the processor redeems it server-to-server with Accelerate to obtain the clear card details for the authorization.
 
 The merchant's browser and backend only ever hold the opaque token — the clear PAN travels exactly once, from Accelerate to the processor, over an authenticated back channel. This keeps the clear card data out of the merchant's environment and shrinks their PCI scope.
 
