@@ -76,7 +76,7 @@ A successful redemption returns the clear card details:
 ```
 {
   "pan": "4242424242424242",     // clear card number
-  "cvv": "123",                  // card verification value when available; may be null (see CVV handling)
+  "cvv": "123",                  // card verification value
   "expiryMonth": 12,             // expiry month 1–12; may be null
   "expiryYear": 2030,            // 4-digit expiry year; may be null
   "currency": "USD",             // ISO currency code
@@ -107,7 +107,7 @@ In addition, a source IP allowlist is applied per merchant. A processor may only
 
 ## CVV handling
 
-Both flows are supported and selectable per merchant in the merchant settings. With CVV, the redeem response includes `cvv` when it is available. Without CVV, the merchant can be configured to authorize without a CVV, in which case `cvv` may be `null`. The processor should be prepared to handle a `null` `cvv` for merchants configured for the CVV-less flow.
+Both flows are supported and selectable per merchant in the merchant settings. With CVV, the redeem response includes `cvv` when it is required according to the merchant's specifications.
 
 ## Notes
 
