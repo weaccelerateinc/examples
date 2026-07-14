@@ -8,29 +8,32 @@ This flow is for processor integrations where it is preferred for payment token 
 
 The merchant's browser and backend only ever hold the opaque token — the clear PAN travels exactly once, from Accelerate to the processor, over an authenticated back channel. This keeps the clear card data out of the merchant's environment and shrinks their PCI scope.
 
-A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. It is short-lived (currently a global default of 5 minutes) and can be redeemed exactly once — any further redemption is rejected. It is bound to a specific `{ user, payment source, merchant, amount, currency }`, and the issue response itself contains no card data.
+A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. It is short-lived (currently a global default of 5 minutes) and can be redeemed exactly once — any further redemption is rejected. It is bound to a specific `{ user, payment source, merchant, currency }`, and the issue response itself contains no card data.
 
 ## Flow overview
 
 ```
 1. Shopper selects a card in the Accelerate wallet
-2. Merchant  → Accelerate:  POST /outbound/issue-authorization-token   → { authorizationToken, expiresAt, ... }
-3. Merchant  → Processor:   sends the token as metadata "AccelerateAuthToken"
-4. Processor → Accelerate:  POST /processor/redeem-authorization-token  → { pan, cvv, exp, ... }
-5. Processor authorizes the card with the returned details
+2. Accelerate notifies the merchant and returns the selected CardID
+3. Shopper clicks "Pay now"
+4. Merchant  → Accelerate:  POST /outbound/issue-authorization-token   → { authorizationToken, expiresAt, ... }
+5. Merchant  → Processor:   sends the token as metadata "AccelerateAuthToken"
+6. Processor → Accelerate:  POST /processor/redeem-authorization-token  → { pan, cvv, exp, ... }
+7. Processor authorizes the card with the returned details
 ```
 
 ## Issuing the token
 
-The merchant issues the token (via the Accelerate SDK) at "Pay now", after the shopper has selected a card. This call is authenticated with the end-user bearer token (Firebase JWT), the same as other outbound calls.
+When the shopper selects a card, Accelerate returns its CardID to the merchant. Do not issue a token at this point. When the shopper clicks "Pay now", the merchant calls this endpoint with that CardID to receive an opaque, single-use token.
+
+This call is authenticated with the end-user bearer token (Firebase JWT), the same as other outbound calls.
 
 ```
 POST /outbound/issue-authorization-token
 
 {
   "merchantId": "b1a7…",        // Accelerate merchant id
-  "paymentSourceId": "9f3c…",   // the card the shopper selected
-  "amount": 1299,               // amount in minor units (cents); the token is bound to this exact amount
+  "paymentSourceId": "9f3c…",   // the CardID returned after card selection
   "currency": "USD"             // ISO currency code, defaults to USD
 }
 ```
@@ -64,8 +67,7 @@ The processor (Aurus) redeems the token server-to-server to exchange it for the 
 POST /processor/redeem-authorization-token
 
 {
-  "authorizationToken": "atk_test_9df1a2…",   // the token received from the merchant
-  "amount": 1299                              // optional; if supplied, must match the amount the token was bound to
+  "authorizationToken": "atk_test_9df1a2…"    // the token received from the merchant
 }
 ```
 
@@ -77,7 +79,6 @@ A successful redemption returns the clear card details:
   "cvv": "123",                  // card verification value when available; may be null (see CVV handling)
   "expiryMonth": 12,             // expiry month 1–12; may be null
   "expiryYear": 2030,            // 4-digit expiry year; may be null
-  "amountCents": 1299,           // amount the token was bound to, in minor units
   "currency": "USD",             // ISO currency code
   "paymentSourceId": "9f3c…"     // the bound payment source id
 }
@@ -88,7 +89,7 @@ The redeem request and response field format shown here is illustrative for the 
 The redeem call is strict and single-use, so error handling matters. Errors are returned as standard problem responses:
 
 * `401` — processor identity or authentication failed. Check credentials.
-* `403` — token revoked, processor↔merchant mismatch, amount mismatch, or source IP not on the merchant's allowlist. Do not retry; start a new checkout.
+* `403` — token revoked, processor↔merchant mismatch, or source IP not on the merchant's allowlist. Do not retry; start a new checkout.
 * `404` — unknown token. Do not retry.
 * `409` — token already redeemed (single-use). Do not retry; the card was already released once.
 * `410` — token expired. Ask the merchant to re-issue a token.
@@ -110,7 +111,6 @@ Both flows are supported and selectable per merchant in the merchant settings. W
 
 ## Notes
 
-* Amounts are in minor units (cents). The token is bound to an exact amount for the first version.
 * Expiry is enforced on Accelerate's clock. Processors should not rely on their own clock for the TTL.
 * v1 idempotency is strict (no idempotency window). If retry semantics are needed on redeem timeout, they can be added after measuring failure rates in the pilot.
 * `atk_test_…` tokens are sandbox and `atk_live_…` are production. Test PANs are provided for sandbox testing.
