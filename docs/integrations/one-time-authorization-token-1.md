@@ -10,7 +10,7 @@ This flow is for processor integrations where it is preferred for payment token 
 
 The merchant's browser and backend only ever hold the opaque token — the clear PAN travels exactly once, from Accelerate to the processor, over an authenticated back channel. This keeps the clear card data out of the merchant's environment.
 
-A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. Its TTL is currently a global default of 1 hour, and it can be redeemed exactly once — any further redemption is rejected. It is bound to the selected payment method, user, and merchant, as well as the amount and currency when the merchant supplies them. The issue response itself contains no card data.
+A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. Its TTL is currently a global default of 1 hour, and it can be redeemed exactly once — any further redemption is rejected. It is bound to the selected payment method, user, and merchant. The issue response itself contains no card data.
 
 ### Flow overview
 
@@ -39,14 +39,14 @@ AccelerateAuthToken: atk_test_9df1a2…
 
 ### Redeeming the token
 
-The processor (Aurus) redeems the token server-to-server to exchange it for the clear card details. This call uses processor authentication (see below); the end-user JWT is not accepted here.
+The processor redeems the token server-to-server to exchange it for the clear card details. This call uses processor authentication (see below); the end-user JWT is not accepted here.
 
 ```
 POST /processor/redeem-authorization-token
 
 {
   "authorizationToken": "atk_test_9df1a2…",   // the token received from the merchant
-  "amount": 1299                              // optional
+  "amountCents": 1299                              // optional
 }
 ```
 
