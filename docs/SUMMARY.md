@@ -20,6 +20,7 @@
 * [Checkout.com](integrations/checkoutdotcom.md)
 * [Handoff flow for direct processing](integrations/handoffdirect.md)
 * [One-time authorization token](integrations/one-time-authorization-token.md)
+* [One-time authorization token](integrations/one-time-authorization-token-1.md)
 
 ***
 
