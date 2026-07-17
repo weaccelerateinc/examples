@@ -68,9 +68,12 @@ The processor (Aurus) redeems the token server-to-server to exchange it for the 
 POST /processor/redeem-authorization-token
 
 {
-  "authorizationToken": "atk_test_9df1a2…"    // the token received from the merchant
+  "authorizationToken": "atk_test_9df1a2…",  // the token received from the merchant
+  "transactionId": "txn_01J…"                 // optional processor transaction ID for downstream tracing
 }
 ```
+
+Send an idempotency key with every redemption request. Reuse the same key when retrying the same redemption.
 
 A successful redemption returns the clear card details:
 
@@ -95,14 +98,14 @@ The redeem call is strict and single-use, so error handling matters. Errors are 
 * `409` — token already redeemed (single-use). Do not retry; the card was already released once.
 * `410` — token expired. Ask the merchant to re-issue a token.
 
-Single-use is strict. Once a token is successfully redeemed it cannot be redeemed again — a second attempt returns `409`. If a redemption succeeds but the response is lost in transit, the merchant must issue a new token (a new checkout). This is intentional: the clear PAN is released at most once per token.
+Single-use is strict. Once a token is successfully redeemed, it cannot be redeemed again. A retry using the same idempotency key is handled safely. A new key returns `409`. This ensures the clear PAN is released at most once per token.
 
 ## Processor authentication
 
 The `/processor/*` endpoints authenticate the processor's identity, not an end user. Two mechanisms are supported:
 
 * **mTLS client certificate (preferred).** The processor presents a client certificate whose thumbprint is on the allowlist for that processor.
-* **HMAC signature (fallback).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body keyed with the shared secret.
+* **HMAC signature (fallback).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body. The shared secret is 256-bit, vault-stored, and rotated quarterly.
 
 In addition, a source IP allowlist is applied per merchant. A processor may only redeem tokens for merchants that are mapped to it.
 
@@ -113,5 +116,5 @@ Both flows are supported and selectable per merchant in the merchant settings. W
 ## Notes
 
 * Expiry is enforced on Accelerate's clock. Processors should not rely on their own clock for the TTL.
-* v1 idempotency is strict (no idempotency window). If retry semantics are needed on redeem timeout, they can be added after measuring failure rates in the pilot.
+* Use the same idempotency key for retries of one redemption. Use a new key only for a new redemption.
 * `atk_test_…` tokens are sandbox and `atk_live_…` are production. Test PANs are provided for sandbox testing.
