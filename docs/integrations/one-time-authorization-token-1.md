@@ -46,7 +46,8 @@ POST /processor/redeem-authorization-token
 
 {
   "authorizationToken": "atk_test_9df1a2…",   // the token received from the merchant
-  "amountCents": 1299                              // optional
+  "transactionId": "txn_01J…"                 // optional transaction ID for downstream tracing
+  "amountCents": 1299                         // optional
 }
 ```
 
@@ -59,7 +60,7 @@ A successful redemption returns the clear card details:
   "expiryMonth": 12,             // expiry month 1–12; may be null
   "expiryYear": 2030,            // 4-digit expiry year; may be null
   "amountCents": 1299,           // bound amount in minor units; null when no amount was supplied
-  "currency": "USD"              // ISO currency code
+  "transactionId": "txn_01J…"    // optional transaction ID for downstream tracing
 }
 ```
 
