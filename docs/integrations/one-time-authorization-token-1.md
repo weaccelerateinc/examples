@@ -10,7 +10,7 @@ This flow is for processor integrations where it is preferred for payment token 
 
 The merchant's browser and backend only ever hold the opaque token — the clear PAN travels exactly once, from Accelerate to the processor, over an authenticated back channel. This keeps the clear card data out of the merchant's environment.
 
-A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. Its TTL is currently a global default of 1 hour, and it can be redeemed exactly once — any further redemption is rejected. It is bound to the selected payment method, user, and merchant. The issue response itself contains no card data.
+A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. Its TTL is currently a global default of 15 minutes, and it can be redeemed exactly once — any further redemption is rejected. It is bound to the selected payment method, user, and merchant. The issue response itself contains no card data.
 
 ### Flow overview
 
@@ -27,7 +27,7 @@ A few properties are worth calling out up front. The token is an opaque string p
 
 Accelerate issues the token when the shopper selects a card in the Accelerate iframe. The iframe returns the opaque token to the merchant.
 
-The token TTL is currently a global default of 1 hour. If it expires before payment, the Accelerate iframe automatically deselects the selected card and requires the shopper to select a card again. Selecting a card issues a fresh token.
+The token TTL is currently a global default of 15 minutes. If it expires before payment, the Accelerate iframe automatically deselects the selected card and requires the shopper to select a card again. Selecting a card issues a fresh token.
 
 ### Forwarding the token to the processor
 
@@ -80,16 +80,19 @@ Single-use is strict. Once a token is successfully redeemed it cannot be redeeme
 The `/processor/*` endpoints authenticate the processor's identity, not an end user. Two mechanisms are supported:
 
 * **mTLS client certificate (preferred).** The processor presents a client certificate whose thumbprint is on the allowlist for that processor.
-* **HMAC signature (fallback).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body keyed with the shared secret.
+* **HMAC signature (fallback).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body. The signature uses a 256-bit secret stored in the vault. Secrets rotate quarterly.
 
 In addition, a source IP allowlist is applied per merchant. A processor may only redeem tokens for merchants that are mapped to it.
 
 ### CVV handling
 
-Both flows are supported and selectable per merchant in the merchant settings. With CVV, the redeem response includes `cvv` when it is available. Without CVV, the merchant can be configured to authorize without a CVV, in which case `cvv` may be `null`. The processor should be prepared to handle a `null` `cvv` for merchants configured for the CVV-less flow.
+Both flows are supported and selectable per merchant in the merchant settings. With CVV, the redeem response includes `cvv` when it is available. CVV is single-use and only supports authorization. It is held as a short-lived VGS alias and is never stored after pre-authorization.
+
+Without CVV, the merchant can be configured to authorize without a CVV. In that flow, `cvv` may be `null`. The processor should handle a `null` `cvv` for merchants using the CVV-less flow.
 
 ### Notes
 
 * Expiry is enforced on Accelerate's clock. Processors should not rely on their own clock for the TTL.
-* v1 idempotency is strict (no idempotency window). If retry semantics are needed on redeem timeout, they can be added after measuring failure rates in the pilot.
+* Redemption uses an atomic database update to enforce single-use. Replay attempts return `409`.
+* Idempotency keys are supported for redemption requests.
 * `atk_test_…` tokens are sandbox and `atk_live_…` are production. Test PANs are provided for sandbox testing.
