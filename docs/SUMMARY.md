@@ -21,6 +21,7 @@
 * [Handoff flow for direct processing](integrations/handoffdirect.md)
 * [One-time authorization token](integrations/one-time-authorization-token.md)
 * [One-time authorization token](integrations/one-time-authorization-token-1.md)
+* [One-Time Authorization Token (DirectAuthToken)](integrations/one-time-authorization-token-directauthtoken.md)
 
 ***
 
