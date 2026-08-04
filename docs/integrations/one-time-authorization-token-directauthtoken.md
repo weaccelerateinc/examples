@@ -1,3 +1,7 @@
+---
+icon: coin
+---
+
 # One-Time Authorization Token (DirectAuthToken)
 
 The one-time authorization token is a checkout mode (`DirectAuthToken`) for merchants whose processor integrates directly with Accelerate — the first such processor is **Aurus**. Instead of handing your frontend a processor token (Stripe, Braintree, etc.) or raw card credentials (Direct mode), Accelerate hands you a **single-use, short-lived, opaque token**. You forward that token to your processor in place of card data, and the processor redeems it **server-to-server** with Accelerate to receive the actual card details for the authorization.
