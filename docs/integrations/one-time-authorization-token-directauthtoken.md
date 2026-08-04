@@ -384,7 +384,6 @@ Hand the resulting `atk_test_…` token to your processor's sandbox (or curl the
 * **Short exposure window.** 15-minute TTL, enforced server-side on Accelerate's clock.
 * **Disjoint auth planes.** End-user credentials cannot redeem; processor credentials cannot issue or touch any other endpoint.
 * **Defense in depth on redeem.** Processor identity (mTLS or HMAC with constant-time comparison) + processor↔merchant mapping + optional processor-level and merchant-level IP allowlists + per-processor rate limiting (60/min).
-* **Merchant PCI scope.** The merchant handles only the opaque token — no PAN, no CVV, no expiry — in the browser or on the server.
 
 ### Notes
 
