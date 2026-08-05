@@ -103,64 +103,7 @@ Behavior to build against:
 * **When a token expires before it is used, the wallet deselects the card** and calls `onCardSelected(null, …)`. Disable your Pay button in that case; when the shopper re-selects a card, a fresh token is issued and `onCardSelected` fires again.
 * **Unverified cards never produce a token.** `onCardSelected` is called with `null` until the card passes verification, exactly as in the other modes.
 
-#### Issuing on demand: `accelerate.requestAuthorizationToken`
 
-If you prefer to fetch a token at a specific moment (for example, immediately before submitting the payment), you can request one for the currently selected card:
-
-```jsx
-const result = await accelerate.requestAuthorizationToken(cardId, amount);
-if ("authorizationToken" in result) {
-  // { authorizationToken, expiresAt, last4, brand }
-} else {
-  // { status, message } — e.g. status 401 means the Accelerate session expired;
-  // call accelerate.login again (see the Authentication Guide).
-}
-```
-
-* `cardId` must be the currently selected card (from `onCardSelected`).
-* Each call issues a **new** token; previously issued tokens remain valid until they expire or are redeemed.
-* The `amount` parameter is accepted for forward compatibility; tokens are not bound to an amount.
-
-#### The REST call behind it
-
-Your frontend normally never calls this directly — the wallet does — but for completeness, issuance is a plain HTTPS call (no VGS proxying is involved, because nothing sensitive is in the request or response):
-
-```
-POST /outbound/issue-authorization-token
-Authorization: Bearer <end-user token>
-Content-Type: application/json
-
-{
-  "merchantId": "b1a7…",         // your Accelerate merchant id
-  "paymentSourceId": "9f3c…",    // the selected card
-  "currency": "USD"              // optional, ISO code; defaults to USD
-}
-```
-
-Response `200`:
-
-```json
-{
-  "authorizationToken": "atk_test_Zx8vQ1…",
-  "expiresAt": "2026-08-04T21:15:00+00:00",
-  "last4": "4242",
-  "brand": "credit_card"
-}
-```
-
-| Field                | Type             | Description                                                                           |
-| -------------------- | ---------------- | ------------------------------------------------------------------------------------- |
-| `authorizationToken` | `string`         | The opaque single-use token. Returned exactly once — Accelerate stores only its hash. |
-| `expiresAt`          | `string`         | UTC expiry timestamp.                                                                 |
-| `last4`              | `string \| null` | Card last four, display only.                                                         |
-| `brand`              | `string \| null` | Card brand/type, display only.                                                        |
-
-Issuance failures return `401` (no/expired end-user session) or `403` as a problem response with a `title` explaining the reason:
-
-* Direct authorization tokens are not enabled for this merchant (you haven't been opted in — talk to your integration contact).
-* Payment source not found for the current user.
-* Card verification required before an authorization token can be issued.
-* This merchant requires a CVV, but none is on file for the selected card (see CVV handling).
 
 #### Handling the token on your side
 
@@ -187,11 +130,11 @@ Your integration contact will confirm the exact hostname to call for redemption 
 
 The `/processor/*` endpoints authenticate the **processor's identity** — not an end user. End-user bearer tokens are not accepted here, and processor credentials grant no access to any other Accelerate endpoint. Two mechanisms are supported:
 
-1. **mTLS client certificate (preferred).** You present a client certificate during the TLS handshake; its thumbprint must be on the allowlist Accelerate holds for your processor. Certificate exchange and rotation are coordinated with your integration contact.
-2.  **HMAC request signature (fallback).** You send two headers on every request:
+1. **mTLS client certificate (preferred for production).** You present a client certificate during the TLS handshake; its thumbprint must be on the allowlist Accelerate holds for your processor. Certificate exchange and rotation are coordinated with your integration contact.
+2.  **HMAC request signature (preferred for sandbox).** You send two headers on every request:
 
     * `X-Processor-Name` — your processor name as registered with Accelerate (e.g. `Aurus`)
-    * `X-Processor-Signature` — hex-encoded HMAC-SHA256 of the **raw request body**, keyed with your shared secret (hex case-insensitive; comparison is constant-time)
+    * `X-Processor-Signature` — hex-encoded HMAC-SHA256 of the **raw request body**, keyed with your shared secret \[shared in the merchant dashboard] (hex case-insensitive; comparison is constant-time)
 
     Sign the exact bytes you transmit — any re-serialization of the JSON after signing (key reordering, whitespace changes) will invalidate the signature.
 
@@ -206,12 +149,9 @@ curl -sS https://sbx.api.weaccelerate.com/processor/redeem-authorization-token \
   --data-raw "$BODY"
 ```
 
-Two IP allowlists may additionally apply on top of identity (they are filters, never identity by themselves):
+IP allowlists may additionally apply on top of identity (they are filters, never identity by themselves):
 
-* **Per-processor** — an allowlist of your egress IPs registered with Accelerate.
-* **Per-merchant** — each merchant can restrict which source IPs may redeem _their_ tokens (configured in the merchant dashboard). A redemption from outside a merchant's allowlist fails with `403` even though your identity is valid.
-
-Both lists are exact-IP match in v1 (no CIDR ranges); an empty list means no IP restriction.
+* Exact-IP match in v1 (no CIDR ranges); an empty list means no IP restriction.
 
 Finally, a processor can only redeem tokens for **merchants mapped to it**. Redeeming another processor's token — or a token for a merchant not configured for this flow — fails with `403`.
 

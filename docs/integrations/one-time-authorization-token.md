@@ -104,8 +104,8 @@ Single-use is strict. Once a token is successfully redeemed, it cannot be redeem
 
 The `/processor/*` endpoints authenticate the processor's identity, not an end user. Two mechanisms are supported:
 
-* **mTLS client certificate (preferred).** The processor presents a client certificate whose thumbprint is on the allowlist for that processor.
-* **HMAC signature (fallback).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body. The shared secret is 256-bit, vault-stored, and rotated quarterly.
+* **mTLS client certificate (preferred for production).** The processor presents a client certificate whose thumbprint is on the allowlist for that processor.
+* **HMAC signature (preferred for sandbox).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body. The shared secret is 256-bit, vault-stored, and rotated quarterly.
 
 In addition, a source IP allowlist is applied per merchant. A processor may only redeem tokens for merchants that are mapped to it.
 
