@@ -45,7 +45,6 @@ function PaymentContent() {
   const productTitle = searchParams.get("productTitle") || "";
   // Hardcode product price to $0.99
   const productPrice = 0.99;
-  const variantId = searchParams.get("variantId") || "1";
   const variantTitle = searchParams.get("variantTitle") || "Standard";
   const quantity = parseInt(searchParams.get("quantity") || "1");
   const productImage = searchParams.get("productImage") || "/shirt.avif";
@@ -109,31 +108,12 @@ function PaymentContent() {
         }
         console.log({ card: JSON.stringify(card) });
 
-        // Call the PDP confirm API
-        const confirmIntent = await fetch("/api/pdp/confirm", {
+        // Confirm payment for a product in the Remember Me demo.
+        const confirmIntent = await fetch("/api/pdp2/confirm", {
           method: "POST",
           body: JSON.stringify({
             processorToken: card.processorToken,
             checkoutId: productId,
-            line_item: {
-              product_id: productId,
-              variant_id: variantId,
-            },
-            customer: {
-              firstName,
-              lastName,
-              email,
-              phone: searchParams.get("phone") || "",
-            },
-            shipTo: {
-              name: `${firstName} ${lastName}`,
-              address: {
-                line1: address,
-                city: city,
-                state: state,
-                postal_code: zip,
-              },
-            },
           }),
         });
 

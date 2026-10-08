@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { useState, useEffect, use } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { rememberMeProducts } from "../products";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
@@ -13,52 +13,6 @@ declare global {
     accelerate: AccelerateWindowAPI;
   }
 }
-
-// Types for Printify products
-interface PrintifyProduct {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  blueprint_id: number;
-  shop_id: number;
-  images: string[];
-  variants: Array<{ id: number; price: number; is_enabled: boolean }>;
-}
-
-interface ProductsResponse {
-  success: boolean;
-  products: PrintifyProduct[];
-  total: number;
-}
-
-// Function to strip HTML tags for plain text display
-const stripHtmlTags = (html: string): string => {
-  if (typeof document === "undefined") return html;
-  const tmp = document.createElement("div");
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || "";
-};
-
-// Function to remove specification lines (lines starting with ".:") from description
-const stripSpecifications = (html: string): string => {
-  if (typeof document === "undefined") return html;
-  // Create a temporary element to parse the HTML
-  const tmp = document.createElement("div");
-  tmp.innerHTML = html;
-
-  // Find and remove paragraphs containing specification lines
-  const paragraphs = tmp.querySelectorAll("p");
-  paragraphs.forEach((p) => {
-    const text = p.textContent || "";
-    // Check if the paragraph contains specification lines (starting with ".: ")
-    if (text.includes(".: ") || text.match(/^\s*\.:/) || text.includes("Fabric weight:") || text.includes("Dimensions:")) {
-      p.remove();
-    }
-  });
-
-  return tmp.innerHTML;
-};
 
 // Function to get a valid image URL
 const getValidImageUrl = (images: string[] | undefined): string => {
@@ -82,21 +36,12 @@ const getValidImageUrls = (images: string[] | undefined): string[] => {
   return validImages.length > 0 ? validImages : ["/shirt.avif", "/product-1.avif", "/product-2.avif", "/product-3.avif"];
 };
 
-// Fetch function for products
-const fetchProducts = async (): Promise<ProductsResponse> => {
-  const response = await fetch("/api/pdp/list-products");
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return response.json();
-};
-
 export default function ProductDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const currentProduct = rememberMeProducts.find((product) => product.id === id);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [quantity] = useState(1); // Hardcode quantity to always be 1
-  const [mainImage, setMainImage] = useState("/shirt.avif"); // Initialize with fallback image
+  const [mainImage, setMainImage] = useState(() => getValidImageUrl(currentProduct?.images));
   const router = useRouter();
 
   // QuickCard state
@@ -147,22 +92,6 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     setIsCardLoading(false);
   };
 
-  // Unwrap params using React.use()
-  const { id } = use(params);
-
-  // Fetch products using useQuery
-  const {
-    data: productsData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["printify-products"],
-    queryFn: fetchProducts,
-  });
-
-  // Find the product based on the ID from the API response
-  const currentProduct = productsData?.products?.find((p) => p.id === id);
-
   // Set initial main image when product is found
   useEffect(() => {
     if (currentProduct && currentProduct.images && currentProduct.images.length > 0) {
@@ -185,7 +114,7 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
 
     const urlParams = new URLSearchParams({
       productId: currentProduct.id,
-      productTitle: stripHtmlTags(currentProduct.title),
+      productTitle: currentProduct.title,
       productPrice: productPriceValue.toString(),
       variantId: selectedVariant?.id?.toString() || "1",
       variantTitle: selectedVariant ? `Variant ${selectedVariant.id}` : "Standard",
@@ -210,36 +139,6 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
     }
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-slate-900"></div>
-          <p className="mt-4 text-slate-600">Loading product...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load product</p>
-          <p className="text-slate-600 mb-8">{error instanceof Error ? error.message : "Unknown error"}</p>
-          <Link
-            href="/pdp2"
-            className="inline-block bg-slate-900 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Back to Products
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   // Product not found state
   if (!currentProduct) {
     return (
@@ -259,25 +158,11 @@ export default function ProductDetailsPage({ params }: { params: Promise<{ id: s
   }
 
   // Get product data
-  const productTitle = stripHtmlTags(currentProduct.title);
-  const productDescription = stripSpecifications(currentProduct.description); // Remove specifications, keep HTML for rendering
+  const productTitle = currentProduct.title;
+  const productDescription = currentProduct.description;
   const productImages = getValidImageUrls(currentProduct.images);
 
-  // Tags to filter out
-  const excludedTags = [
-    "Valentine's Day",
-    "Valentine's Day Picks",
-    "Valentine's Day promotion",
-    "Spring Essentials",
-    "US Elections Season",
-    "Halloween",
-    "TikTok",
-    "Bestsellers",
-    "Home & Living",
-  ];
-  const productTags = (currentProduct.tags || []).filter(
-    (tag) => !excludedTags.some((excluded) => tag.toLowerCase() === excluded.toLowerCase())
-  );
+  const productTags = currentProduct.tags;
 
   // Filter enabled variants only
   const enabledVariants = currentProduct.variants?.filter((variant) => variant.is_enabled) || [];

@@ -2,34 +2,8 @@
 import React from 'react';
 import Image from "next/image";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { rememberMeProducts } from "./products";
 import { Shield, Zap, CreditCard, Lock, Check, ArrowRight, Sparkles, TrendingUp, Clock } from 'lucide-react';
-
-// Types for Printify products
-interface PrintifyProduct {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  blueprint_id: number;
-  shop_id: number;
-  images: string[];
-  variants: Array<{ id: number; price: number; is_enabled: boolean }>;
-}
-
-interface ProductsResponse {
-  success: boolean;
-  products: PrintifyProduct[];
-  total: number;
-}
-
-// Function to strip HTML tags for plain text display
-const stripHtmlTags = (html: string): string => {
-  if (typeof document === 'undefined') return html;
-  const tmp = document.createElement("div");
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || "";
-};
 
 // Function to get a valid image URL
 const getValidImageUrl = (images: string[] | undefined): string => {
@@ -42,61 +16,7 @@ const getValidImageUrl = (images: string[] | undefined): string => {
   return validImage || "/shirt.avif";
 };
 
-// Fetch function for products
-const fetchProducts = async (): Promise<ProductsResponse> => {
-  const response = await fetch("/api/pdp/list-products");
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return response.json();
-};
-
 export default function ProductDetailsPage() {
-  // Fetch products using useQuery
-  const {
-    data: productsData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["printify-products"],
-    queryFn: fetchProducts,
-  });
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-slate-900"></div>
-          <p className="mt-4 text-slate-600">Loading products...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Failed to load products</p>
-          <p className="text-slate-600 mb-8">{error instanceof Error ? error.message : "Unknown error"}</p>
-          <Link
-            href="/"
-            className="inline-block bg-slate-900 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors"
-          >
-            Back to Home
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Get all products from the API response
-  const products = productsData?.products || [];
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -224,18 +144,15 @@ export default function ProductDetailsPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product) => {
+          {rememberMeProducts.map((product) => {
             // Hardcode price to $0.99 for all products
             const price = "0.99";
 
             // Get a valid image URL
             const productImage = getValidImageUrl(product.images);
 
-            // Strip HTML tags for display
-            const plainTitle = stripHtmlTags(product.title);
-            const plainDescription = stripHtmlTags(
-              product.description || "Premium quality product with excellent craftsmanship."
-            );
+            const plainTitle = product.title;
+            const plainDescription = product.summary;
 
             return (
               <Link

@@ -16,6 +16,12 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Remember Me product demo
+
+`/products-rememberme` (also available at `/pdp2`) uses the built-in AirPods catalog in `app/pdp2/products.ts`. Product pages load without an external catalog request or a Printify token. Add or edit demo products in that file, using images from `public` and variant prices in cents.
+
+Payments use `/api/pdp2/confirm` with the existing `PDP_STRIPE_SECRET_KEY` and Accelerate merchant configuration. This demo does not create Printify orders. The other `/products` demo continues to use its existing catalog and fulfillment integration.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
