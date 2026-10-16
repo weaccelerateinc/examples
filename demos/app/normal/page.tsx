@@ -93,6 +93,9 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <input
                       data-testid="first-name-input"
+                      id="first-name"
+                      name="firstName"
+                      autoComplete="given-name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="First name"
@@ -100,6 +103,9 @@ export default function CheckoutPage() {
                     />
                     <input
                       data-testid="last-name-input"
+                      id="last-name"
+                      name="lastName"
+                      autoComplete="family-name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Last name"
@@ -107,6 +113,9 @@ export default function CheckoutPage() {
                     />
                   </div>
                   <input
+                    id="email"
+                    name="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Email address"
@@ -114,6 +123,9 @@ export default function CheckoutPage() {
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="phone"
+                    name="phone"
+                    autoComplete="tel"
                     value={phoneNumber}
                     onChange={(e) => {
                       setPhone(tryFormatPhone(e.target.value));
@@ -129,24 +141,36 @@ export default function CheckoutPage() {
                 <h2 className="text-lg font-semibold text-slate-900 mb-6">Billing Address</h2>
                 <div className="space-y-4">
                   <input
+                    id="billing-address-line1"
+                    name="billingAddressLine1"
+                    autoComplete="billing address-line1"
                     placeholder="Street address"
                     value={addrLine1}
                     onChange={(e) => setAddrLine1(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="billing-city"
+                    name="billingCity"
+                    autoComplete="billing address-level2"
                     placeholder="City"
                     value={addrCity}
                     onChange={(e) => setAddrCity(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="billing-state"
+                    name="billingState"
+                    autoComplete="billing address-level1"
                     placeholder="State"
                     value={addrState}
                     onChange={(e) => setAddrState(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="billing-postal-code"
+                    name="billingPostalCode"
+                    autoComplete="billing postal-code"
                     placeholder="ZIP"
                     value={addrZip}
                     onChange={(e) => setAddrZip(e.target.value)}
@@ -156,6 +180,7 @@ export default function CheckoutPage() {
               </div>
 
               <button
+                id="continue-to-payment"
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30"
               >

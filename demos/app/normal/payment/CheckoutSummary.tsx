@@ -79,7 +79,7 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange,
         </div>
         <div className="border-t border-slate-200 pt-4 flex justify-between text-lg font-bold text-slate-900">
           <span>Total</span>
-          <span>${Number(total).toFixed(2)}</span>
+          <span id="checkout-total">USD ${Number(total).toFixed(2)}</span>
         </div>
       </div>
       <div className="bg-blue-50 rounded-xl p-4 flex items-center gap-3">

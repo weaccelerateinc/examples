@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState, useEffect, Suspense } from "react";
+import { FormEvent, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
@@ -37,16 +37,9 @@ function PaymentContent() {
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvc, setCardCvc] = useState("");
-  const [cardName, setCardName] = useState("");
-
-  useEffect(() => {
-    console.log("Form data updated:", {
-      address,
-      city,
-      state,
-      zip,
-    });
-  }, [address, city, state, zip]);
+  const [cardName, setCardName] = useState(
+    [searchParams.get("firstName"), searchParams.get("lastName")].filter(Boolean).join(" ")
+  );
 
   const [selectedPayment, setSelectedPayment] = useState("card");
   const [selectedShipping, setSelectedShipping] = useState("standard");
@@ -158,30 +151,45 @@ function PaymentContent() {
                 <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Address</h2>
                 <div className="space-y-4">
                   <input
+                    id="shipping-address-line1"
+                    name="shippingAddressLine1"
+                    autoComplete="shipping address-line1"
                     placeholder="Street address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="shipping-address-line2"
+                    name="shippingAddressLine2"
+                    autoComplete="shipping address-line2"
                     placeholder="Apartment, suite, etc. (optional)"
                     value={apartment}
                     onChange={(e) => setApartment(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="shipping-city"
+                    name="shippingCity"
+                    autoComplete="shipping address-level2"
                     placeholder="City"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="shipping-state"
+                    name="shippingState"
+                    autoComplete="shipping address-level1"
                     placeholder="State"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   />
                   <input
+                    id="shipping-postal-code"
+                    name="shippingPostalCode"
+                    autoComplete="shipping postal-code"
                     placeholder="ZIP"
                     value={zip}
                     onChange={(e) => setZip(e.target.value)}
@@ -274,12 +282,18 @@ function PaymentContent() {
                   {selectedPayment === "card" && (
                     <div className="pt-4 border-t border-slate-200 space-y-4">
                       <input
+                        id="cardholder-name"
+                        name="cardholderName"
+                        autoComplete="cc-name"
                         placeholder="Cardholder name"
                         value={cardName}
                         onChange={(e) => setCardName(e.target.value)}
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                       />
                       <input
+                        id="card-number"
+                        name="cardNumber"
+                        autoComplete="cc-number"
                         placeholder="Card number"
                         value={cardNumber}
                         onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
@@ -288,6 +302,9 @@ function PaymentContent() {
                       />
                       <div className="grid grid-cols-2 gap-4">
                         <input
+                          id="card-expiry"
+                          name="cardExpiry"
+                          autoComplete="cc-exp"
                           placeholder="MM/YY"
                           value={cardExpiry}
                           onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
@@ -295,6 +312,9 @@ function PaymentContent() {
                           className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                         />
                         <input
+                          id="card-cvc"
+                          name="cardCvc"
+                          autoComplete="cc-csc"
                           placeholder="CVC"
                           value={cardCvc}
                           onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
@@ -340,6 +360,7 @@ function PaymentContent() {
               </div>
 
               <button
+                id="complete-payment"
                 type="submit"
                 disabled={isSubmitting || (selectedPayment === "card" && (!cardNumber || !cardExpiry || !cardCvc || !cardName))}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
