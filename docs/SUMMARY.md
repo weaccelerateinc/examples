@@ -16,6 +16,8 @@
 ## Integrations
 
 * [Agentic platforms](integrations/agentic-platforms.md)
+  * [Private CVV and credential delivery](integrations/agentic-platforms-private-payments.md)
+  * [OpenInstinct configuration reference](integrations/openinstinct-reference.md)
 * [Stripe](integrations/stripe.md)
 * [Braintree](integrations/braintree.md)
 * [Checkout.com](integrations/checkoutdotcom.md)

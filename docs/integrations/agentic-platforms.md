@@ -10,6 +10,8 @@ Connect Accelerate to the agent framework, browser provider, and customer messag
 
 Your platform is the Accelerate integration customer and receives a **Merchant ID**. Each shopper has a separate wallet session. The website where the agent shops is the checkout destination. Use your platform's Merchant ID across supported checkout destinations.
 
+For implementation detail, see [Private CVV and credential delivery](agentic-platforms-private-payments.md). The separate [OpenInstinct configuration reference](openinstinct-reference.md) shows one application's browser and private messaging setup.
+
 ## 1. Set up your agent workspace
 
 Open **Agent payments** in the [merchant dashboard](https://merchantdashboard-gamma.vercel.app/agent-payments).
