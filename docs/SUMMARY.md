@@ -15,6 +15,7 @@
 
 ## Integrations
 
+* [Agentic platforms](integrations/agentic-platforms.md)
 * [Stripe](integrations/stripe.md)
 * [Braintree](integrations/braintree.md)
 * [Checkout.com](integrations/checkoutdotcom.md)
