@@ -6,7 +6,7 @@ description: Add Accelerate as a payment option in your agent platform, using th
 
 Use Accelerate to let your customers pay with their Accelerate wallets while your agent shops on their behalf. Your platform owns the shopping experience, customer identity, browser, and messaging channel. Accelerate handles private wallet verification, payment-field filling, and customer payment review.
 
-This guide follows the [OpenInstinct integration](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/docs/accelerate-wallet.md). OpenInstinct shops in an existing Browser Use session and uses a private iMessage conversation for verification and payment review. You can use the same SDK adapters with your own authenticated application and supported messaging channel.
+Connect Accelerate to the agent framework, browser provider, and customer messaging channel your platform already uses. Your platform creates the browser and shops in it. At payment, Accelerate connects to that same browser session through a connector configured for your integration.
 
 Your platform is the Accelerate integration customer and receives a **Merchant ID**. Each shopper has a separate wallet session. The website where the agent shops is the checkout destination. Use your platform's Merchant ID across supported checkout destinations.
 
@@ -64,11 +64,42 @@ npm run smoke
 
 The version command must print `0.10.3`. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order.
 
-Install the approved extension through your browser provider's image, profile, or startup settings **before shopping starts**. Verify the ZIP with `verifyApprovedExtensionArtifact` from `@weaccelerateinc/agent-sdk/approved-extension` and the packaged `approved-extension-releases/0.0.0.1.json` manifest. A matching version number alone does not verify the ZIP. The `0.0.0.2` extension is a qualification candidate and must not replace the approved artifact.
+Install the approved extension through your browser's image, profile, or launch configuration **before shopping starts**. Accelerate supplies a release manifest approved for your browser connector during qualification. Verify the ZIP against that manifest with `verifyApprovedExtensionArtifact` from `@weaccelerateinc/agent-sdk/approved-extension`. A matching version number alone does not verify the ZIP. The `0.0.0.2` extension is a qualification candidate and must not replace the approved artifact.
 
-Browser Use is the packaged provider recipe. Other providers require a provisioned connector and qualification. Your provider API key stays on your backend. The connector supplies the owned browser connection privately to Accelerate.
+### Connect your existing browser
 
-See the [extension contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/extension-release-contract.md) and [browser attachment guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/customer-browser-attachment.md).
+Keep your browser provider and browser creation code. The current integration supports compatible Chromium/CDP browsers with the approved extension. Coordinate with Accelerate to provision and qualify a connector for your browser stack and Merchant ID.
+
+Connect your existing browser controls to the SDK's `BrowserConnectorHost` interface:
+
+| Host method | Your platform supplies |
+| --- | --- |
+| `resolveOwnedBrowser` | Resolve the authenticated customer's browser, exact checkout document, and expiry from backend records. |
+| `inspectBrowser` | Check the current document, installed extension, recording disabled, remaining lifetime, and automation access state. |
+| `drainAndFence` | Block new ordinary browser actions and wait for in-flight actions to finish. Persist this restriction across processes. |
+| `bindCheckout` | Save the checkout, attempt, browser, document, and access restriction together. |
+| `resolveCheckoutBrowser` | Retrieve that same association for later payment checks. |
+| `confirmCleanup` | Independently verify that the browser stopped and payment credentials were cleared. Retain restrictions for an uncertain payment. |
+
+After implementing your host, create the SDK connector in your backend startup code:
+
+```js
+import { createExistingBrowserConnector } from '@weaccelerateinc/agent-sdk/browser-connector';
+
+const browserConnector = createExistingBrowserConnector({
+  connectorId: platformConfig.accelerateConnectorId,
+  extensionRelease: approvedExtensionRelease,
+  host: platformBrowserHost,
+});
+```
+
+`platformConfig`, `approvedExtensionRelease`, and `platformBrowserHost` are values supplied by your application. Use the connector ID provisioned by Accelerate. Set `approvedExtensionRelease` to the manifest Accelerate approved for `provider: 'connector'` and your intended checkout use. The packaged `approved-extension-releases/0.0.0.1.json` manifest covers the Browser Use baseline; it does not qualify a generic connector.
+
+Pass `browserConnector` to the partner SDK integration described below. Accelerate configures the matching private executor connector to resolve and connect to your existing browser, then stop it and verify cleanup after payment. Registering a connector alone does not qualify its extension runtime or merchant checkout support.
+
+Browser credentials and connection URLs stay in trusted backend components. The agent receives only safe checkout state. Browser Use has an optional packaged adapter for platforms that already use it; the general connector contract does not require Browser Use.
+
+See the [browser connector interface](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/browser-connector.d.ts), [provider connector contract](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/docs/customer-browser-connectors.md), and [extension contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/extension-release-contract.md).
 
 ## 4. Connect your backend
 
@@ -97,16 +128,16 @@ You can also run `npx --no-install accelerate-agent doctor`. These checks verify
 The generated existing-browser starter uses the explicit **`managed_review_v2`** profile. Connect its `createPartnerDependencies()` boundary to:
 
 - Authenticated customer, workspace, direct conversation, and phone records.
-- Your existing browser controls and the packaged browser connector.
+- The `browserConnector` connected to your platform's existing browser controls.
 - Durable checkout ownership, operation locks, and event delivery. A Postgres host adapter is included.
 - A verified private webhook that intercepts sensitive replies before ordinary message processing.
-- A private messaging adapter that sends the masked review image and amount together and records the actual delivery receipt. A Linq/iMessage adapter is included.
+- A `PrivateMessagingAdapter` for your customer messaging channel. It must send the masked review image and amount together and record the actual delivery receipt.
 
 The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. Keep `purpose: 'sandbox_fill_only'` and `enableSubmit: false` during initial testing.
 
 ## 5. Follow the payment flow
 
-OpenInstinct provides a reference for this sequence:
+Use this sequence in your platform:
 
 1. **Shop in your existing browser.** Keep the cart, merchant login, and cookies in the same session. Complete required non-secret contact, shipping, and cardholder-name fields. Leave card number, expiry, and CVV empty.
 2. **Attach at the payment step.** Resolve the browser from authenticated ownership records. Stop and drain ordinary browser automation before handing the document to Accelerate. Do not create a replacement browser.
@@ -116,9 +147,7 @@ OpenInstinct provides a reference for this sequence:
 6. **Send the private review.** The customer receives the masked payment form and final amount together. Purchase approval has a five-minute window from the confirmed sent receipt. Filling the form does not approve the purchase.
 7. **Submit explicitly, then clean up.** A purchase requires fresh private approval and a separate final-submit action. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
 
-OpenInstinct uses application-specific tool names such as `accelerate_wallet_start`. New integrations can use the packaged `accelerate_checkout_*` MCP tools instead of copying OpenInstinct's application code. Its vendored SDK version is separate from the current npm package.
-
-See [OpenInstinct's browser setup](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/docs/browser-use.md) and the [v2 checkout contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md).
+These steps apply to the SDK, HTTP API, and optional MCP tools. Your integration binds them to your own browser lifecycle and messaging channel. See the [v2 checkout contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md).
 
 ## HTTP API: integrate without the SDK
 
@@ -157,7 +186,7 @@ curl --fail-with-body "$ACCELERATE_BASE_URL/v1/connection" \
 
 ### Create an existing-browser checkout
 
-Example body for `POST /v1/checkouts`:
+Example body for `POST /v1/checkouts` using a registered connector for your platform's browser:
 
 ```json
 {
@@ -165,21 +194,24 @@ Example body for `POST /v1/checkouts`:
   "workspace_id": "workspace_42",
   "conversation_id": "conversation_42",
   "phone_number": "+14155550100",
-  "start_url": "https://demos.weaccelerate.com/normal/payment",
+  "start_url": "https://shop.example/checkout/payment",
   "idempotency_key": "checkout_attempt_42",
   "interaction_mode": "chat",
   "purpose": "sandbox_fill_only",
   "approval_policy": "after_fill",
   "fill_after_verification": true,
   "browser": {
-    "provider": "browser_use",
-    "browser_id": "11111111-2222-4333-8444-555555555555",
+    "provider": "connector",
+    "connector_id": "your_platform_browser",
+    "browser_id": "owned_browser_42",
     "custody_mode": "customer_backend_trusted"
   }
 }
 ```
 
-Replace all example identity and browser values with owned backend records. Use the browser's exact current HTTPS checkout URL, including its query and fragment. If your integration retains the Browser Use key, include a fresh `browser_resource` from your backend's provider read, as specified in [Keep your provider key](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/customer-browser-attachment.md#keep-your-provider-key). Its connection URL is secret and must stay outside model input and logs. A browser ID alone does not establish readiness.
+Replace `connector_id` with the ID provisioned by Accelerate for your Merchant ID. Resolve `browser_id` from your backend's authenticated browser ownership record. The private executor uses that connector to find the exact existing browser; a browser ID alone does not establish readiness. Keep provider keys and connection URLs outside the request body, model input, and logs.
+
+Replace all example customer and checkout values with your authenticated records and the browser's exact current HTTPS checkout URL, including its query and fragment. The example URL is a placeholder. Qualify the actual checkout with Accelerate before payment use.
 
 Explicitly set the mode, purpose, approval policy, and fill flag shown above. Raw API defaults do not select the v2 partner flow. Require the service to echo `fill_after_verification: true` before starting OTP. Creation declares capability; it does not arm a fill. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `currency: "USD"`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. Require that acknowledgement before private CVV collection.
 
