@@ -6,6 +6,8 @@ icon: star
 
 Accelerate integrates backend and frontend to provide a continuous checkout experience for your users. The frontend uses an iframe and a script tag to present a modal login flow and then the user's wallet of cards. The backend uses a simple token passing scheme to execute payments or can be used as a proxy to your payment processor.
 
+Building an agent platform that shops on your customers' behalf? Start with [Agentic platforms](integrations/agentic-platforms.md) to add Accelerate payments through the Agent SDK, HTTP API, or MCP tools. The guide covers merchant dashboard setup and uses OpenInstinct as a reference integration.
+
 The following steps are provided as a way to organize integrating with Accelerate and it is highly recommended that you read these docs and then meet with our engineering team to answer any questions you may have. Accelerate will provide engineering support to assist in the integration if needed.
 
 1. Choose a backend integration flow:
