@@ -4,7 +4,7 @@ description: Add Accelerate as a payment option in your agent platform, using th
 
 # Agentic platforms
 
-Use Accelerate to let your customers pay with their Accelerate wallets while your agent shops on their behalf. Your platform owns the shopping experience, customer identity, browser, and messaging channel. Accelerate handles private wallet verification, payment-field filling, and customer payment review.
+Accelerate agent wallets are pre filled with up to date card details, and address information for ~90% of US shoppers. Add Accelerate as a payment option in your agent platform, using the SDK, HTTP API, or MCP tools.
 
 Connect Accelerate to the agent framework, browser provider, and customer messaging channel your platform already uses. Your platform creates the browser and shops in it. At payment, Accelerate connects to that same browser session through a connector configured for your integration.
 
@@ -101,7 +101,7 @@ Pass `browserConnector` to the partner SDK integration described below. Accelera
 
 Browser credentials and connection URLs stay in trusted backend components. The agent receives only safe checkout state. Browser Use has an optional packaged adapter for platforms that already use it; the general connector contract does not require Browser Use.
 
-See the [browser connector interface](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/browser-connector.d.ts), [provider connector contract](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/docs/customer-browser-connectors.md), and [extension contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/extension-release-contract.md).
+See the [browser connector interface](browser-connector-interface.md), [provider connector contract](provider-connector-contract.md), and [extension contract](extension-contract.md).
 
 ## 4. Connect your backend
 
