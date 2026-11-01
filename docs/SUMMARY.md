@@ -16,6 +16,11 @@
 ## Integrations
 
 * [Agentic platforms](integrations/agentic-platforms.md)
+  * [Browser connector interface](integrations/browser-connector-interface.md)
+  * [Provider connector contract](integrations/provider-connector-contract.md)
+  * [Extension contract](integrations/extension-contract.md)
+  * [Private CVV and credential delivery](integrations/agentic-platforms-private-payments.md)
+  * [OpenInstinct configuration reference](integrations/openinstinct-reference.md)
 * [Stripe](integrations/stripe.md)
 * [Braintree](integrations/braintree.md)
 * [Checkout.com](integrations/checkoutdotcom.md)
