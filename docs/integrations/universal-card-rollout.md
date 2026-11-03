@@ -6,7 +6,9 @@ description: Separate deployed sandbox form support from provider onboarding, cu
 
 `universal_card_v1` has already supported sandbox fills and masked reviews on real merchant checkout documents. It is not restricted to `demos.weaccelerate.com/normal/payment`. The [2 November 2026 sandbox report](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) records additional merchant layouts, failures, and incomplete cleanup evidence. It records no submitted real-store order or production payment qualification.
 
-The **0.11.0 customer-final-click SDK is published**. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
+The SDK **0.11.0 customer-final-click contract** remains the published purchase baseline. SDK 0.12.0 is published and its managed sandbox service is healthy on release source `12cf65b0a338f845ad9c966e491fc6ae438ec324`. Run-browser merchant admission is disabled there. Deployment reports migration `004_browser_run_claims.sql` as skipped; this does not establish the database's ledger state. An operator must apply and verify the migration before enabling admission. The patched wallet gateway and reaper deployment passed a synthetic worker-loss retirement probe. These observations do not qualify the source, full adapter, guest profile cleanup, provider, merchant, WhatsApp flow, or purchase. Production customer onboarding, tenant activation, and financial release remain closed. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
+
+SDK 0.12.0 includes Dana's run-browser and WhatsApp journal APIs. Their availability in the SDK does not enable merchant admission or establish provider/payment qualification. See the [run browser guide](browser-use-run-browsers.md) and [WhatsApp private messaging guide](whatsapp-private-messaging.md).
 
 ## What admission checks
 
@@ -46,7 +48,20 @@ Qualify worker-loss cleanup for the selected credential model. With client-owned
 
 ## Release and environment status
 
-SDK 0.11.0 is published as npm's `latest` version. The [release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked on **3 November 2026 at 20:21 UTC** are:
+The following release and deployment records were verified for SDK 0.12.0 and the patched sandbox wallet rollout:
+
+| Component | Verified record |
+| --- | --- |
+| SDK release | npm `@weaccelerateinc/agent-sdk@0.12.0`; [release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0); source merge `12cf65b0a338f845ad9c966e491fc6ae438ec324`; archive SHA-256 `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. Clean registry download, consumer imports, and release workflow `41739645592` passed. |
+| Managed sandbox service | Vercel deployment `dpl_Bu89UfpQmSJwbupFKpHb5dmfbT4B`, Ready on SDK source `12cf65b0a338f845ad9c966e491fc6ae438ec324`; `/healthz` returned HTTP 200. Run-browser merchant flag is absent. Deployment reports migration `004_browser_run_claims.sql` as skipped; this does not establish the database ledger state. Apply and verify it before any admission. |
+| Wallet MCP patched release | Deployment `dpl_EU66XRoDLt35K1iSZ8ECK4ppcEfP`, Ready on source `dfe6564373174e705f50ca2dc5286b625e7b0c56` (merged dependency update PR #22). Dependency audit reported zero findings. The full test run reported 1,136 passed and 258 skipped; the direct Next.js build passed. |
+| Sandbox gateway and reaper | Sole active revisions `accelerate-wallet-agent-sbx--ccdfe6564373` and `accelerate-browser-reaper-sbx--ccdfe6564373`, healthy at one replica; image SHA-256 `18200b9598def05b5a4a677c532cc659c6d4acc53ac5beca4ef70df6ea5c218f`; fresh reaper epoch `702e0672-6fdb-4ea8-9425-90159657b0d7`. |
+| Synthetic worker-loss retirement probe | In the reaper container, a child was killed with `SIGKILL`. A fresh acknowledgement, provider `404`, and database retirement were confirmed 29,441 ms before the 90-second deadline, without operator fallback. The post-probe check found zero non-closed leases and zero Kernel project browsers. The probe made no wallet, card, token, or payment calls. It did not independently inspect guest-profile removal. Source and the full extension adapter remain unqualified. |
+| Extension release compatibility | Public [compatibility update PR #1](https://github.com/weaccelerateinc/accelerate-extension-downloads/pull/1), merged at `a738d6288d9a10a0dab5b78ae20d1cea73602490`. Manifest SHA-256 `8a7d81138f371159e8cac60514ad9f5e495f28ca259afbe49c3d51dc8749b371`. The ZIP bytes are unchanged. New assets are `accelerate-extension-0.0.0.1.sdk-0.12.0.release.json` and `.SHA256SUMS`. This metadata supports SDK 0.12.0; it does not qualify a new extension or provider. |
+
+These are sandbox release and operational observations. They do not establish real-store payment success, provider qualification, merchant form acceptance, WhatsApp provider qualification, or production readiness. No Dana merchant is enabled. Keep production activation and financial release closed.
+
+At the **3 November 2026, 20:21 UTC** verification point, SDK 0.11.0 was published as npm's `latest` version. The [0.11.0 release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked at that time are:
 
 | Component | Observed metadata |
 | --- | --- |
