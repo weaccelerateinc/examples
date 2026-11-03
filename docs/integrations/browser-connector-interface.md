@@ -10,7 +10,7 @@ The customer's agent performs the final payment click through its own browser co
 
 This is the client-side backend interface. Accelerate separately registers the [provider connector](provider-connector-contract.md) in its private executor and cleanup service. Both layers must be configured for the same Merchant ID and connector ID.
 
-The six baseline host methods below apply to the published integration. **SDK 0.11.0** adds a customer final-click callback for purchases and is published on npm. Its matching stack is deployed in sandbox. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code. Separate real-money production provisioning and qualification remain pending; see [Universal checkout rollout](universal-card-rollout.md).
+The six baseline host methods below apply to the published integration. **SDK 0.11.0** adds a customer final-click callback for purchases and is published on npm. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code. Sandbox and production infrastructure are deployed, while production onboarding and qualification remain pending; see [Universal checkout rollout](universal-card-rollout.md).
 
 ## Create the connector
 

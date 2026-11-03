@@ -6,7 +6,7 @@ description: Separate deployed sandbox form support from provider onboarding, cu
 
 `universal_card_v1` has already supported sandbox fills and masked reviews on real merchant checkout documents. It is not restricted to `demos.weaccelerate.com/normal/payment`. The [2 November 2026 sandbox report](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) records additional merchant layouts, failures, and incomplete cleanup evidence. It records no submitted real-store order or production payment qualification.
 
-The **0.11.0 customer-final-click SDK is published**, and its matching stack is deployed in sandbox. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. The separate production wallet stack is being provisioned. See [Purchase mode](purchase-mode.md).
+The **0.11.0 customer-final-click SDK is published**. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
 
 ## What admission checks
 
@@ -59,17 +59,20 @@ SDK 0.11.0 is published as npm's `latest` version. The [release tag](https://git
 
 The Vercel aliases use Vercel's production deployment slot, but their wallet environment is **sandbox**. That slot name does not indicate real-money production payments. Health and source/image identity verify deployment; they do not establish payment qualification. The older 2 November merchant fill/review evidence applies to its recorded deployment and is not a new 0.11.0 real-money purchase test.
 
-**Real-money production provisioning is in progress.** Accelerate is preparing a separate Azure stack with private networking, gateway, reaper, wallet MCP, and managed service. Its proposed origins are not yet confirmed live by this guide, and the stack is not production-payment-qualified. Use only validated production origins supplied after provisioning; do not infer readiness from a proposed hostname.
+**Separate production infrastructure is deployed.** The Azure stack includes the managed service, wallet MCP, internal gateway, and independent reaper. Operator infrastructure verification is complete. No production tenants are active, all financial release flags remain closed, and customer onboarding and provider/payment qualification are pending. This deployment does not enable customer charges or establish production payment qualification.
 
-This is preparation for future production readiness, not enablement of customer charges. Production customer access and keys remain closed until qualification and approved onboarding.
+| Production service | Origin |
+| --- | --- |
+| Managed checkout service | `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` |
+| Wallet MCP and add-card | `https://accelerate-wallet-mcp-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` |
 
-For real-money production, explicitly set `ACCELERATE_BASE_URL` to the approved production managed-service origin. The SDK's canonical Vercel default remains sandbox. Use the Production key and Merchant ID, and the dashboard-generated add-card URL for that approved Production environment. A sandbox add-card example or an environment query parameter alone is not production onboarding approval.
+For approved production use, explicitly set `ACCELERATE_BASE_URL` to the production managed-service origin above. The SDK's canonical Vercel default remains sandbox. Use the separate Production key and Merchant ID, and the approved add-card URL supplied during onboarding. A dashboard-generated link requires the dashboard deployment to be configured for the production wallet origin. A sandbox add-card example or an environment query parameter alone is not production onboarding approval. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
 
 The original approved extension manifest records a narrower demo fill/review baseline. Preserve that history. The later sandbox report adds merchant evidence without retroactively qualifying a new provider, extension artifact, or production purchase.
 
 ## Deploy a matching release
 
-Accelerate operators perform the coordinated deployment. Customers can install SDK 0.11.0 now and update their authenticated host integration. A real-money rollout must still complete the separate production provisioning and acceptance steps.
+Accelerate operators perform the coordinated deployment. Customers can install SDK 0.11.0 now and update their authenticated host integration. Production customer use must still complete approved onboarding and provider/payment acceptance.
 
 1. Select reviewed SDK, managed-service, wallet-MCP, gateway, and reaper revisions. Record commits, image digests, extension bytes, configuration version, and test evidence. Publish the SDK only through its reviewed release process; a source version is not an available npm release.
 2. Build the private worker with its pinned `playwright-core@1.62.1`, required native capture dependencies, and reviewed connector modules. Verify the extension installation and runtime against its approved manifest. Preserve isolated private evaluation; there is no merchant-main-world fallback.
