@@ -8,6 +8,8 @@ OpenInstinct is an example of an agent platform that connects its existing brows
 
 This page describes the repository implementation. It does not inspect deployed secret values or establish that a deployment is qualified for live purchases. OpenInstinct uses an application-specific integration and a pinned SDK runtime with recorded compatibility patches. New clients should use the current npm SDK and partner starter instead of copying its vendored files.
 
+The described pinned application predates the **0.11.0 customer-final-click source candidate**. Do not treat its older submit integration as an implementation of the new contract. That migration requires the matching release/deployment and a trusted customer-browser click callback; it is not established by this reference. See [Purchase mode](purchase-mode.md).
+
 ## Backend configuration
 
 OpenInstinct configures these integration values in its protected server environment:
@@ -75,6 +77,6 @@ When the customer replies with CVV, the private handler completes verification. 
 
 OpenInstinct calls `deliverPrivateCheckoutReview` from its private handler. It retrieves the masked PNG, checks the review metadata, sends the image and exact amount together through the native Linq transport, and acknowledges the actual sent receipt. A purchase decision has five minutes from that confirmed receipt. The customer's approval reply uses the provider-authenticated `sent_at` timestamp and optional reply-to message ID.
 
-After private approval, the agent must still make a separate explicit submit call for that revision. For `sandbox_fill_only`, OpenInstinct cancels the same checkout after confirmed informational review delivery. An uncertain fill, delivery, cancellation, or submit cannot authorize a new payment attempt.
+In this older integration, private approval still precedes a separate explicit submit request. The new candidate contract disables direct executor submission and requires preflight → arm → customer host click → complete instead. The completion token stays in its SDK orchestrator. Do not enable purchases in the pinned app by changing a flag alone. For `sandbox_fill_only`, OpenInstinct cancels the same checkout after confirmed informational review delivery. An uncertain fill, delivery, cancellation, or click cannot authorize a new payment attempt.
 
 Source references: [managed private reply and review handlers](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/accelerate/managed.ts), [native message receipts](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/linq/transport.ts), and [private payment flow](agentic-platforms-private-payments.md).

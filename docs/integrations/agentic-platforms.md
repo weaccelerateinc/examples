@@ -12,6 +12,8 @@ Your platform is the Accelerate integration customer and receives a **Merchant I
 
 For implementation detail, see [Private CVV and credential delivery](agentic-platforms-private-payments.md). The separate [OpenInstinct configuration reference](openinstinct-reference.md) shows one application's browser and private messaging setup.
 
+**Purchase release status:** the customer-owned final-click flow below is source candidate **0.11.0**, not published or deployed. It requires the matching SDK, managed service, gateway, and trusted browser host. Published `0.10.3` cannot perform that handshake. Existing universal sandbox fills and masked reviews are already recorded on real merchant checkout documents; see [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
+
 ## 1. Set up your agent workspace
 
 Open **Agent payments** in the [merchant dashboard](https://merchantdashboard-gamma.vercel.app/agent-payments).
@@ -48,11 +50,11 @@ MCP controls how the agent invokes checkout actions. It does not replace backend
 
 Use Node.js 22 or later. The server-only SDK includes TypeScript declarations and has no runtime dependencies.
 
-- **SDK on npm:** [@weaccelerateinc/agent-sdk](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk), current guide version **0.10.3**.
+- **SDK on npm:** [@weaccelerateinc/agent-sdk](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk), published baseline **0.10.3**.
 - **SDK source and guides:** [Accelerate Agent SDK](https://github.com/weaccelerateinc/accelerate/tree/main/products/agent-sdk).
 - **Approved extension download:** [Extension release 0.0.0.1](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1). Download `accelerate-extension-0.0.0.1.zip` and its checksum files from the release assets.
 
-Use npm for the 0.10.3 SDK in this guide. SDK and extension versions are independent.
+The commands below install the published 0.10.3 baseline for its existing integration and synthetic tests. They do not install candidate 0.11.0 or enable customer final-click purchases. Coordinate a verified matching release with Accelerate before migrating. SDK and extension versions are independent.
 
 Generate the matching starter:
 
@@ -84,6 +86,9 @@ Connect your existing browser controls to the SDK's `BrowserConnectorHost` inter
 | `bindCheckout` | Save the checkout, attempt, browser, document, and access restriction together. |
 | `resolveCheckoutBrowser` | Retrieve that same association for later payment checks. |
 | `confirmCleanup` | Independently verify that the browser stopped and payment credentials were cleared. Retain restrictions for an uncertain payment. |
+| `performFinalClick` | Candidate 0.11.0 purchase only: send one trusted click through your own browser connection on the bound target, while ordinary automation stays blocked. |
+
+The first six methods describe the baseline host. Candidate purchases additionally require `performFinalClick`; fill-only hosts can omit it. The connector adds a one-use `prepareFinalClick` check before arming. The host callback receives the exact fenced browser/document, target, and deadline, but no `arm_id` completion token. It must not read credential fields, lift the ordinary automation restriction, or retry a click. See the [browser connector interface](browser-connector-interface.md#customer-final-click-in-candidate-0110).
 
 After implementing your host, create the SDK connector in your backend startup code:
 
@@ -137,25 +142,25 @@ The generated existing-browser starter uses the explicit **`managed_review_v2`**
 - A verified private webhook that intercepts sensitive replies before ordinary message processing.
 - A `PrivateMessagingAdapter` for your customer messaging channel. It must send the masked review image and amount together and record the actual delivery receipt.
 
-The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. For purchases, register `purpose: 'purchase'` with `enableSubmit: true`. For a no-order test, select `purpose: 'sandbox_fill_only'` with submission disabled. See [Purchase mode and checkout support](purchase-mode.md) for starter settings, release defaults, and `universal_card_v1`.
+The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. In candidate 0.11.0, purchase registration uses `purpose: 'purchase'` with `enableSubmit: true` and a host that implements `performFinalClick`. For a no-order test, select `purpose: 'sandbox_fill_only'` with submission disabled. See [Purchase mode and checkout support](purchase-mode.md) for version-specific migration.
 
 ## 5. Follow the payment flow
 
-Use this sequence in your platform:
+The candidate 0.11.0 purchase sequence is:
 
 1. **Shop in your existing browser.** Keep the cart, merchant login, and cookies in the same session. Complete required non-secret contact, shipping, and cardholder-name fields. Leave card number, expiry, and CVV empty.
-2. **Attach at the payment step.** Resolve the browser from authenticated ownership records. Stop and drain ordinary browser automation before handing the document to Accelerate. Do not create a replacement browser.
+2. **Attach at the payment step.** Resolve the browser from authenticated ownership records. Stop and drain ordinary browser automation before handing the document to Accelerate. Declare `final_click_actor: 'customer'` and require the service to echo that actor. The service internally requires the gateway's private `customer_final_click_supported: true` admission before OTP. Do not create a replacement browser.
 3. **Verify the customer privately.** The customer completes OTP and masked card selection through the private channel. Ordinary agent tools receive safe checkout status.
 4. **Apply the address and verify the final amount.** Include shipping and tax. Bind the quote to the exact checkout URL, total, currency, revision, and submit control.
 5. **Collect CVV and fill once.** In `managed_review_v2`, creation declares `fill_after_verification: true`. The later verified quote separately arms that fill. Private CVV success continues the fill in the backend. The agent does not call a fill tool.
 6. **Send the private review.** The customer receives the masked payment form and final amount together. Purchase approval has a five-minute window from the confirmed sent receipt. Filling the form does not approve the purchase.
-7. **Submit explicitly, then clean up.** A purchase requires fresh private approval and a separate final-submit action. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
+7. **Click once through your backend, then clean up.** After fresh private approval, the agent requests submit. Inside the owned-checkout lock, the trusted SDK handler checks readiness, arms the exact revision, consumes the preparation to call your browser host once, and completes the arm. Provider inspection occurs before arming. Your backend physically clicks through its own connection; the host receives no completion token. The Accelerate executor and extension do not click. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
 
 These steps apply to the SDK, HTTP API, and optional MCP tools. Your integration binds them to your own browser lifecycle and messaging channel. See the [v2 checkout contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md).
 
 ## HTTP API: integrate without the SDK
 
-Call the managed checkout service from your backend. All routes below require:
+Call the managed checkout service from your backend. The final-click routes and purchase example below require candidate 0.11.0's matching deployment. All routes use:
 
 ```http
 Authorization: Bearer YOUR_TENANT_API_KEY
@@ -185,7 +190,8 @@ curl --fail-with-body "$ACCELERATE_BASE_URL/v1/connection" \
 | `POST` | `/v1/checkouts/{id}/verify-quote` | Verify the actual final amount and currency. |
 | `POST` | `/v1/checkouts/{id}/approval` | Freeze the quote and request private verification. With v2, arm the exact fill. This does not approve a purchase. |
 | `POST` | `/v1/checkouts/{id}/fill` | Manual one-use fill for compatible v1 clients. V2 uses private backend continuation. |
-| `POST` | `/v1/checkouts/{id}/submit` | Explicitly submit an approved purchase revision. |
+| `POST` | `/v1/checkouts/{id}/final-click/arm` | Candidate 0.11.0, backend only: arm the approved revision and receive its short-lived private click target. |
+| `POST` | `/v1/checkouts/{id}/final-click/complete` | Candidate 0.11.0, backend only: complete the arm after the customer backend's one click, or observe uncertainty after an error. |
 | `POST` | `/v1/checkouts/{id}/cancel` | Cancel and start cleanup. Send `{}`. |
 
 ### Create an existing-browser checkout
@@ -202,6 +208,7 @@ Example body for `POST /v1/checkouts` using a registered connector for your plat
   "idempotency_key": "checkout_attempt_42",
   "interaction_mode": "chat",
   "purpose": "purchase",
+  "final_click_actor": "customer",
   "approval_policy": "after_fill",
   "fill_after_verification": true,
   "browser": {
@@ -217,7 +224,13 @@ Replace `connector_id` with the ID provisioned by Accelerate for your Merchant I
 
 Replace all example customer and checkout values with your authenticated records and the browser's exact current HTTPS checkout URL, including its query and fragment. The example URL is a placeholder. Qualify the actual checkout with Accelerate before payment use.
 
-This example creates a purchase checkout. Select `purpose: 'sandbox_fill_only'` for a no-order test instead. Explicitly set the mode, purpose, approval policy, and fill flag shown above. Raw API defaults do not select the v2 partner flow. Require the service to echo `fill_after_verification: true` before starting OTP. Creation declares capability; it does not arm a fill. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `currency: "USD"`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. Require that acknowledgement before private CVV collection.
+This candidate example creates an owned existing-browser purchase with the customer as final-click actor. Accelerate-managed Kernel purchases are rejected. For a no-order test, use `purpose: 'sandbox_fill_only'` and omit `final_click_actor`. Explicitly set the mode, purpose, approval policy, and fill flag. Raw API defaults do not select this flow. Require `fill_after_verification: true` and `final_click_actor: 'customer'` in the service response before OTP. The service checks supported customer-click admission internally; it does not expose the private receipt. Creation does not arm a fill or click. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `currency: "USD"`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. Require that acknowledgement before private CVV collection.
+
+The initial purchase candidate requires one top-level document with no iframes or shadow roots. Its card/address controls, explicitly USD-labelled simple total, and unique exact total/submit selectors must belong to that document. Separate iframe or shadow-root fill support does not qualify those layouts for purchase. After private approval, follow the backend-only [arm, customer click, and complete sequence](purchase-mode.md#direct-http-final-click-api) within the candidate gateway's at-most-10-second window. The old `/v1/checkouts/{id}/submit` route fails closed in the new contract; it cannot invoke an Accelerate executor click.
+
+Active or registered origin service workers are also unsupported. Non-main-frame and worker requests are blocked. New pages are closed and produce `outcome_unknown`. Browser request controls and CDP service-worker bypass do not establish a provider firewall or WebRTC protection.
+
+Programmatic merchant `form.submit()`/`requestSubmit()` flows are unsupported. The gate preserves bound fields, quote, URL, submit target, and submit-form controls; it permits unrelated banner/countdown text and hover/focus class changes. The click deadline cannot exceed the original approval. Arming does not release payment requests before click admission. After that deadline, retained observation grants no further click authority. Early cancellation can return `final_click_in_progress`. See [Purchase mode](purchase-mode.md) for the clock-probe limits and recovery contract.
 
 Store the returned `id` as `checkout_id` in your durable owner record, together with the revision. Use one stable `idempotency_key` per logical checkout attempt. After a timeout, inspect the existing attempt and reconcile uncertainty before further payment actions.
 
@@ -242,7 +255,7 @@ For complete request shapes, see the [HTTP route implementation](https://github.
 
 **MCP is relevant when your agent uses MCP tools.** For the existing-browser flow, use `registerPartnerCheckoutTools` from `@weaccelerateinc/agent-sdk/partner` on your authenticated MCP server. Select `profile: 'managed_review_v2'` explicitly. The generated starter supplies the composition example.
 
-The tool set includes `accelerate_checkout_start`, `accelerate_checkout_request_payment`, `accelerate_checkout_apply_details`, `accelerate_checkout_request_approval`, `accelerate_checkout_status`, and cancellation. Qualified purchase hosts can explicitly enable `accelerate_checkout_submit`. V2 omits the manual fill tool. Identity, browser credentials, OTP, CVV, and private review APIs stay in backend handlers. There is no HTTP `/request-payment` route; that MCP tool dispatches the private payment event.
+The tool set includes `accelerate_checkout_start`, `accelerate_checkout_request_payment`, `accelerate_checkout_apply_details`, `accelerate_checkout_request_approval`, `accelerate_checkout_status`, and cancellation. Candidate 0.11.0 purchase hosts can enable `accelerate_checkout_submit` with unchanged model inputs `{ checkout_id, revision }`. Its trusted handler performs preflight → arm → customer host click → complete inside the existing restriction. The completion token stays in the SDK orchestrator. Preparations, arms, click targets, browser credentials, OTP, CVV, and private review APIs stay outside model inputs, results, and history. V2 omits the manual fill tool. There is no HTTP `/request-payment` route; that MCP tool dispatches the private payment event.
 
 The dashboard also shows the hosted wallet MCP endpoint:
 
@@ -256,7 +269,7 @@ You can use the HTTP API with your own agent tools if your runtime does not use 
 
 ## Test and request production access
 
-Purchase mode supports a separate explicit submit after private customer approval. For no-order qualification, select `sandbox_fill_only` and disable submission. Verify the complete path: same-browser attachment, private verification, final total, one fill, masked review delivery, cancellation, and cleanup. Use **Request production access** in the merchant dashboard and coordinate the intended purchase deployment with Accelerate. See [Purchase mode and checkout support](purchase-mode.md).
+The candidate purchase flow requires a separate customer-backend click after private approval. For no-order qualification, select `sandbox_fill_only` and disable submission. Verify same-browser attachment, private verification, final total, one fill, masked review delivery, cancellation, and cleanup. Use **Request production access** in the merchant dashboard and coordinate the intended purchase deployment with Accelerate. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
 The current flow supports saved cards and USD. Browser connector support and merchant checkout support require separate qualification. The extension's original manifest records the normal demo fill/review baseline; [newer sandbox evidence](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) includes additional merchant layouts. That evidence does not establish real-store order submission or production payment qualification. `universal_card_v1` admits supported existing documents for either purchase or fill-only; installing the SDK alone does not establish deployment or checkout support.
 
