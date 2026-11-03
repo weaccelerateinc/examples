@@ -66,7 +66,7 @@ The Vercel aliases use Vercel's production deployment slot, but their wallet env
 | Managed checkout service | `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` |
 | Wallet MCP and add-card | `https://accelerate-wallet-mcp-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` |
 
-For approved production use, explicitly set `ACCELERATE_BASE_URL` to the production managed-service origin above. The SDK's canonical Vercel default remains sandbox. Use the separate Production key and Merchant ID, and the dashboard-generated add-card URL for that approved Production environment. A sandbox add-card example or an environment query parameter alone is not production onboarding approval. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
+For approved production use, explicitly set `ACCELERATE_BASE_URL` to the production managed-service origin above. The SDK's canonical Vercel default remains sandbox. Use the separate Production key and Merchant ID, and the approved add-card URL supplied during onboarding. A dashboard-generated link requires the dashboard deployment to be configured for the production wallet origin. A sandbox add-card example or an environment query parameter alone is not production onboarding approval. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
 
 The original approved extension manifest records a narrower demo fill/review baseline. Preserve that history. The later sandbox report adds merchant evidence without retroactively qualifying a new provider, extension artifact, or production purchase.
 

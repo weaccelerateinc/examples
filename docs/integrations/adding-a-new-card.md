@@ -16,7 +16,7 @@ Open **Agent payments** in the [merchant dashboard](https://merchantdashboard-ga
 https://accelerate-wallet-mcp.vercel.app/add-card?m=YOUR_MERCHANT_ID&env=sandbox
 ```
 
-After production onboarding and qualification, use the dashboard-generated Production link on `https://accelerate-wallet-mcp-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io`, with your approved Production Merchant ID and `env=production`. Production infrastructure is deployed, but customer onboarding, tenant activation, and financial release remain closed. The canonical Vercel wallet origin remains sandbox; changing only the environment parameter does not complete production onboarding.
+After production onboarding and qualification, obtain the approved Production link on `https://accelerate-wallet-mcp-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io`, with your Production Merchant ID and `env=production`. Use a dashboard-generated link only after Accelerate has configured that dashboard deployment for the production wallet origin. Production infrastructure is deployed, but customer onboarding, tenant activation, and financial release remain closed. The canonical Vercel wallet origin remains sandbox; changing only the environment parameter does not complete production onboarding.
 
 The environment chooses wallet data, credentials, verification, and fill services. It does not select the merchant's payment processor. Use approved sandbox test data and synthetic or no-order checkout tests; submitting a real card to a live merchant can still create a real charge. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
 

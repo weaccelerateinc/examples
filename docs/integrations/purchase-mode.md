@@ -33,7 +33,7 @@ ACCELERATE_ENABLE_PURCHASE_SUBMIT=true
 ACCELERATE_CONTEXT_MODULE=/absolute/protected/partner-host.mjs
 ```
 
-`live` selects real backend dependencies. It does not select the production wallet environment. After approved onboarding and qualification, set `ACCELERATE_BASE_URL` explicitly to `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` and use the separate Production key and Merchant ID. The canonical Vercel default is sandbox. Use the dashboard-generated add-card URL on the production wallet origin. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
+`live` selects real backend dependencies. It does not select the production wallet environment. After approved onboarding and qualification, set `ACCELERATE_BASE_URL` explicitly to `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` and use the separate Production key and Merchant ID. The canonical Vercel default is sandbox. Use the approved add-card URL supplied during onboarding; a dashboard-generated link requires the dashboard deployment to be configured for the production wallet origin. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
 
 The environment selects Accelerate's wallet data, credentials, verification, and fill backend. The merchant's existing processor handles a charge after the customer's agent clicks through its own browser. Sandbox does not turn a live merchant into a test processor; use approved test data and synthetic or no-order checkouts during testing.
 
