@@ -137,7 +137,7 @@ The generated existing-browser starter uses the explicit **`managed_review_v2`**
 - A verified private webhook that intercepts sensitive replies before ordinary message processing.
 - A `PrivateMessagingAdapter` for your customer messaging channel. It must send the masked review image and amount together and record the actual delivery receipt.
 
-The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. Keep `purpose: 'sandbox_fill_only'` and `enableSubmit: false` during initial testing.
+The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. For purchases, register `purpose: 'purchase'` with `enableSubmit: true`. For a no-order test, select `purpose: 'sandbox_fill_only'` with submission disabled. See [Purchase mode and checkout support](purchase-mode.md) for starter settings, release defaults, and `universal_card_v1`.
 
 ## 5. Follow the payment flow
 
@@ -201,7 +201,7 @@ Example body for `POST /v1/checkouts` using a registered connector for your plat
   "start_url": "https://shop.example/checkout/payment",
   "idempotency_key": "checkout_attempt_42",
   "interaction_mode": "chat",
-  "purpose": "sandbox_fill_only",
+  "purpose": "purchase",
   "approval_policy": "after_fill",
   "fill_after_verification": true,
   "browser": {
@@ -217,7 +217,7 @@ Replace `connector_id` with the ID provisioned by Accelerate for your Merchant I
 
 Replace all example customer and checkout values with your authenticated records and the browser's exact current HTTPS checkout URL, including its query and fragment. The example URL is a placeholder. Qualify the actual checkout with Accelerate before payment use.
 
-Explicitly set the mode, purpose, approval policy, and fill flag shown above. Raw API defaults do not select the v2 partner flow. Require the service to echo `fill_after_verification: true` before starting OTP. Creation declares capability; it does not arm a fill. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `currency: "USD"`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. Require that acknowledgement before private CVV collection.
+This example creates a purchase checkout. Select `purpose: 'sandbox_fill_only'` for a no-order test instead. Explicitly set the mode, purpose, approval policy, and fill flag shown above. Raw API defaults do not select the v2 partner flow. Require the service to echo `fill_after_verification: true` before starting OTP. Creation declares capability; it does not arm a fill. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `currency: "USD"`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. Require that acknowledgement before private CVV collection.
 
 Store the returned `id` as `checkout_id` in your durable owner record, together with the revision. Use one stable `idempotency_key` per logical checkout attempt. After a timeout, inspect the existing attempt and reconcile uncertainty before further payment actions.
 
@@ -256,8 +256,8 @@ You can use the HTTP API with your own agent tools if your runtime does not use 
 
 ## Test and request production access
 
-Start with `sandbox_fill_only` and submission disabled. Verify the complete path: same-browser attachment, private verification, final total, one fill, masked review delivery, cancellation, and cleanup. Then use **Request production access** in the merchant dashboard and coordinate qualification with Accelerate.
+Purchase mode supports a separate explicit submit after private customer approval. For no-order qualification, select `sandbox_fill_only` and disable submission. Verify the complete path: same-browser attachment, private verification, final total, one fill, masked review delivery, cancellation, and cleanup. Use **Request production access** in the merchant dashboard and coordinate the intended purchase deployment with Accelerate. See [Purchase mode and checkout support](purchase-mode.md).
 
-The current flow supports saved cards and USD. Browser connector support and merchant checkout support require separate qualification. The approved extension's recorded fill/review qualification is the normal demo payment page. Additional layouts need compatible deployed service/executor support and qualification; installing the SDK does not establish this.
+The current flow supports saved cards and USD. Browser connector support and merchant checkout support require separate qualification. The extension's original manifest records the normal demo fill/review baseline; [newer sandbox evidence](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) includes additional merchant layouts. That evidence does not establish real-store order submission or production payment qualification. `universal_card_v1` admits supported existing documents for either purchase or fill-only; installing the SDK alone does not establish deployment or checkout support.
 
 `ready_for_submit` alone does not prove customer approval. `submit_attempted` and `outcome_unknown` do not confirm an order. Check the merchant's independent order status before reporting success or starting a replacement purchase. Never automatically replay an uncertain fill or submit.
