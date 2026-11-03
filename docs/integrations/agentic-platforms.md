@@ -16,7 +16,7 @@ For implementation detail, see [Private CVV and credential delivery](agentic-pla
 
 **SDK release status:** **SDK 0.12.0 is published on npm**. Its [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0) points to source commit [`12cf65b0`](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk). The published archive SHA-256 is `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. The SDK managed sandbox service is healthy on this source revision. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
-SDK 0.12.0 includes the Dana run-created Browser Use and WhatsApp messaging APIs. Run-browser merchant admission is not enabled in the current sandbox, and the matching patched wallet rollout is still being verified. See [Browser Use run browser integration](browser-use-run-browsers.md) and [WhatsApp private messaging](whatsapp-private-messaging.md).
+SDK 0.12.0 includes the Dana run-created Browser Use and WhatsApp messaging APIs. Run-browser merchant admission is not enabled in the current sandbox; the operator must apply and verify migration 004 before enabling it. The matching wallet gateway and reaper have passed a synthetic worker-loss retirement probe, but provider and merchant qualification remain pending. See [Browser Use run browser integration](browser-use-run-browsers.md), [WhatsApp private messaging](whatsapp-private-messaging.md), and [deployment status](universal-card-rollout.md#release-and-environment-status).
 
 ## Choose the wallet environment
 

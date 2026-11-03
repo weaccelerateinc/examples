@@ -6,7 +6,7 @@ description: Integrate private WhatsApp replies and review delivery with the pub
 
 **SDK 0.12.0 is published.** The [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0) points to source commit [`12cf65b0`](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk). Its published npm archive SHA-256 is `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. Clean consumer imports and the release workflow were verified.
 
-The SDK managed sandbox deployment is healthy on that source revision. The matching wallet patched container-app rollout is still being verified. This SDK release does not qualify a WhatsApp provider integration or merchant. Provider and payment qualification remain pending. Production activation and financial release remain closed.
+The SDK managed sandbox deployment is healthy on that source revision. The matching wallet gateway and reaper are deployed; the synthetic worker-loss probe and its limits are recorded in [rollout status](universal-card-rollout.md#release-and-environment-status). This SDK release does not qualify a WhatsApp provider integration or merchant. Provider and payment qualification remain pending. Production activation and financial release remain closed.
 
 The WhatsApp adapters let a platform connect its native provider client to Accelerate's private checkout flow. They do not replace Dana's general media and onboarding router. Keep that router for ordinary messages, and intercept sensitive checkout replies before history, tracing, queues, or AI admission.
 
