@@ -43,7 +43,7 @@ verifyApprovedExtensionArtifact(zip, release);
 
 These paths refer to files supplied through your trusted deployment process. Install the verified bytes using your browser's extension mechanism, then preserve the installation/upload record. A version string or successful upload does not prove which bytes are installed.
 
-The [GitHub release assets](https://github.com/weaccelerateinc/accelerate-agent-sdk/releases/tag/v0.10.1) include the approved baseline ZIP and checksum files. Coordinate the manifest and qualification for your own connector with Accelerate.
+The [GitHub release assets](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1) include the approved baseline ZIP and checksum files. Coordinate the manifest and qualification for your own connector with Accelerate.
 
 ## Verify the live runtime
 

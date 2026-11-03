@@ -50,9 +50,9 @@ Use Node.js 22 or later. The server-only SDK includes TypeScript declarations an
 
 - **SDK on npm:** [@weaccelerateinc/agent-sdk](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk), current guide version **0.10.3**.
 - **SDK source and guides:** [Accelerate Agent SDK](https://github.com/weaccelerateinc/accelerate/tree/main/products/agent-sdk).
-- **Approved extension and packaged release downloads:** [GitHub release v0.10.1](https://github.com/weaccelerateinc/accelerate-agent-sdk/releases/tag/v0.10.1). Download the approved `accelerate-extension-0.0.0.1.zip` and its checksum files from the release assets.
+- **Approved extension download:** [Extension release 0.0.0.1](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1). Download `accelerate-extension-0.0.0.1.zip` and its checksum files from the release assets.
 
-The GitHub v0.10.1 release also contains the earlier SDK archive under the legacy `@accelerate/agent-sdk` name. Use npm for the 0.10.3 SDK in this guide. The older archive has its own version-specific instructions. SDK and extension versions are independent.
+Use npm for the 0.10.3 SDK in this guide. SDK and extension versions are independent.
 
 Generate the matching starter:
 
