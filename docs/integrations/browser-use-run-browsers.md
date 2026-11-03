@@ -46,6 +46,8 @@ Run-created browser support has three separate merchant opt-ins. Each must remai
 
 The service checks both static and provisioned tenant authorization. The wallet independently checks its merchant configuration and provider evidence. One opt-in does not enable the other layers.
 
+Both service and wallet reject run provenance for `purchase`. Only `sandbox_fill_only` is admitted in this preview. Existing purchase integrations keep their separate customer-final-click contract.
+
 Key-bearing wallet tenants read Browser Use independently. When Dana retains the provider key, the wallet checks Dana's authenticated resource projection. This remains the `customer_backend_trusted` trust model; it is not an independent provider read.
 
 ## Preload the extension before the first run
@@ -92,4 +94,17 @@ The SDK source also requires the actual provider expiry and has bounded create/f
 
 Use the paired PRs and matching tested archive. Keep the three merchant opt-ins off until the wallet/reaper and service are deployed with the required migration. Then qualify the actual Browser Use project and merchant form. Verify cart continuity, original expiry, extension bytes and installed IDs, scheduler/viewer fencing, private masked review, one fill, and independent cleanup. Test crashes, duplicate and late webhooks, queued follow-up work, viewer access, failed creation, and already stopped browsers. Do not submit an order.
 
-The prior published purchase rules and qualification status remain in force. This preview does not activate a tenant, enable financial release, qualify production, qualify a co-extension, or add final-click support. Dana's supplied repository audit and required file changes are recorded in the [SDK integration preview](https://github.com/weaccelerateinc/accelerate/blob/c8e81d3f/products/agent-sdk/docs/dana-integration.md).
+The prior published purchase rules and qualification status remain in force. This preview does not activate a tenant, enable financial release, qualify production, qualify a co-extension, or add final-click support. Dana's supplied repository audit and required file changes are recorded in the [SDK integration preview](https://github.com/weaccelerateinc/accelerate/blob/2cea64d1/products/agent-sdk/docs/dana-integration.md).
+
+## Compatibility with other providers
+
+| Integration | Effect of this preview |
+| --- | --- |
+| Browser Use standalone metadata browsers | Existing metadata and single-extension defaults remain. Additional extensions require an exact operator policy and qualification. |
+| Browser Use run-created browsers | New merchant opt-in for fill-only. Requires Dana's durable owner, scheduler and viewer controls. |
+| Registered browser connectors | Existing provider contract remains. Browser Use run provenance is not accepted on generic bindings. |
+| Managed Kernel browsers | Existing managed custody and purpose rules remain. This preview adds no Kernel purchase capability. |
+| Linq private messaging | Existing adapter and receipt contract remain. WhatsApp is a separate opt-in adapter. |
+| Agent models and workflow engines | No model vendor is selected by this change. Hosts must preserve the same ownership, idempotency and private-ingress contract. See [Eve guidance](whatsapp-private-messaging.md#eve-workflow-integration). |
+
+These statements describe source and contract compatibility. They do not qualify an untested browser provider, model integration, or workflow deployment. Keep the original runtime and extension configuration available until active or uncertain leases close; changing the pins can block cleanup proof even after the browser stops.

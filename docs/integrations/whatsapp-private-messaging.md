@@ -44,7 +44,19 @@ For higher volume, the preview includes `createPostgresWhatsAppDeliveryJournal({
 
 Apply its schema with the operator-only `initialize()` method during deployment, not from request handling. Schedule `pruneExpired()` to remove unmatched pre-bind events after 24 hours. Those unmatched events are capped at 64 per sender/recipient. Reservations and matched evidence remain durable. Configure database encryption, TLS, and retention in the deployment. Unrelated WhatsApp delivery statuses are ignored unless they match a bound message or an outstanding recipient reservation.
 
-The WhatsApp journal does not replace Dana's checkout-host persistence contract. Checkout host transactions still require a direct or session-affine connection for their session advisory lock. Dana can use its existing durable store for workflow persistence if each safe intent commits before remote effects and the callback is not automatically retried. Never place sensitive replies, review image bytes, or native provider secrets in workflow state or journal rows.
+The WhatsApp journal does not replace Dana's checkout-host persistence contract. Checkout host transactions still require a direct or session-affine connection for their session advisory lock. Dana can use its existing durable store if each safe intent commits before remote effects. The persistence lock must invoke its callback exactly once per acquisition. An outer workflow step may retry, but it must re-enter the durable host and reload its record. It must not repeat the callback's remote effects directly. Never place sensitive replies, review image bytes, or native provider secrets in workflow state or journal rows.
+
+## Eve workflow integration
+
+Dana reports using Eve. The following guidance assumes [Vercel's eve](https://github.com/vercel/eve/blob/main/docs/tools/workflows.mdx). Confirm Dana's installed version and retry configuration before acceptance. This does not require a change to the shared SDK contract.
+
+Eve replays workflow bodies and can retry steps or dispatch duplicate runs. Put effects in step helpers behind the durable host. Persist one mapping from Eve's authenticated session and call ID to the checkout attempt before starting it. Keep per-effect keys stable across retries and concurrent runs. A completed or cancelled attempt must not become a new checkout when the same call returns. Reconcile uncertain effects before further work. Recheck current ownership, browser readiness and expiry after a durable wait; a recorded earlier check is not current proof.
+
+Step inputs and outputs enter durable history. Keep OTP, CVV, raw webhooks, review image bytes, `browser_resource`, and `cdpUrl` outside that history. Do not collect sensitive replies through `ctx.ask`, workflow hooks, or workflow webhooks. Intercept them before Eve message admission. Pass only safe references and status onward. Keep attachment preparation, service creation and attachment commit inside one step; their in-memory capabilities cannot cross a durable wait.
+
+Ordinary steering messages can abort an `execute` call. Use a task for checkout work that must survive steering, or queue ordinary messages while it runs. This does not permit browser access through another task. Keep private replies on the private ingress.
+
+Cancellation is not browser retirement. Do not depend on the workflow body's `finally` for cleanup. Keep independent cleanup recovery and retain the owner/session fences. Preserve the deployment and workflow entry point until its checkouts and cleanup are terminal. Eve does not replace host locking, the journal, or verified cleanup, and it does not change the database connection requirements.
 
 ## Qualification gate
 
@@ -54,4 +66,4 @@ The source tests do not qualify the native WhatsApp client, Meta webhook schema,
 
 - [SDK draft PR #482](https://github.com/weaccelerateinc/accelerate/pull/482)
 - [Wallet draft PR #21](https://github.com/weaccelerateinc/accelerate-wallet-mcp/pull/21)
-- [SDK Dana integration preview at the reviewed source commit](https://github.com/weaccelerateinc/accelerate/blob/c8e81d3f/products/agent-sdk/docs/dana-integration.md)
+- [SDK Dana integration preview at the reviewed source commit](https://github.com/weaccelerateinc/accelerate/blob/2cea64d1/products/agent-sdk/docs/dana-integration.md)
