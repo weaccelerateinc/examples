@@ -98,6 +98,8 @@ Cleanup requires two steps: request stop, then independently read back the exact
 
 The gateway bounds read/stop callbacks at eight seconds and connect at ten seconds. The independent reaper bounds read/stop at three seconds and does not connect. Failed or uncertain cleanup remains pending for reconciliation. Cleanup does not release an uncertain-payment fence or retry payment.
 
+Those registered operator connector callbacks give the reaper actual provider read/stop capability. The Browser Use client-key path, configured through `MCP_CLIENT_BROWSER_EXTENSION_JSON`, has a different limit: Accelerate can acknowledge and close its lease but cannot stop or read the provider browser after worker loss. Lease closure is not provider-stop proof. The customer's host must independently stop and read back the exact browser and retain its restriction until provider-stop proof or confirmed provider expiry. An uncertain payment still requires reconciliation.
+
 Keep the connector definition and stop/read capability available while it has active leases. Qualify the extension runtime, document preservation, recording controls, lifetime, durable automation restriction, independent cleanup, and supported checkout layouts before use. Native customer review and purchase submission have their own acceptance requirements.
 
 Universal sandbox fills have already run on additional merchant documents; that evidence is separate from a new provider's acceptance or 0.11.0 customer-click purchases. See [Universal checkout rollout](universal-card-rollout.md) for current gates, dated deployment evidence, and the coordinated gateway/reaper rollout.

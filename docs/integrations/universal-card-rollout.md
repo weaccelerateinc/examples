@@ -42,6 +42,8 @@ The current executor uses Playwright-compatible Chromium/CDP and a Manifest V3 e
 
 Include the reviewed connector module and its dependencies in both deployments. Setting `MCP_CUSTOMER_BROWSER_CONNECTORS_MODULE` does not add an external file to the default worker image. Do not remove a definition or its stop/read capability while it has active leases.
 
+Qualify worker-loss cleanup for the selected credential model. With client-owned Browser Use keys (`MCP_CLIENT_BROWSER_EXTENSION_JSON`), Accelerate's reaper can acknowledge/close the lease but cannot stop or read the provider browser. The customer's host must independently stop and read back that exact browser, retaining the restriction until provider-stop proof or confirmed provider expiry. Lease closure alone is insufficient. Registered operator provider connectors supply separate provider read/stop capability to the reaper; do not infer that capability for the client-key path.
+
 ## Release and environment status
 
 SDK 0.11.0 is published as npm's `latest` version. The [release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked on **3 November 2026 at 20:21 UTC** are:
@@ -58,6 +60,8 @@ SDK 0.11.0 is published as npm's `latest` version. The [release tag](https://git
 The Vercel aliases use Vercel's production deployment slot, but their wallet environment is **sandbox**. That slot name does not indicate real-money production payments. Health and source/image identity verify deployment; they do not establish payment qualification. The older 2 November merchant fill/review evidence applies to its recorded deployment and is not a new 0.11.0 real-money purchase test.
 
 **Real-money production provisioning is in progress.** Accelerate is preparing a separate Azure stack with private networking, gateway, reaper, wallet MCP, and managed service. Its proposed origins are not yet confirmed live by this guide, and the stack is not production-payment-qualified. Use only validated production origins supplied after provisioning; do not infer readiness from a proposed hostname.
+
+This is preparation for future production readiness, not enablement of customer charges. Production customer access and keys remain closed until qualification and approved onboarding.
 
 For real-money production, explicitly set `ACCELERATE_BASE_URL` to the approved production managed-service origin. The SDK's canonical Vercel default remains sandbox. Use the Production key and Merchant ID, and the dashboard-generated add-card URL for that approved Production environment. A sandbox add-card example or an environment query parameter alone is not production onboarding approval.
 

@@ -139,6 +139,8 @@ SDK 0.11.0 adds the two private final-click operations above. They do not releas
 
 After Accelerate reports closure, verify that the exact owned provider browser stopped and payment credentials were cleared. Retain the uncertainty fence. A successful stop request, missing resource, or `404` is not proof of cleanup. Never release a restriction merely to retry an uncertain fill or purchase.
 
+When a Browser Use client keeps its provider key through the `MCP_CLIENT_BROWSER_EXTENSION_JSON` path, Accelerate's reaper can acknowledge and close the lease but cannot stop or read the provider browser after worker loss. A closed lease is not proof that the browser stopped. The customer's trusted host must independently stop and read back that exact browser, retaining the restriction until provider-stop proof or confirmed provider expiry. Registered operator provider connectors supply a separate reaper read/stop capability. Neither cleanup path resolves payment uncertainty by itself.
+
 Browser provider support, extension approval, merchant checkout support, review delivery, and purchase submission require separate qualification. Your backend retains provider-owner access under `customer_backend_trusted`; restricting ordinary agent tools does not revoke that access.
 
 For exact types, see the [SDK interface source](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/browser-connector.d.ts). Return to [Agentic platforms](agentic-platforms.md) for the full integration flow.
