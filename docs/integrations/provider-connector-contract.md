@@ -8,6 +8,8 @@ The provider connector lets Accelerate's private executor attach the existing br
 
 Your platform implements the separate [SDK browser host](browser-connector-interface.md). Accelerate registers the private provider implementation for your Merchant ID and connector ID in both the gateway and independent cleanup service. Coordinate this registration during onboarding.
 
+For **published SDK 0.11.0**, the customer's agent performs the final physical click through its own browser connection and trusted SDK host. The SDK connector checks live readiness before arming and consumes a private one-use preparation for the click, without another provider read inside the short window. The host receives the exact document, target, and deadline, but no completion token. The provider connector continues to support Accelerate's admission, private fill/review, and cleanup. It does not add an Accelerate executor click. The matching stack is deployed in sandbox; real-money production provisioning and qualification remain separate. See [Purchase mode](purchase-mode.md).
+
 The current executor requires a qualified Playwright-compatible Chromium/CDP browser with the approved Manifest V3 extension. An SDK adapter alone does not establish provider or merchant support.
 
 ## Provider implementation
@@ -82,12 +84,24 @@ After registration, your authenticated backend supplies this binding when it cre
 
 The managed service asks the private executor to attach that resource. The executor selects the registered merchant/connector definition and checks ownership, extension, exact document, purpose, and cleanup capability. A mismatched binding fails; it does not trigger a new browser or a cart transfer.
 
+Purchases using 0.11.0 declare `final_click_actor: 'customer'`. Before OTP, the service internally requires `customer_final_click_supported: true` from the gateway's private admission. The initial release requires one top-level document with no iframes or shadow roots, containing its card and address controls. Quote inspection requires an explicit USD-labelled simple total. Unique exact total and submit selectors are checked before credential fill. Do not infer purchase support from existing iframe or shadow-root fills. The customer host's one click remains subject to the gateway's at-most-10-second window, exact target, and merchant/provider network policy; general browser access stays restricted.
+
+Initial admission rejects active or registered origin service workers. The gateway requests CDP service-worker bypass as an additional control and blocks non-main-frame and worker requests. It closes new pages and reports `outcome_unknown`. These are browser/application controls; they do not establish a provider firewall or WebRTC protection.
+
+The initial gate excludes merchant `form.submit()` and `requestSubmit()` flows. It checks submit-target identity and security properties, bound card/address native values and metadata, submit-form control inventory, exact total text, and URL. Unrelated banners, countdowns, and hover/focus class changes are permitted. The browser-clock probe requires a round trip of at most 500 ms and skew of at most 250 ms.
+
+The click deadline cannot exceed the original approval. Approved-origin network policy applies only after click admission; arming does not allow automatic payment requests before that admission. Outcome observation can outlast the click window or caller connection, but it cannot extend click authority. Do not stop the browser merely because the request disconnected.
+
 ## Independent cleanup
 
 Cleanup requires two steps: request stop, then independently read back the exact owned resource as `stopped`. A successful callback, raw `404`, missing resource, changed owner, or provider error is insufficient. If the provider cannot give trustworthy stopped-resource evidence, it is not ready for this contract.
 
 The gateway bounds read/stop callbacks at eight seconds and connect at ten seconds. The independent reaper bounds read/stop at three seconds and does not connect. Failed or uncertain cleanup remains pending for reconciliation. Cleanup does not release an uncertain-payment fence or retry payment.
 
+Those registered operator connector callbacks give the reaper actual provider read/stop capability. The Browser Use client-key path, configured through `MCP_CLIENT_BROWSER_EXTENSION_JSON`, has a different limit: Accelerate can acknowledge and close its lease but cannot stop or read the provider browser after worker loss. Lease closure is not provider-stop proof. The customer's host must independently stop and read back the exact browser and retain its restriction until provider-stop proof or confirmed provider expiry. An uncertain payment still requires reconciliation.
+
 Keep the connector definition and stop/read capability available while it has active leases. Qualify the extension runtime, document preservation, recording controls, lifetime, durable automation restriction, independent cleanup, and supported checkout layouts before use. Native customer review and purchase submission have their own acceptance requirements.
+
+Universal sandbox fills have already run on additional merchant documents; that evidence is separate from a new provider's acceptance or 0.11.0 customer-click purchases. See [Universal checkout rollout](universal-card-rollout.md) for current gates, dated deployment evidence, and the coordinated gateway/reaper rollout.
 
 For the operator implementation specification, see the [provider connector source reference](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/docs/customer-browser-connectors.md). See [Private CVV and credential delivery](agentic-platforms-private-payments.md) for the payment data path.

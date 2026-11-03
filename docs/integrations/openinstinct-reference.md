@@ -8,6 +8,8 @@ OpenInstinct is an example of an agent platform that connects its existing brows
 
 This page describes the repository implementation. It does not inspect deployed secret values or establish that a deployment is qualified for live purchases. OpenInstinct uses an application-specific integration and a pinned SDK runtime with recorded compatibility patches. New clients should use the current npm SDK and partner starter instead of copying its vendored files.
 
+The described pinned application predates the **published 0.11.0 customer-final-click release**. Do not treat its older submit integration as an implementation of the new contract. That migration requires the 0.11.0 SDK and a trusted customer-browser click callback; it is not established by this reference. The matching managed stack is deployed in sandbox. See [Purchase mode](purchase-mode.md).
+
 ## Backend configuration
 
 OpenInstinct configures these integration values in its protected server environment:
@@ -16,7 +18,7 @@ OpenInstinct configures these integration values in its protected server environ
 | --- | --- |
 | `ACCELERATE_API_KEY` | Tenant API key for the managed checkout service. |
 | `ACCELERATE_MERCHANT_ID` | Merchant UUID for the platform and environment. |
-| `ACCELERATE_BASE_URL` | Optional managed-service origin. The default is `https://accelerate-agent-sdk.vercel.app`. |
+| `ACCELERATE_BASE_URL` | Managed-service origin. The default `https://accelerate-agent-sdk.vercel.app` uses the sandbox wallet environment. Real-money production requires the explicitly configured, validated production origin. |
 | `BROWSER_USE_API_KEY` | Browser project key used by OpenInstinct's browser backend. This is specific to its selected provider. |
 | `ACCELERATE_AGENT_BROWSER_USE_EXTENSION_ID` | Approved extension upload ID in that browser project. |
 | `ACCELERATE_AGENT_BROWSER_USE_EXTENSION_SHA256` | Exact ZIP checksum from the verified upload record. |
@@ -75,6 +77,6 @@ When the customer replies with CVV, the private handler completes verification. 
 
 OpenInstinct calls `deliverPrivateCheckoutReview` from its private handler. It retrieves the masked PNG, checks the review metadata, sends the image and exact amount together through the native Linq transport, and acknowledges the actual sent receipt. A purchase decision has five minutes from that confirmed receipt. The customer's approval reply uses the provider-authenticated `sent_at` timestamp and optional reply-to message ID.
 
-After private approval, the agent must still make a separate explicit submit call for that revision. For `sandbox_fill_only`, OpenInstinct cancels the same checkout after confirmed informational review delivery. An uncertain fill, delivery, cancellation, or submit cannot authorize a new payment attempt.
+In this older integration, private approval still precedes a separate explicit submit request. The new contract disables direct executor submission and requires preflight → arm → customer host click → complete instead. The completion token stays in its SDK orchestrator. Do not enable purchases in the pinned app by changing a flag alone. For `sandbox_fill_only`, OpenInstinct cancels the same checkout after confirmed informational review delivery. An uncertain fill, delivery, cancellation, or click cannot authorize a new payment attempt.
 
 Source references: [managed private reply and review handlers](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/accelerate/managed.ts), [native message receipts](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/linq/transport.ts), and [private payment flow](agentic-platforms-private-payments.md).
