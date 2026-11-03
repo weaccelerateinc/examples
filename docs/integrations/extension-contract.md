@@ -75,7 +75,7 @@ The verification helpers make no network requests. They do not install the exten
 
 ## Fill and retention boundaries
 
-The bridge restricts filling to the bound tab, document, and permitted payment frames. It supports one-use manual card fill, disables autosave, and does not automatically submit. The extension's maximum advertised retention is 480,000 ms; checkout and authorization lifetimes remain separate limits.
+The bridge restricts filling to the bound tab, document, and permitted payment frames. It supports one-use manual card fill, disables autosave, and does not automatically submit. This is separate from the executor's explicit, customer-approved final-submit operation in [purchase mode](purchase-mode.md). The extension's maximum advertised retention is 480,000 ms; checkout and authorization lifetimes remain separate limits.
 
 The executor supplies transient credentials through its private background-worker call. The merchant's actual payment fields contain the native values during the allowed review/submit period. Display masking changes presentation; it does not encrypt those fields or revoke provider-owner access. See [Private CVV and credential delivery](agentic-platforms-private-payments.md).
 
