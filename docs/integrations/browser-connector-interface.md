@@ -10,7 +10,7 @@ The customer's agent performs the final payment click through its own browser co
 
 This is the client-side backend interface. Accelerate separately registers the [provider connector](provider-connector-contract.md) in its private executor and cleanup service. Both layers must be configured for the same Merchant ID and connector ID.
 
-The six baseline host methods below apply to the published integration. **Source candidate 0.11.0** adds a customer final-click callback for purchases. It is not published or deployed. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code.
+The six baseline host methods below apply to the published integration. **SDK 0.11.0** adds a customer final-click callback for purchases and is published on npm. Its matching stack is deployed in sandbox. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code. Separate real-money production provisioning and qualification remain pending; see [Universal checkout rollout](universal-card-rollout.md).
 
 ## Create the connector
 
@@ -71,9 +71,9 @@ Replace these example IDs with the provisioned connector and the browser owned b
 
 Every inspection must preserve the same owner, browser binding, document ID, URL, and expiry. Do not construct readiness evidence by copying requested values into a response. A process-local mutex or instruction to the model does not enforce a durable restriction across workers.
 
-## Customer final click in candidate 0.11.0
+## Customer final click in SDK 0.11.0
 
-Candidate purchases require `BrowserConnectorHost.performFinalClick(context, request, options)`. Fill-only hosts can omit it. The frozen host request contains the flattened `FencedBrowserDocument` fields and exact click target:
+Purchases using 0.11.0 require `BrowserConnectorHost.performFinalClick(context, request, options)`. Fill-only hosts can omit it. The frozen host request contains the flattened `FencedBrowserDocument` fields and exact click target:
 
 | Fields | Meaning |
 | --- | --- |
@@ -106,11 +106,11 @@ These are the connector method shapes, not a replacement for the complete submit
 
 `prepareFinalClick(context, { checkout_id }, options?)` resolves the persisted fenced document and checks the drained restriction, live provider resource, recording policy, and approved extension runtime. It runs before arming and does not apply the attachment's ten-minute headroom requirement. It returns an opaque, frozen `PreparedFinalClick` with no public fields. The preparation belongs to that connector instance, owner, and checkout; it is valid for at most 60 seconds. Do not serialize, reconstruct, or clone it.
 
-`performFinalClick(context, { checkout_id, preparation, checkout_url, submit_selector, armed_expires_at }, options?)` consumes that preparation on its first use, including a failed check. It checks the same owner/checkout, exact prepared URL, deadline, browser expiry, and cancellation. It does not resolve ownership again or perform a provider/extension network read inside the click window. It calls the host once, without the opaque completion token. The candidate gateway's window is at most 10 seconds; the host must finish before the returned deadline.
+`performFinalClick(context, { checkout_id, preparation, checkout_url, submit_selector, armed_expires_at }, options?)` consumes that preparation on its first use, including a failed check. It checks the same owner/checkout, exact prepared URL, deadline, browser expiry, and cancellation. It does not resolve ownership again or perform a provider/extension network read inside the click window. It calls the host once, without the opaque completion token. The gateway's window is at most 10 seconds; the host must finish before the returned deadline.
 
-The initial purchase candidate admits only one top-level document with no iframes or shadow roots. Card/address fields, the simple USD-labelled total, and the unique submit target must belong to that document. These restrictions do not describe all layouts supported for separate fill-only review.
+The initial purchase flow admits only one top-level document with no iframes or shadow roots. Card/address fields, the simple USD-labelled total, and the unique submit target must belong to that document. These restrictions do not describe all layouts supported for separate fill-only review.
 
-The candidate also rejects active or registered origin service workers. CDP service-worker bypass is an additional browser control. Non-main-frame and worker requests are blocked; a new page is closed and yields `outcome_unknown`. This is not a provider firewall or WebRTC protection.
+The initial release also rejects active or registered origin service workers. CDP service-worker bypass is an additional browser control. Non-main-frame and worker requests are blocked; a new page is closed and yields `outcome_unknown`. This is not a provider firewall or WebRTC protection.
 
 Programmatic merchant `form.submit()` and `requestSubmit()` flows are unsupported. The gate rechecks the submit target's identity and security properties, bound card/address fields, submit-form control inventory, exact total text, and URL. Unrelated banner/countdown text and hover/focus class changes are permitted. Its browser-clock probe requires a round trip of at most 500 ms and skew of at most 250 ms. A rejected or interrupted action is not permission to retry.
 
@@ -133,7 +133,7 @@ The SDK requires at least ten minutes of actual remaining browser lifetime durin
 
 The partner SDK composes these calls with checkout creation and private messaging. Direct HTTP clients must implement the same ownership, restriction, readiness, and cleanup behavior in their backend.
 
-Candidate 0.11.0 adds the two private final-click operations above. They do not release the ordinary browser restriction. Only the platform backend's exact authorized click can run while the document contains payment values.
+SDK 0.11.0 adds the two private final-click operations above. They do not release the ordinary browser restriction. Only the platform backend's exact authorized click can run while the document contains payment values.
 
 ## Cleanup and scope
 

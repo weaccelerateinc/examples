@@ -6,7 +6,7 @@ description: Verify the extension artifact, live runtime, provider compatibility
 
 Install the approved Accelerate extension through your platform's existing browser image, profile, or launch configuration before shopping starts. Accelerate supplies the ZIP and a release manifest approved for your connector and intended checkout use. Your platform keeps browser creation and the original shopping session.
 
-The extension provides document-bound, one-use card filling. The backend and private executor enforce customer ownership, private CVV collection, review delivery, purchase approval, and cleanup. In source candidate 0.11.0, the customer's trusted browser backend performs the final physical purchase click. Installing the extension alone does not establish those controls or the new, unpublished and undeployed purchase contract.
+The extension provides document-bound, one-use card filling. The backend and private executor enforce customer ownership, private CVV collection, review delivery, purchase approval, and cleanup. In published SDK 0.11.0, the customer's agent performs the final physical payment click through its own trusted browser host and connection. The matching stack is deployed in sandbox. Installing the extension alone does not establish those controls or real-money production qualification.
 
 ## Trusted release manifest
 
@@ -74,7 +74,7 @@ The verification helpers make no network requests. They do not install the exten
 
 ## Fill and retention boundaries
 
-The bridge restricts filling to the bound tab, document, and permitted payment frames. It supports one-use manual card fill and disables autosave. Its `automatic_submit: false` capability means that the extension does not click purchase. It does not mean that every checkout must be fill-only. Candidate 0.11.0 uses a separate customer-backend click after private approval; the Accelerate executor does not click. See [Purchase mode](purchase-mode.md). The extension's maximum advertised retention is 480,000 ms; checkout and authorization lifetimes remain separate limits.
+The bridge restricts filling to the bound tab, document, and permitted payment frames. It supports one-use manual card fill and disables autosave. Its `automatic_submit: false` capability means that the extension does not click purchase. It does not mean that every checkout must be fill-only. SDK 0.11.0 uses a separate customer-backend click after private approval; the Accelerate executor does not click. See [Purchase mode](purchase-mode.md). The extension's maximum advertised retention is 480,000 ms; checkout and authorization lifetimes remain separate limits.
 
 The executor supplies transient credentials through its private background-worker call. The merchant's actual payment fields contain the native values during the allowed review/submit period. Display masking changes presentation; it does not encrypt those fields or revoke provider-owner access. See [Private CVV and credential delivery](agentic-platforms-private-payments.md).
 

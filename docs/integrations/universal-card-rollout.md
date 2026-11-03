@@ -6,7 +6,7 @@ description: Separate deployed sandbox form support from provider onboarding, cu
 
 `universal_card_v1` has already supported sandbox fills and masked reviews on real merchant checkout documents. It is not restricted to `demos.weaccelerate.com/normal/payment`. The [2 November 2026 sandbox report](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) records additional merchant layouts, failures, and incomplete cleanup evidence. It records no submitted real-store order or production payment qualification.
 
-The **0.11.0 customer-final-click contract is a separate source candidate**. It is not published or deployed. Existing universal fill/review evidence does not qualify that new purchase flow. See [Purchase mode](purchase-mode.md).
+The **0.11.0 customer-final-click SDK is published**, and its matching stack is deployed in sandbox. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. The separate production wallet stack is being provisioned. See [Purchase mode](purchase-mode.md).
 
 ## What admission checks
 
@@ -35,31 +35,37 @@ Browser Use has a packaged provider adapter. Accelerate can configure tenant pro
 
 A different provider needs both connector layers:
 
-1. The client implements the [SDK browser host](browser-connector-interface.md), including real ownership records, inspection, durable automation restriction, and cleanup confirmation. Candidate purchases additionally need its trusted final-click callback.
+1. The client implements the [SDK browser host](browser-connector-interface.md), including real ownership records, inspection, durable automation restriction, and cleanup confirmation. Purchases using 0.11.0 additionally need its trusted final-click callback.
 2. Accelerate registers the [provider connector](provider-connector-contract.md) for the same Merchant ID and connector ID in the gateway and independent reaper. The module must resolve the existing resource, connect without creating another browser, request stop, and independently read back that exact owned resource as stopped.
 
 The current executor uses Playwright-compatible Chromium/CDP and a Manifest V3 extension. A generic provider also needs a release manifest approved for `provider: 'connector'` and the intended use. Installing the Browser Use baseline ZIP or implementing an interface does not provide that qualification.
 
 Include the reviewed connector module and its dependencies in both deployments. Setting `MCP_CUSTOMER_BROWSER_CONNECTORS_MODULE` does not add an external file to the default worker image. Do not remove a definition or its stop/read capability while it has active leases.
 
-## Sandbox deployment evidence
+## Release and environment status
 
-Read-only deployment inspection on **3 November 2026 at 19:26 UTC** found:
+SDK 0.11.0 is published as npm's `latest` version. The [release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked on **3 November 2026 at 20:21 UTC** are:
 
 | Component | Observed metadata |
 | --- | --- |
-| Sandbox gateway | Revision `managed-1031-472425`, active and Healthy, receiving 100% traffic. |
-| Independent sandbox reaper | Revision `managed-1031-472351`, active and Healthy. |
-| Shared image | SHA-256 `05d3eb57305c14946f3636fee69ce48a5f263f5ccdc11942d8a16faa0f2410b0`, created 31 October. |
-| Managed service and wallet MCP | Vercel aliases reported READY; inspected metadata did not identify their source commits. |
+| SDK | npm `@weaccelerateinc/agent-sdk@0.11.0`; release source `dc30fdaf`. |
+| Managed service | Canonical `https://accelerate-agent-sdk.vercel.app`, healthy release source `dc30fdaf`, sandbox wallet environment. |
+| Wallet MCP | Canonical `https://accelerate-wallet-mcp.vercel.app`, healthy release source `5cb0a049`, sandbox wallet environment. |
+| Sandbox gateway | Ready revision `accelerate-wallet-agent-sbx--cc5cb0a049`; 100% traffic on the latest revision. |
+| Independent sandbox reaper | Ready revision `accelerate-browser-reaper-sbx--cc5cb0a049`. |
+| Gateway/reaper image | SHA-256 `fb8f1655871f66b58fabf5b24b862c8d7ad05bc2569f299b192d16e7458aa1e6`. |
 
-The gateway revision matches the 2 November report. This supports deployed sandbox universal fill/review evidence. It does not prove that current main's later fixes are in the image, that every configured provider works, or that the 0.11.0 final-click contract is deployed. Process health is not payment qualification. No settings or deployments were changed by this inspection.
+The Vercel aliases use Vercel's production deployment slot, but their wallet environment is **sandbox**. That slot name does not indicate real-money production payments. Health and source/image identity verify deployment; they do not establish payment qualification. The older 2 November merchant fill/review evidence applies to its recorded deployment and is not a new 0.11.0 real-money purchase test.
+
+**Real-money production provisioning is in progress.** Accelerate is preparing a separate Azure stack with private networking, gateway, reaper, wallet MCP, and managed service. Its proposed origins are not yet confirmed live by this guide, and the stack is not production-payment-qualified. Use only validated production origins supplied after provisioning; do not infer readiness from a proposed hostname.
+
+For real-money production, explicitly set `ACCELERATE_BASE_URL` to the approved production managed-service origin. The SDK's canonical Vercel default remains sandbox. Use the Production key and Merchant ID, and the dashboard-generated add-card URL for that approved Production environment. A sandbox add-card example or an environment query parameter alone is not production onboarding approval.
 
 The original approved extension manifest records a narrower demo fill/review baseline. Preserve that history. The later sandbox report adds merchant evidence without retroactively qualifying a new provider, extension artifact, or production purchase.
 
-## Deploy a matching candidate
+## Deploy a matching release
 
-Accelerate operators perform the coordinated deployment. Customers update their authenticated host integration after the matching release is available.
+Accelerate operators perform the coordinated deployment. Customers can install SDK 0.11.0 now and update their authenticated host integration. A real-money rollout must still complete the separate production provisioning and acceptance steps.
 
 1. Select reviewed SDK, managed-service, wallet-MCP, gateway, and reaper revisions. Record commits, image digests, extension bytes, configuration version, and test evidence. Publish the SDK only through its reviewed release process; a source version is not an available npm release.
 2. Build the private worker with its pinned `playwright-core@1.62.1`, required native capture dependencies, and reviewed connector modules. Verify the extension installation and runtime against its approved manifest. Preserve isolated private evaluation; there is no merchant-main-world fallback.
@@ -69,7 +75,7 @@ Accelerate operators perform the coordinated deployment. Customers update their 
 6. Verify exact-document admission, private verification, one fill, masked review delivery, cancellation, and independent cleanup on the actual provider and agreed merchant layouts. Use explicit fill-only purpose for a no-order test.
 7. Qualify the new customer-final-click path separately. Before OTP, the service internally requires `customer_final_click_supported: true` for one top-level document with no iframes or shadow roots and card/address controls in that document. Quote inspection requires an explicit USD-labelled simple total; unique exact total/submit selectors are checked before credential fill. Exercise fresh private approval and readiness preflight before arming, one-use preparation, the at-most-10-second gateway window without late provider reads, exactly one customer-backend click, completion, expiry/failure handling, and retained restrictions. Verify that the completion token remains in the SDK orchestrator and never reaches the host. Existing iframe or shadow-root fills do not establish purchase support for those layouts.
 
-For this first purchase candidate, programmatic merchant `form.submit()` and `requestSubmit()` flows are unsupported. The gate compares the submit control's identity, tag, type, name, form, and disabled state; bound card/address native values and metadata; submit-form control inventory; exact total text; and URL. Unrelated banner/countdown text and button hover/focus class changes are allowed. Qualify those permitted changes as well as rejection of changed security bindings. The browser-clock probe must have a round trip of at most 500 ms and skew of at most 250 ms.
+For this first purchase flow, programmatic merchant `form.submit()` and `requestSubmit()` flows are unsupported. The gate compares the submit control's identity, tag, type, name, form, and disabled state; bound card/address native values and metadata; submit-form control inventory; exact total text; and URL. Unrelated banner/countdown text and button hover/focus class changes are allowed. Qualify those permitted changes as well as rejection of changed security bindings. The browser-clock probe must have a round trip of at most 500 ms and skew of at most 250 ms.
 
 Initial admission also requires no active or registered origin service workers. CDP service-worker bypass provides an additional browser control. Include blocked non-main-frame/worker requests and new-page closure in acceptance tests. A new page makes the outcome `outcome_unknown`. Do not describe these browser/application controls as a provider firewall or WebRTC protection.
 
