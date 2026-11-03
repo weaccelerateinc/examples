@@ -20,6 +20,8 @@
   * [Universal checkout rollout](integrations/universal-card-rollout.md)
   * [Adding a new card](integrations/adding-a-new-card.md)
   * [Browser connector interface](integrations/browser-connector-interface.md)
+  * [Browser Use run browser preview](integrations/browser-use-run-browsers.md)
+  * [WhatsApp private messaging preview](integrations/whatsapp-private-messaging.md)
   * [Provider connector contract](integrations/provider-connector-contract.md)
   * [Extension contract](integrations/extension-contract.md)
   * [Private CVV and credential delivery](integrations/agentic-platforms-private-payments.md)

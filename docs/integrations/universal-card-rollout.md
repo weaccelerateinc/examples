@@ -8,6 +8,8 @@ description: Separate deployed sandbox form support from provider onboarding, cu
 
 The **0.11.0 customer-final-click SDK is published**. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
 
+Separate Dana run-browser and WhatsApp journal changes are under review in paired SDK and wallet draft PRs. They are unreleased source previews and do not change this published purchase status. See the [run browser guide](browser-use-run-browsers.md) and [WhatsApp private messaging guide](whatsapp-private-messaging.md).
+
 ## What admission checks
 
 The private executor inspects the actual existing HTTPS payment document before OTP or CVV. It must find supported, unambiguous card controls and safe review capability. Its admission receipt binds the exact checkout URL, including query and fragment, and the immutable checkout purpose.

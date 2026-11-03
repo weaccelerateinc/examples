@@ -16,6 +16,8 @@ For implementation detail, see [Private CVV and credential delivery](agentic-pla
 
 **Purchase release status:** **SDK 0.11.0 is published on npm**. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Older `0.10.3` clients cannot perform the new handshake. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
+An unreleased Dana integration preview is under review. It describes run-created Browser Use sessions and WhatsApp private messaging. These source changes are not part of the published SDK; see [Browser Use run browser preview](browser-use-run-browsers.md) and [WhatsApp private messaging preview](whatsapp-private-messaging.md).
+
 ## Choose the wallet environment
 
 Sandbox and Production select Accelerate's wallet data, credentials, verification, and fill backend. The customer's agent still performs the final payment click through its own browser connection. The merchant's existing payment processor handles the charge; choosing Accelerate's production endpoint does not replace that processor.
