@@ -10,11 +10,15 @@ Prefer completing enrollment before starting the managed checkout's private wall
 
 ## Get the add-card link
 
-Open **Agent payments** in the [merchant dashboard](https://merchantdashboard-gamma.vercel.app/agent-payments), select the environment, and copy **Add-card link**. The URL has this form:
+Open **Agent payments** in the [merchant dashboard](https://merchantdashboard-gamma.vercel.app/agent-payments), select the approved environment, and copy **Add-card link**. This example is for sandbox:
 
 ```text
 https://accelerate-wallet-mcp.vercel.app/add-card?m=YOUR_MERCHANT_ID&env=sandbox
 ```
+
+After production onboarding and qualification, use the dashboard-generated Production link on `https://accelerate-wallet-mcp-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io`, with your approved Production Merchant ID and `env=production`. Production infrastructure is deployed, but customer onboarding, tenant activation, and financial release remain closed. The canonical Vercel wallet origin remains sandbox; changing only the environment parameter does not complete production onboarding.
+
+The environment chooses wallet data, credentials, verification, and fill services. It does not select the merchant's payment processor. Use approved sandbox test data and synthetic or no-order checkout tests; submitting a real card to a live merchant can still create a real charge. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
 
 | Parameter | Purpose |
 | --- | --- |
@@ -26,7 +30,7 @@ The link contains the public Merchant ID and presentation/environment settings. 
 
 ### Generate the URL through the existing API
 
-Your backend can also request the link from the wallet service:
+Your backend can also request the link from the wallet service. This example uses the sandbox origin and environment; an approved production integration uses the production wallet origin and `env=production`:
 
 ```sh
 curl --fail-with-body --get \
@@ -61,6 +65,8 @@ Append `&embed=1` to the dashboard link:
 ```
 
 Use the origin configured for your deployment and ensure its frame-ancestor policy permits your application. Keep the hosted page on Accelerate's origin. Do not replace its secure fields with card inputs on the parent page or read its DOM through agent automation.
+
+The production image currently permits framing only by its own origin and `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io`. Adding a customer's embedded parent origin requires an operator allowlist change and image rebuild. Top-level add-card links are separate from iframe permission. The sandbox Vercel framing policy is unchanged.
 
 ## Continue checkout after enrollment
 

@@ -6,7 +6,7 @@ description: Configure a customer-owned final click and distinguish purchase sup
 
 The customer's agent performs the final payment click through its own browser connection. Accelerate verifies the shopper, fills the bound payment document, delivers the masked review, and checks fresh private approval. The agent's trusted browser host sends its one authorized click under the existing restriction. Accelerate fills the form; its executor and extension do not click.
 
-**Release status:** **SDK 0.11.0 is published on npm**, with the matching stack deployed for the sandbox wallet environment. The [GitHub release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) records source commit `dc30fdaf`. The separate real-money production stack is being provisioned. Neither a Vercel production deployment slot nor sandbox evidence establishes real-money production payment qualification. Coordinate provider and checkout acceptance with Accelerate before use.
+**Release status:** **SDK 0.11.0 is published on npm**. The [GitHub release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) records source commit `dc30fdaf`. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed pending qualification. Neither deployment health nor sandbox evidence establishes production payment qualification.
 
 `universal_card_v1` is the private form-admission contract. It has already been exercised in sandbox on real merchant checkout documents. It has no demo-hostname restriction and does not require fill-only purpose. This does not qualify every form for a purchase. See [Universal checkout rollout](universal-card-rollout.md).
 
@@ -16,7 +16,7 @@ The customer's agent performs the final payment click through its own browser co
 | --- | --- |
 | Published SDK `0.10.3` | Its purchase switches select the older executor-submit contract. It cannot perform the new customer-final-click handshake. |
 | `0.10.4` source change | Changes new existing-browser starter defaults to purchase. It does not add the customer final-click contract. |
-| Published SDK `0.11.0` | Adds customer final-click orchestration through the agent's trusted browser host. The matching stack is deployed in sandbox; real-money production provisioning and qualification remain separate. |
+| Published SDK `0.11.0` | Adds customer final-click orchestration through the agent's trusted browser host. Sandbox and production infrastructure are deployed; production onboarding and qualification remain separate gates. |
 | Already generated application | Keeps its copied runtime after an SDK package upgrade. Update its integration and host explicitly. |
 
 In the new contract, the old direct executor-submit path is disabled. Accelerate-managed Kernel purchases are rejected at creation; its fill-only diagnostic remains a separate supported purpose. An old SDK or a new environment flag cannot restore the disabled purchase path. Keep old version documentation as historical behavior, not migration instructions.
@@ -33,7 +33,9 @@ ACCELERATE_ENABLE_PURCHASE_SUBMIT=true
 ACCELERATE_CONTEXT_MODULE=/absolute/protected/partner-host.mjs
 ```
 
-`live` selects real backend dependencies. It does not select the production wallet environment. For real-money production, explicitly set `ACCELERATE_BASE_URL` to the validated production managed-service origin supplied by Accelerate, and use the approved Production key and Merchant ID. The canonical Vercel default is sandbox. Use the dashboard-generated add-card URL for that same approved Production environment. The separate production stack is still being provisioned.
+`live` selects real backend dependencies. It does not select the production wallet environment. After approved onboarding and qualification, set `ACCELERATE_BASE_URL` explicitly to `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` and use the separate Production key and Merchant ID. The canonical Vercel default is sandbox. Use the dashboard-generated add-card URL on the production wallet origin. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
+
+The environment selects Accelerate's wallet data, credentials, verification, and fill backend. The merchant's existing processor handles a charge after the customer's agent clicks through its own browser. Sandbox does not turn a live merchant into a test processor; use approved test data and synthetic or no-order checkouts during testing.
 
 The starter does not load `.env` automatically. Export the values through deployment configuration or load the file explicitly, for example with `node --env-file=.env server.mjs`.
 
