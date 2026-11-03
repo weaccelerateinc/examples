@@ -6,7 +6,9 @@ description: Add Accelerate as a payment option in your agent platform, using th
 
 Accelerate agent wallets are pre filled with up to date card details, and address information for ~90% of US shoppers. Add Accelerate as a payment option in your agent platform, using the SDK, HTTP API, or MCP tools.
 
-Connect Accelerate to the agent framework, browser provider, and customer messaging channel your platform already uses. Your platform creates the browser and shops in it. At payment, Accelerate connects to that same browser session through a connector configured for your integration.
+Connect Accelerate to the agent framework, browser provider, and customer messaging channel your platform already uses. Your platform creates the browser, and the customer's agent shops in it. At payment, Accelerate connects to that same browser session through a connector configured for your integration.
+
+The customer's agent performs the final payment click through its own browser connection. Accelerate fills the payment fields and does not click. The click callback is the agent's trusted browser host; it is not Accelerate's executor.
 
 Your platform is the Accelerate integration customer and receives a **Merchant ID**. Each shopper has a separate wallet session. The website where the agent shops is the checkout destination. Use your platform's Merchant ID across supported checkout destinations.
 
@@ -154,7 +156,7 @@ The candidate 0.11.0 purchase sequence is:
 4. **Apply the address and verify the final amount.** Include shipping and tax. Bind the quote to the exact checkout URL, total, currency, revision, and submit control.
 5. **Collect CVV and fill once.** In `managed_review_v2`, creation declares `fill_after_verification: true`. The later verified quote separately arms that fill. Private CVV success continues the fill in the backend. The agent does not call a fill tool.
 6. **Send the private review.** The customer receives the masked payment form and final amount together. Purchase approval has a five-minute window from the confirmed sent receipt. Filling the form does not approve the purchase.
-7. **Click once through your backend, then clean up.** After fresh private approval, the agent requests submit. Inside the owned-checkout lock, the trusted SDK handler checks readiness, arms the exact revision, consumes the preparation to call your browser host once, and completes the arm. Provider inspection occurs before arming. Your backend physically clicks through its own connection; the host receives no completion token. The Accelerate executor and extension do not click. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
+7. **The customer's agent clicks through its own browser.** After fresh private approval, the agent requests submit. Inside the owned-checkout lock, the trusted SDK handler checks readiness, arms the exact revision, consumes the preparation to call the agent's trusted browser host once, and completes the arm. That host sends the final payment click through the agent's own browser connection. Provider inspection occurs before arming, and the host receives no completion token. Accelerate fills the form; its executor and extension do not click. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
 
 These steps apply to the SDK, HTTP API, and optional MCP tools. Your integration binds them to your own browser lifecycle and messaging channel. See the [v2 checkout contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md).
 

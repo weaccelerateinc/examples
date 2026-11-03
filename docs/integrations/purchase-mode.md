@@ -4,7 +4,7 @@ description: Configure a customer-owned final click and distinguish purchase sup
 
 # Purchase mode and checkout support
 
-Your platform owns the final physical purchase click. Accelerate verifies the shopper, fills the bound payment document, delivers the masked review, and checks fresh private approval. The customer's agent then requests submission. Its trusted backend sends one click through its own browser connection.
+The customer's agent performs the final payment click through its own browser connection. Accelerate verifies the shopper, fills the bound payment document, delivers the masked review, and checks fresh private approval. The agent's trusted browser host sends its one authorized click under the existing restriction. Accelerate fills the form; its executor and extension do not click.
 
 **Release status:** this customer-final-click contract is source candidate **0.11.0**. It is not published or deployed. Existing sandbox fill/review support is separate from this new purchase contract. Coordinate the matching SDK, managed service, gateway, and provider qualification with Accelerate before using it.
 

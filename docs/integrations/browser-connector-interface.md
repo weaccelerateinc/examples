@@ -6,6 +6,8 @@ description: Connect your platform's authenticated browser ownership and automat
 
 The SDK browser connector attaches the browser your platform already uses for shopping. Your backend implements `BrowserConnectorHost` to resolve ownership, check readiness, pause ordinary automation, and confirm cleanup. It keeps the cart, cookies, login, and payment document in the same browser session.
 
+The customer's agent performs the final payment click through its own browser connection. `BrowserConnectorHost.performFinalClick` is that agent's trusted browser-host callback. Accelerate fills the payment fields; its executor and extension do not send the click. Private verification, delivered review, fresh approval, and the exact document restriction remain required.
+
 This is the client-side backend interface. Accelerate separately registers the [provider connector](provider-connector-contract.md) in its private executor and cleanup service. Both layers must be configured for the same Merchant ID and connector ID.
 
 The six baseline host methods below apply to the published integration. **Source candidate 0.11.0** adds a customer final-click callback for purchases. It is not published or deployed. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code.
