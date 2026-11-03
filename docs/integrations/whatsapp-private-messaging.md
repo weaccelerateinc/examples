@@ -1,10 +1,12 @@
 ---
-description: Preview guide for private WhatsApp replies and review delivery in Dana.
+description: Integrate private WhatsApp replies and review delivery with the published Accelerate SDK.
 ---
 
 # WhatsApp private messaging
 
-**Unreleased preview.** This guide describes source changes in the [SDK draft PR #482](https://github.com/weaccelerateinc/accelerate/pull/482) and [wallet draft PR #21](https://github.com/weaccelerateinc/accelerate-wallet-mcp/pull/21). These APIs are not in a published npm package. Use them only with the paired, tested SDK archive when it is available.
+**SDK 0.12.0 is published.** The [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0) points to source commit [`12cf65b0`](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk). Its published npm archive SHA-256 is `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. Clean consumer imports and the release workflow were verified.
+
+The SDK managed sandbox deployment is healthy on that source revision. The matching wallet patched container-app rollout is still being verified. This SDK release does not qualify a WhatsApp provider integration or merchant. Provider and payment qualification remain pending. Production activation and financial release remain closed.
 
 The WhatsApp adapters let a platform connect its native provider client to Accelerate's private checkout flow. They do not replace Dana's general media and onboarding router. Keep that router for ordinary messages, and intercept sensitive checkout replies before history, tracing, queues, or AI admission.
 
@@ -40,7 +42,7 @@ If the send acknowledgement is lost, reconcile the existing reservation with `ho
 
 The reference encrypted-namespace journal is bounded. It allows up to 1,000 reservations and 3,000 status records per business sender, and has a separate bound for unmatched events. It fails closed at capacity and does not evict unresolved reservations. Use it only where those limits fit the expected traffic.
 
-For higher volume, the preview includes `createPostgresWhatsAppDeliveryJournal({ pool })` from `@weaccelerateinc/agent-sdk/postgres-whatsapp-journal`. The pool must provide `query` and `connect`. The journal stores normalized hash-only reservation and matched-evidence rows, and uses short `BEGIN`/`COMMIT` transactions with row locks. These transactions work with transaction poolers; they do not need a session-affine connection.
+For higher volume, SDK 0.12.0 includes `createPostgresWhatsAppDeliveryJournal({ pool })` from `@weaccelerateinc/agent-sdk/postgres-whatsapp-journal`. The pool must provide `query` and `connect`. The journal stores normalized hash-only reservation and matched-evidence rows, and uses short `BEGIN`/`COMMIT` transactions with row locks. These transactions work with transaction poolers; they do not need a session-affine connection.
 
 Apply its schema with the operator-only `initialize()` method during deployment, not from request handling. Schedule `pruneExpired()` to remove unmatched pre-bind events after 24 hours. Those unmatched events are capped at 64 per sender/recipient. Reservations and matched evidence remain durable. Configure database encryption, TLS, and retention in the deployment. Unrelated WhatsApp delivery statuses are ignored unless they match a bound message or an outstanding recipient reservation.
 
@@ -64,6 +66,6 @@ The source tests do not qualify the native WhatsApp client, Meta webhook schema,
 
 ## References
 
-- [SDK draft PR #482](https://github.com/weaccelerateinc/accelerate/pull/482)
-- [Wallet draft PR #21](https://github.com/weaccelerateinc/accelerate-wallet-mcp/pull/21)
-- [SDK Dana integration preview at the reviewed source commit](https://github.com/weaccelerateinc/accelerate/blob/2cea64d1/products/agent-sdk/docs/dana-integration.md)
+- [SDK 0.12.0 release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0)
+- [SDK Dana integration contract at the release commit](https://github.com/weaccelerateinc/accelerate/blob/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk/docs/dana-integration.md)
+- [Merged wallet implementation PR #21](https://github.com/weaccelerateinc/accelerate-wallet-mcp/pull/21)

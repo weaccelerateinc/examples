@@ -6,9 +6,9 @@ description: Separate deployed sandbox form support from provider onboarding, cu
 
 `universal_card_v1` has already supported sandbox fills and masked reviews on real merchant checkout documents. It is not restricted to `demos.weaccelerate.com/normal/payment`. The [2 November 2026 sandbox report](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) records additional merchant layouts, failures, and incomplete cleanup evidence. It records no submitted real-store order or production payment qualification.
 
-The **0.11.0 customer-final-click SDK is published**. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
+The SDK **0.11.0 customer-final-click contract** remains the published purchase baseline. SDK 0.12.0 is now published and its managed sandbox service is healthy on release source `12cf65b0a338f845ad9c966e491fc6ae438ec324`. The run-browser merchant flag is absent and migration `004_browser_run_claims.sql` was skipped in that sandbox. The matching patched wallet container-app rollout is still being verified; no final wallet deployment digest is recorded here yet. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
 
-Separate Dana run-browser and WhatsApp journal changes are under review in paired SDK and wallet draft PRs. They are unreleased source previews and do not change this published purchase status. See the [run browser guide](browser-use-run-browsers.md) and [WhatsApp private messaging guide](whatsapp-private-messaging.md).
+SDK 0.12.0 includes Dana's run-browser and WhatsApp journal APIs. Their availability in the SDK does not enable merchant admission or establish provider/payment qualification. See the [run browser guide](browser-use-run-browsers.md) and [WhatsApp private messaging guide](whatsapp-private-messaging.md).
 
 ## What admission checks
 
@@ -48,7 +48,7 @@ Qualify worker-loss cleanup for the selected credential model. With client-owned
 
 ## Release and environment status
 
-SDK 0.11.0 is published as npm's `latest` version. The [release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked on **3 November 2026 at 20:21 UTC** are:
+At the **3 November 2026, 20:21 UTC** verification point, SDK 0.11.0 was published as npm's `latest` version. The [0.11.0 release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked at that time are:
 
 | Component | Observed metadata |
 | --- | --- |

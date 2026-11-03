@@ -12,7 +12,7 @@ This is the client-side backend interface. Accelerate separately registers the [
 
 The six baseline host methods below apply to the published integration. **SDK 0.11.0** adds a customer final-click callback for purchases and is published on npm. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code. Sandbox and production infrastructure are deployed, while production onboarding and qualification remain pending; see [Universal checkout rollout](universal-card-rollout.md).
 
-Run-created Browser Use support is a separate unreleased preview and is not available in npm 0.11.0. It adds opt-in provenance and run-control evidence; see [Browser Use run browser preview](browser-use-run-browsers.md).
+SDK 0.12.0 adds opt-in run-created Browser Use provenance and run-control evidence. The current sandbox has not enabled run-browser merchant admission; see [Browser Use run browser integration](browser-use-run-browsers.md).
 
 ## Create the connector
 

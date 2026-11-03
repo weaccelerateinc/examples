@@ -14,9 +14,9 @@ Your platform is the Accelerate integration customer and receives a **Merchant I
 
 For implementation detail, see [Private CVV and credential delivery](agentic-platforms-private-payments.md). The separate [OpenInstinct configuration reference](openinstinct-reference.md) shows one application's browser and private messaging setup.
 
-**Purchase release status:** **SDK 0.11.0 is published on npm**. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. Older `0.10.3` clients cannot perform the new handshake. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
+**SDK release status:** **SDK 0.12.0 is published on npm**. Its [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0) points to source commit [`12cf65b0`](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk). The published archive SHA-256 is `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. The SDK managed sandbox service is healthy on this source revision. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
-An unreleased Dana integration preview is under review. It describes run-created Browser Use sessions and WhatsApp private messaging. These source changes are not part of the published SDK; see [Browser Use run browser preview](browser-use-run-browsers.md) and [WhatsApp private messaging preview](whatsapp-private-messaging.md).
+SDK 0.12.0 includes the Dana run-created Browser Use and WhatsApp messaging APIs. Run-browser merchant admission is not enabled in the current sandbox, and the matching patched wallet rollout is still being verified. See [Browser Use run browser integration](browser-use-run-browsers.md) and [WhatsApp private messaging](whatsapp-private-messaging.md).
 
 ## Choose the wallet environment
 
@@ -67,26 +67,26 @@ MCP controls how the agent invokes checkout actions. It does not replace backend
 
 Use Node.js 22 or later. The server-only SDK includes TypeScript declarations and has no runtime dependencies.
 
-- **SDK on npm:** [@weaccelerateinc/agent-sdk](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk), published version **0.11.0**.
-- **SDK release:** [agent-sdk-v0.11.0](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0), source commit `dc30fdaf`.
-- **SDK source and guides:** [Accelerate Agent SDK 0.11.0](https://github.com/weaccelerateinc/accelerate/tree/agent-sdk-v0.11.0/products/agent-sdk).
+- **SDK on npm:** [@weaccelerateinc/agent-sdk](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk), published version **0.12.0**.
+- **SDK release:** [agent-sdk-v0.12.0](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0), source commit `12cf65b0a338f845ad9c966e491fc6ae438ec324`.
+- **SDK source and guides:** [Accelerate Agent SDK 0.12.0](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk).
 - **Approved extension download:** [Extension release 0.0.0.1](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1). Download `accelerate-extension-0.0.0.1.zip` and its checksum files from the release assets.
 
-The commands below install published SDK 0.11.0 and generate its matching existing-browser starter. Connect and qualify your own trusted browser host before payment use. SDK and extension versions are independent.
+The commands below install published SDK 0.12.0 and generate its matching existing-browser starter. Connect and qualify your own trusted browser host before payment use. SDK and extension versions are independent.
 
 Generate the matching starter:
 
 ```sh
-npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.11.0
+npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.12.0
 npx --no-install accelerate-agent --version
 npx --no-install accelerate-agent init ./accelerate-demo --browser existing
 cd accelerate-demo
-npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.11.0
+npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.12.0
 npm test
 npm run smoke
 ```
 
-The version command must print `0.11.0`. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order.
+The version command must print `0.12.0`. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order.
 
 Install the approved extension through your browser's image, profile, or launch configuration **before shopping starts**. Accelerate supplies a release manifest approved for your browser connector during qualification. Verify the ZIP against that manifest with `verifyApprovedExtensionArtifact` from `@weaccelerateinc/agent-sdk/approved-extension`. A matching version number alone does not verify the ZIP. The `0.0.0.2` extension is a qualification candidate and must not replace the approved artifact.
 

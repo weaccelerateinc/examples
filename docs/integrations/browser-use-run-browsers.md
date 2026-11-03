@@ -1,12 +1,14 @@
 ---
-description: Preview integration notes for Dana's run-created Browser Use sessions.
+description: Integrate Dana's run-created Browser Use sessions with the published Accelerate SDK.
 ---
 
 # Reuse a Browser Use run for checkout
 
-**Unreleased preview.** This guide describes source changes in the [SDK draft PR #482](https://github.com/weaccelerateinc/accelerate/pull/482) and [wallet draft PR #21](https://github.com/weaccelerateinc/accelerate-wallet-mcp/pull/21). They are not published in npm `0.11.0` or any other released package. Use them only with the matching tested SDK archive after its release is available. Do not copy these new fields into an integration that uses the published package.
+**SDK 0.12.0 is published.** The [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0) points to source commit [`12cf65b0`](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk). Its published npm archive SHA-256 is `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. Clean consumer imports and the release workflow were verified.
 
-This flow reuses Dana's run-created shopping browser. The cart, cookies, login, and merchant page stay in that browser. It does not create a payment browser or move a cart. The preview is fill-only and does not submit an order.
+The SDK managed sandbox deployment is healthy on that source revision. The run-browser merchant flag is absent and migration `004_browser_run_claims.sql` was skipped, so run-browser admission is not enabled in that environment. The wallet's final patched container-app rollout is still being verified. Do not enable a merchant until the matching wallet gateway and reaper deployment, migration, merchant configuration, and provider qualification are complete. Production activation and financial release remain closed.
+
+This flow reuses Dana's run-created shopping browser. The cart, cookies, login, and merchant page stay in that browser. It does not create a payment browser or move a cart. This path is fill-only and does not submit an order.
 
 ## Configure the SDK host
 
@@ -46,7 +48,7 @@ Run-created browser support has three separate merchant opt-ins. Each must remai
 
 The service checks both static and provisioned tenant authorization. The wallet independently checks its merchant configuration and provider evidence. One opt-in does not enable the other layers.
 
-Both service and wallet reject run provenance for `purchase`. Only `sandbox_fill_only` is admitted in this preview. Existing purchase integrations keep their separate customer-final-click contract.
+Both service and wallet reject run provenance for `purchase`. Only `sandbox_fill_only` is admitted for this path. Existing purchase integrations keep their separate customer-final-click contract.
 
 Key-bearing wallet tenants read Browser Use independently. When Dana retains the provider key, the wallet checks Dana's authenticated resource projection. This remains the `customer_backend_trusted` trust model; it is not an independent provider read.
 
@@ -92,18 +94,18 @@ The SDK source also requires the actual provider expiry and has bounded create/f
 
 ## Qualification and scope
 
-Use the paired PRs and matching tested archive. Keep the three merchant opt-ins off until the wallet/reaper and service are deployed with the required migration. Then qualify the actual Browser Use project and merchant form. Verify cart continuity, original expiry, extension bytes and installed IDs, scheduler/viewer fencing, private masked review, one fill, and independent cleanup. Test crashes, duplicate and late webhooks, queued follow-up work, viewer access, failed creation, and already stopped browsers. Do not submit an order.
+Use the published SDK and matching wallet release. Keep the three merchant opt-ins off until the wallet/reaper and service are deployed with the required migration. Then qualify the actual Browser Use project and merchant form. Verify cart continuity, original expiry, extension bytes and installed IDs, scheduler/viewer fencing, private masked review, one fill, and independent cleanup. Test crashes, duplicate and late webhooks, queued follow-up work, viewer access, failed creation, and already stopped browsers. Do not submit an order.
 
-The prior published purchase rules and qualification status remain in force. This preview does not activate a tenant, enable financial release, qualify production, qualify a co-extension, or add final-click support. Dana's supplied repository audit and required file changes are recorded in the [SDK integration preview](https://github.com/weaccelerateinc/accelerate/blob/2cea64d1/products/agent-sdk/docs/dana-integration.md).
+The prior published purchase rules and qualification status remain in force. SDK publication and sandbox service health do not activate a tenant, enable financial release, qualify production, qualify a co-extension, or qualify a merchant. Dana's supplied repository audit and required file changes are recorded in the [SDK integration contract at the release commit](https://github.com/weaccelerateinc/accelerate/blob/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk/docs/dana-integration.md).
 
 ## Compatibility with other providers
 
-| Integration | Effect of this preview |
+| Integration | Effect of the SDK 0.12.0 run-browser support |
 | --- | --- |
 | Browser Use standalone metadata browsers | Existing metadata and single-extension defaults remain. Additional extensions require an exact operator policy and qualification. |
 | Browser Use run-created browsers | New merchant opt-in for fill-only. Requires Dana's durable owner, scheduler and viewer controls. |
 | Registered browser connectors | Existing provider contract remains. Browser Use run provenance is not accepted on generic bindings. |
-| Managed Kernel browsers | Existing managed custody and purpose rules remain. This preview adds no Kernel purchase capability. |
+| Managed Kernel browsers | Existing managed custody and purpose rules remain. Run-browser support adds no Kernel purchase capability. |
 | Linq private messaging | Existing adapter and receipt contract remain. WhatsApp is a separate opt-in adapter. |
 | Agent models and workflow engines | No model vendor is selected by this change. Hosts must preserve the same ownership, idempotency and private-ingress contract. See [Eve guidance](whatsapp-private-messaging.md#eve-workflow-integration). |
 
