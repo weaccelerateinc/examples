@@ -16,6 +16,7 @@
 ## Integrations
 
 * [Agentic platforms](integrations/agentic-platforms.md)
+  * [Adding a new card](integrations/adding-a-new-card.md)
   * [Browser connector interface](integrations/browser-connector-interface.md)
   * [Provider connector contract](integrations/provider-connector-contract.md)
   * [Extension contract](integrations/extension-contract.md)
