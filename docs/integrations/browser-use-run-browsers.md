@@ -4,7 +4,7 @@ description: Integrate Dana's run-created Browser Use sessions with the publishe
 
 # Reuse a Browser Use run for checkout
 
-**SDK 0.15.0 is published on npm as `latest`.** The matching managed sandbox service is deployed; see the [release and deployment record](universal-card-rollout.md#sdk-0150-release). Use its [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0) and [matching integration contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/dana-integration.md).
+**SDK 0.15.2 is published on npm as `latest`.** This private-message copy patch uses the existing managed sandbox service and retains the 0.15.0 protocol. Its npm installation, GitHub release archive, immutable source, sandbox deployment, and public compatibility metadata are verified. No new backend configuration or gateway rollout is required. See the [0.15.2 release record](universal-card-rollout.md#sdk-0152-release) and the preserved [0.15.0 deployment evidence](universal-card-rollout.md#sdk-0150-release).
 
 SDK 0.15.0 retains the run-browser simplification introduced in 0.13.0. Authenticated integrations can use the supported fill-only path without a separate merchant allowlist or an inventory of their other extensions. Migration `004_browser_run_claims.sql`, a matching wallet gateway/reaper, the pinned Accelerate extension, durable ownership, and cleanup remain required. The [0.12.0 rollout record](universal-card-rollout.md#historical-sdk-0120-rollout) describes an earlier disabled merchant flag; it does not describe the current admission contract. Provider and merchant qualification remain pending. Production activation and financial release remain closed.
 
@@ -51,7 +51,7 @@ Key-bearing wallet tenants read Browser Use independently. When Dana retains the
 
 Dana must upload and verify the approved extension, then add its Browser Use upload ID to the first `runs.create` call in `browserSettings.extensionIds`. Keep recording disabled. Follow-up runs must retain the same extension set. Existing sessions that started without Accelerate's extension cannot be upgraded in place; start a new session before checkout.
 
-Persist the upload ID, runtime ID, version, and artifact checksum in Dana's installation configuration. Download the [approved 0.0.0.1 artifact](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1) and verify it with `verifyApprovedExtensionArtifact` before upload. Use SDK 0.15.0's bundled `approved-extension-releases/0.0.0.1.json` or its [public compatibility manifest](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.0.release.json) and [checksum file](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.0.SHA256SUMS). The approved extension ZIP bytes are unchanged; its SHA-256 is `65574cbb27ab344687963f72a136f2653551b57458b284e486946b27699099c8`.
+Persist the upload ID, runtime ID, version, and artifact checksum in Dana's installation configuration. Download the [approved 0.0.0.1 artifact](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1) and verify it with `verifyApprovedExtensionArtifact` before upload. Use SDK 0.15.2's bundled `approved-extension-releases/0.0.0.1.json` or its verified public [compatibility manifest](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.2.release.json) and [checksums](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.2.SHA256SUMS). The approved extension ZIP bytes are unchanged; its SHA-256 is `65574cbb27ab344687963f72a136f2653551b57458b284e486946b27699099c8`.
 
 Accelerate validates its own extension's installation ID, approved version, and configured runtime ID. SDK 0.14.1 and later accept Browser Use reports with `runtime_id` or `runtimeId`; conflicting aliases and duplicate runtime IDs are rejected. The SDK projects only the configured Accelerate extension. Dana manages other extensions, including 1Password; Accelerate does not inventory them or claim that filled card data is isolated from extensions with page access.
 
@@ -89,17 +89,19 @@ Keep migration 004's hash-only claim ledger through checkout purge and rollback.
 
 The SDK source also requires the actual provider expiry and has bounded create/fill HTTP waits. Those timeout caps are maximum waits, not reserved execution time. Budget private verification, fill, review delivery, and cleanup within the original browser lifetime.
 
-For SDK 0.15.0, coordinate every private ingress/host worker that shares persistence before enabling [wallet-phone correction](agentic-platforms.md#correct-a-wallet-phone-privately). Older workers cannot read the new typed phone-prompt outbox item, even after delivery. Keep the authenticated chat identity and original browser ownership binding unchanged when a customer corrects the wallet number.
+When upgrading from SDK 0.14.1 or earlier to 0.15.2, coordinate every private ingress/host worker that shares persistence before enabling [wallet-phone correction](agentic-platforms.md#correct-a-wallet-phone-privately). Older workers cannot read the new typed phone-prompt outbox item, even after delivery. Keep the authenticated chat identity and original browser ownership binding unchanged when a customer corrects the wallet number.
+
+SDK 0.15.2 changes only OTP, card-selection, and after-fill security-code wording. It adds policy links and US `+1` guidance without changing phone validation, ownership, reply parsing, the private protocol, or stored data. Install it in the private SDK workers to use the new prompts; the 0.15.0 managed-service protocol remains compatible, and the current release-source sandbox deployment is recorded in the [release record](universal-card-rollout.md#sdk-0152-release). See [the exact private prompt text](whatsapp-private-messaging.md#private-prompts-in-sdk-0152).
 
 ## Qualification and scope
 
 Use the released SDK with the matching wallet gateway/reaper and service, and verify the existing claim-ledger migration. Qualify the actual Browser Use project and merchant form. Verify cart continuity, original expiry, extension bytes and installed IDs, scheduler/viewer fencing, private masked review, one fill, and independent cleanup. Test crashes, duplicate and late webhooks, queued follow-up work, viewer access, failed creation, and already stopped browsers. Do not submit an order.
 
-The prior published purchase rules and qualification status remain in force. SDK publication and sandbox service health do not activate a tenant, enable financial release, qualify production, qualify a co-extension, or qualify a merchant. Dana's supplied repository audit and required file changes are recorded in the [SDK 0.15.0 integration contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/dana-integration.md).
+The prior published purchase rules and qualification status remain in force. SDK publication and sandbox service health do not activate a tenant, enable financial release, qualify production, qualify a co-extension, or qualify a merchant. Dana's supplied repository audit and required file changes are recorded in the preserved [SDK 0.15.0 baseline integration contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/dana-integration.md).
 
 ## Compatibility with other providers
 
-| Integration | SDK 0.15.0 behavior |
+| Integration | SDK 0.15.2 behavior |
 | --- | --- |
 | Browser Use standalone metadata browsers | Existing ownership, metadata, and configured Accelerate extension checks remain. |
 | Browser Use run-created browsers | Authenticated fill-only integration. Requires Dana's durable owner, scheduler and viewer controls, pinned Accelerate runtime, and claim ledger. |
