@@ -213,12 +213,56 @@ curl --fail-with-body "$ACCELERATE_BASE_URL/v1/connection" \
 | `GET` | `/v1/checkouts/{id}` | Read safe status and the current revision. |
 | `POST` | `/v1/checkouts/{id}/browser` | Perform permitted preparation operations. Existing-browser mode allows bounded reads before the quote is frozen. |
 | `POST` | `/v1/checkouts/{id}/details` | Apply the privately selected address. |
-| `POST` | `/v1/checkouts/{id}/verify-quote` | Verify the actual final amount and currency. |
-| `POST` | `/v1/checkouts/{id}/approval` | Freeze the quote and request private verification. With v2, arm the exact fill. This does not approve a purchase. |
+| `POST` | `/v1/checkouts/{id}/verify-quote` | Verify the actual final amount and currency. The updated service defaults omitted `expected_currency` to `USD`. |
+| `POST` | `/v1/checkouts/{id}/approval` | Freeze the quote and request private verification. The updated service defaults omitted `currency` to `USD`. With v2, arm the exact fill. This does not approve a purchase. |
 | `POST` | `/v1/checkouts/{id}/fill` | Manual one-use fill for compatible v1 clients. V2 uses private backend continuation. |
 | `POST` | `/v1/checkouts/{id}/final-click/arm` | SDK 0.11.0, backend only: arm the approved revision and receive its short-lived private click target. |
 | `POST` | `/v1/checkouts/{id}/final-click/complete` | SDK 0.11.0, backend only: complete the arm after the customer backend's one click, or observe uncertainty after an error. |
 | `POST` | `/v1/checkouts/{id}/cancel` | Cancel and start cleanup. Send `{}`. |
+| `POST` | `/v1/checkouts/{id}/reconcile` | Record your backend's independently checked merchant order result. This does not change checkout status or prove payment. |
+
+### Currency inputs
+
+The USD-default change is available in the current [managed-service and SDK source](https://github.com/weaccelerateinc/accelerate/tree/main/products/agent-sdk). Deploy the updated managed service before omitting currency in direct HTTP requests. Published SDK releases through **0.14.1**, including the pinned 0.12.0 examples on this page, still require explicit `expected_currency: 'USD'` for quote verification and `currency: 'USD'` for approval and confirmed reconciliation. Their MCP approval tool also requires `currency: 'USD'`. Keep those fields until you upgrade to an SDK release that includes this change.
+
+After that update, callers can omit these fields:
+
+| Request | Optional field | Behavior when omitted |
+| --- | --- | --- |
+| `POST …/{id}/verify-quote` | `expected_currency` | Verify the checkout against `USD`. |
+| `POST …/{id}/approval` | `currency` | Freeze a USD quote. |
+| `POST …/{id}/reconcile`, with `state: "confirmed"` | `currency` | Record USD, which must match the approved quote. |
+
+Only `USD` is accepted when a currency is supplied. Non-USD values, `null`, and empty strings are rejected. The retired `ACCELERATE_ANY_CURRENCY` setting cannot enable other currencies. For `declined` or `not_found` reconciliation, omitted currency stays absent and appears as `null` in the result.
+
+The default does not establish the merchant page's currency. The backend still verifies the observed currency and binds it to the quote and private approval. A dollar symbol alone does not establish USD. Responses still include explicit currency.
+
+After applying the selected address, send this body to `POST /v1/checkouts/{id}/verify-quote` on the updated service:
+
+```json
+{
+  "revision": 2,
+  "checkout_url": "https://shop.example/checkout/payment",
+  "expected_amount_cents": 1299,
+  "checkout_total_selector": "#checkout-total"
+}
+```
+
+Use the current details revision, exact checkout URL, and original total selector. A successful receipt verifies USD and the amount; it does not authorize filling or approve a purchase. To request private verification and arm the v2 fill, send this body to `POST /v1/checkouts/{id}/approval`:
+
+```json
+{
+  "checkout_url": "https://shop.example/checkout/payment",
+  "amount_cents": 1299,
+  "checkout_total_selector": "#checkout-total",
+  "submit_selector": "#place-order",
+  "fill_after_verification": true
+}
+```
+
+Use the verified amount and the actual checkout controls. Approval independently checks the page again. Require `fill_after_verification: true` in its response before private CVV collection.
+
+For confirmed reconciliation, `order_reference`, `amount_cents`, and `source` remain required. Check the merchant order's actual currency before recording it. The result is your backend's statement of the merchant's result; `payment_confirmed` remains `false`.
 
 ### Create an existing-browser checkout
 
@@ -250,7 +294,7 @@ Replace `connector_id` with the ID provisioned by Accelerate for your Merchant I
 
 Replace all example customer and checkout values with your authenticated records and the browser's exact current HTTPS checkout URL, including its query and fragment. The example URL is a placeholder. Qualify the actual checkout with Accelerate before payment use.
 
-This 0.11.0 example creates an owned existing-browser purchase with the customer as final-click actor. Accelerate-managed Kernel purchases are rejected. For a no-order test, use `purpose: 'sandbox_fill_only'` and omit `final_click_actor`. Explicitly set the mode, purpose, approval policy, and fill flag. Raw API defaults do not select this flow. Require `fill_after_verification: true` and `final_click_actor: 'customer'` in the service response before OTP. The service checks supported customer-click admission internally; it does not expose the private receipt. Creation does not arm a fill or click. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `currency: "USD"`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. Require that acknowledgement before private CVV collection.
+This 0.11.0 example creates an owned existing-browser purchase with the customer as final-click actor. Accelerate-managed Kernel purchases are rejected. For a no-order test, use `purpose: 'sandbox_fill_only'` and omit `final_click_actor`. Explicitly set the mode, purpose, approval policy, and fill flag. Raw API defaults do not select this flow. Require `fill_after_verification: true` and `final_click_actor: 'customer'` in the service response before OTP. The service checks supported customer-click admission internally; it does not expose the private receipt. Creation does not arm a fill or click. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. The updated service defaults omitted `currency` to `USD`; older SDK clients still require explicit `currency: 'USD'`. See [Currency inputs](#currency-inputs). Require the fill acknowledgement before private CVV collection.
 
 The initial purchase flow requires one top-level document with no iframes or shadow roots. Its card/address controls, explicitly USD-labelled simple total, and unique exact total/submit selectors must belong to that document. Separate iframe or shadow-root fill support does not qualify those layouts for purchase. After private approval, follow the backend-only [arm, customer click, and complete sequence](purchase-mode.md#direct-http-final-click-api) within the gateway's at-most-10-second window. The old `/v1/checkouts/{id}/submit` route fails closed in the new contract; it cannot invoke an Accelerate executor click.
 
