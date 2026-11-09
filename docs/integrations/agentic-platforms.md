@@ -14,9 +14,9 @@ Your platform is the Accelerate integration customer and receives a **Merchant I
 
 For implementation detail, see [Private CVV and credential delivery](agentic-platforms-private-payments.md). The separate [OpenInstinct configuration reference](openinstinct-reference.md) shows one application's browser and private messaging setup.
 
-**SDK release status:** **SDK 0.12.0 is published on npm**. Its [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0) points to source commit [`12cf65b0`](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk). The published archive SHA-256 is `4a74b8532cb4d5055804a39a070783d29e52dff48d76f0d48fa35845268bc0e2`. The SDK managed sandbox service is healthy on this source revision. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
+**SDK release status:** **SDK 0.15.0 is published on npm as `latest`.** The matching managed sandbox service is deployed and its health/authentication boundary checks passed; see the [release and deployment record](universal-card-rollout.md#sdk-0150-release). The installation commands below select this version. Immutable tag `agent-sdk-v0.15.0` points to source merge [`adb11920`](https://github.com/weaccelerateinc/accelerate/tree/adb11920bf777c1eb04d5f7bf38dccfebf012ed0/products/agent-sdk). Its [release record](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0) identifies the verified archive. Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
-SDK 0.12.0 includes the Dana run-created Browser Use and WhatsApp messaging APIs. Run-browser merchant admission is not enabled in the current sandbox; the operator must apply and verify migration 004 before enabling it. The matching wallet gateway and reaper have passed a synthetic worker-loss retirement probe, but provider and merchant qualification remain pending. See [Browser Use run browser integration](browser-use-run-browsers.md), [WhatsApp private messaging](whatsapp-private-messaging.md), and [deployment status](universal-card-rollout.md#release-and-environment-status).
+SDK 0.15.0 adds private wallet-phone correction and optional USD currency inputs. It retains Dana's run-created Browser Use and WhatsApp adapters. Since SDK 0.13.0, authenticated integrations use the supported fill-only run-browser path without the earlier merchant opt-ins or an inventory of other browser extensions. Migration 004, the matching gateway/reaper, the pinned Accelerate extension, ownership checks, and cleanup remain required. SDK 0.12.0 keeps its earlier local restrictions until upgraded. See [Browser Use run browser integration](browser-use-run-browsers.md), [WhatsApp private messaging](whatsapp-private-messaging.md), and [deployment status](universal-card-rollout.md#release-and-environment-status).
 
 ## Choose the wallet environment
 
@@ -67,28 +67,28 @@ MCP controls how the agent invokes checkout actions. It does not replace backend
 
 Use Node.js 22 or later. The server-only SDK includes TypeScript declarations and has no runtime dependencies.
 
-- **SDK on npm:** [@weaccelerateinc/agent-sdk](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk), published version **0.12.0**.
-- **SDK release:** [agent-sdk-v0.12.0](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.12.0), source commit `12cf65b0a338f845ad9c966e491fc6ae438ec324`.
-- **SDK source and guides:** [Accelerate Agent SDK 0.12.0](https://github.com/weaccelerateinc/accelerate/tree/12cf65b0a338f845ad9c966e491fc6ae438ec324/products/agent-sdk).
+- **SDK on npm:** [@weaccelerateinc/agent-sdk@0.15.0](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.15.0), published as `latest`.
+- **SDK release:** [agent-sdk-v0.15.0](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0).
+- **SDK source and guides:** [Accelerate Agent SDK 0.15.0 at source merge `adb11920`](https://github.com/weaccelerateinc/accelerate/tree/adb11920bf777c1eb04d5f7bf38dccfebf012ed0/products/agent-sdk).
 - **Approved extension download:** [Extension release 0.0.0.1](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1). Download `accelerate-extension-0.0.0.1.zip` and its checksum files from the release assets.
 
-The commands below install published SDK 0.12.0 and generate its matching existing-browser starter. Connect and qualify your own trusted browser host before payment use. SDK and extension versions are independent.
+The commands below install published SDK 0.15.0 and generate its matching existing-browser starter. Connect and qualify your own trusted browser host before payment use. SDK and extension versions are independent.
 
 Generate the matching starter:
 
 ```sh
-npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.12.0
+npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.15.0
 npx --no-install accelerate-agent --version
 npx --no-install accelerate-agent init ./accelerate-demo --browser existing
 cd accelerate-demo
-npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.12.0
+npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.15.0
 npm test
 npm run smoke
 ```
 
-The version command must print `0.12.0`. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order.
+The version command must print `0.15.0`. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order. Existing generated projects keep their copied runtime; upgrading the package does not rewrite that runtime.
 
-Install the approved extension through your browser's image, profile, or launch configuration **before shopping starts**. Accelerate supplies a release manifest approved for your browser connector during qualification. Verify the ZIP against that manifest with `verifyApprovedExtensionArtifact` from `@weaccelerateinc/agent-sdk/approved-extension`. A matching version number alone does not verify the ZIP. The `0.0.0.2` extension is a qualification candidate and must not replace the approved artifact.
+Install the approved extension through your browser's image, profile, or launch configuration **before shopping starts**. Accelerate supplies a release manifest approved for your browser connector during qualification. SDK 0.15.0's Browser Use baseline has a [public compatibility manifest](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.0.release.json); the approved ZIP bytes are unchanged. Verify the ZIP against the appropriate manifest with `verifyApprovedExtensionArtifact` from `@weaccelerateinc/agent-sdk/approved-extension`. A matching version number alone does not verify the ZIP. The `0.0.0.2` extension is a qualification candidate and must not replace the approved artifact.
 
 ### Connect your existing browser
 
@@ -170,13 +170,33 @@ The generated existing-browser starter uses the explicit **`managed_review_v2`**
 
 The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. In SDK 0.11.0, purchase registration uses `purpose: 'purchase'` with `enableSubmit: true` and a host that implements `performFinalClick`. For a no-order test, select `purpose: 'sandbox_fill_only'` with submission disabled. See [Purchase mode and checkout support](purchase-mode.md) for version-specific migration.
 
+### Correct a wallet phone privately
+
+SDK 0.15.0 and the matching managed service let the customer correct the wallet number before authentication:
+
+1. At payment, private `chat.start` sends the verification code first. Its OTP prompt shows the wallet number that received it.
+2. The customer replies with the code, replies `change` or `change number` to enter another number, or sends the other full number starting with `+` and its country code.
+3. A different wallet number invalidates the old challenge and sends a new code. Verification continues against the new wallet number. Changes are refused after authentication.
+
+The wallet number can differ from the authenticated chat phone. Correcting it does not change the WhatsApp recipient, checkout owner, customer/workspace/conversation binding, original checkout phone, or creation idempotency key. Keep the original identity resolver and messaging destination.
+
+The private SDK negotiates `X-Accelerate-Wallet-Phone: v1`. A new checkout opts in when its first private start uses the header. Later private start, state, and reply calls retain it. Existing checkouts that started without negotiation keep the legacy prompts. Direct HTTP integrations must preserve this negotiation and validate the private fields; see the [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/private-chat.md).
+
+Before authentication, private state can include `wallet_phone_number`. While waiting for another number, it also includes `wallet_phone_entry_required: true`. These fields disappear after authentication.
+
+Phone changes require the authenticated provider's `sent_at`. Later identity answers and OTP replies must be newer than the replacement-number message. Never substitute webhook receipt time. The host may store full wallet numbers only in typed private outbox payloads encrypted at rest. OTP reply text stays transient and must never enter durable host storage. Neither belongs in ordinary status, MCP output, safe progress, model prompts, history, or workflow inputs.
+
+The durable host uses a typed `private_phone_prompt` outbox item with `{checkout_id, idempotency_key, template, wallet_phone_number}`. Its fixed templates are `wallet_otp` and `wallet_phone_entry`; private ingress renders text only immediately before delivery. Custom hosts must support this item without weakening their generic prompt or card-number filters.
+
+Deploy the managed service first, publish the SDK, then upgrade the private ingress and host workers. Pause new private starts while upgrading **all workers that share host persistence**, including workers serving existing checkouts and copied starter runtimes. SDK 0.14.1 and earlier cannot deserialize `private_phone_prompt` items, even after delivery. Resume starts only when every reader supports them. After phone-v1 records exist, prefer a forward fix; do not roll back to pre-phone SDK/service readers while those records remain readable. This feature needs no new SQL migration, wallet gateway deployment, or backend API deployment. Existing browser migration and qualification requirements remain in force.
+
 ## 5. Follow the payment flow
 
 The SDK 0.11.0 purchase sequence is:
 
 1. **Shop in your existing browser.** Keep the cart, merchant login, and cookies in the same session. Complete required non-secret contact, shipping, and cardholder-name fields. Leave card number, expiry, and CVV empty.
 2. **Attach at the payment step.** Resolve the browser from authenticated ownership records. Stop and drain ordinary browser automation before handing the document to Accelerate. Declare `final_click_actor: 'customer'` and require the service to echo that actor. The service internally requires the gateway's private `customer_final_click_supported: true` admission before OTP. Do not create a replacement browser.
-3. **Verify the customer privately.** The customer completes OTP and masked card selection through the private channel. Ordinary agent tools receive safe checkout status.
+3. **Verify the customer privately.** The customer completes OTP and masked card selection through the private channel. SDK 0.15.0 shows the destination wallet number and permits [private correction](#correct-a-wallet-phone-privately) before authentication. Ordinary agent tools receive safe checkout status.
 4. **Apply the address and verify the final amount.** Include shipping and tax. Bind the quote to the exact checkout URL, total, currency, revision, and submit control.
 5. **Collect CVV and fill once.** In `managed_review_v2`, creation declares `fill_after_verification: true`. The later verified quote separately arms that fill. Private CVV success continues the fill in the backend. The agent does not call a fill tool.
 6. **Send the private review.** The customer receives the masked payment form and final amount together. Purchase approval has a five-minute window from the confirmed sent receipt. Filling the form does not approve the purchase.
@@ -223,7 +243,7 @@ curl --fail-with-body "$ACCELERATE_BASE_URL/v1/connection" \
 
 ### Currency inputs
 
-The USD-default change is available in the current [managed-service and SDK source](https://github.com/weaccelerateinc/accelerate/tree/main/products/agent-sdk). Deploy the updated managed service before omitting currency in direct HTTP requests. Published SDK releases through **0.14.1**, including the pinned 0.12.0 examples on this page, still require explicit `expected_currency: 'USD'` for quote verification and `currency: 'USD'` for approval and confirmed reconciliation. Their MCP approval tool also requires `currency: 'USD'`. Keep those fields until you upgrade to an SDK release that includes this change.
+SDK **0.15.0** includes the USD defaults in the typed client and MCP approval tool. Deploy the matching managed service before omitting currency in direct HTTP requests. SDK releases through **0.14.1** still require explicit `expected_currency: 'USD'` for quote verification and `currency: 'USD'` for approval and confirmed reconciliation. Their MCP approval tool also requires `currency: 'USD'`. Keep those fields until you upgrade to 0.15.0. The new SDK sends explicit USD to older services for compatibility.
 
 After that update, callers can omit these fields:
 
@@ -318,6 +338,8 @@ These are separate backend handlers. Never expose them as model tools.
 | `POST` | `/v1/checkouts/{id}/private-chat/cancel` | Cancel the private interaction. |
 
 Private calls bind `customer_id`, `workspace_id`, and `conversation_id` to the created checkout. Replies also need the verified provider `message_id` and transient `text`. Post-fill purchase approval additionally requires the provider's verified `sent_at` timestamp; include `reply_to_message_id` when available. Derive these fields from the authenticated webhook. Review delivery needs the exact review and provider receipt fields in the [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/private-chat.md). The review route returns PNG bytes and metadata headers. Do not forward private state or images to the model.
+
+For wallet-phone correction, retain `X-Accelerate-Wallet-Phone: v1` on negotiated private start, state, and reply requests. Replacement numbers and subsequent identity/OTP replies also require the provider's authenticated `sent_at`; see [Correct a wallet phone privately](#correct-a-wallet-phone-privately).
 
 For complete request shapes, see the [HTTP route implementation](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/service/src/http.js), [typed client contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/index.d.ts), and [v2 lifecycle contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md). These repository references may require access from Accelerate.
 

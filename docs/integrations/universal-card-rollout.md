@@ -6,9 +6,9 @@ description: Separate deployed sandbox form support from provider onboarding, cu
 
 `universal_card_v1` has already supported sandbox fills and masked reviews on real merchant checkout documents. It is not restricted to `demos.weaccelerate.com/normal/payment`. The [2 November 2026 sandbox report](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) records additional merchant layouts, failures, and incomplete cleanup evidence. It records no submitted real-store order or production payment qualification.
 
-The SDK **0.11.0 customer-final-click contract** remains the published purchase baseline. SDK 0.12.0 is published and its managed sandbox service is healthy on release source `12cf65b0a338f845ad9c966e491fc6ae438ec324`. Run-browser merchant admission is disabled there. Deployment reports migration `004_browser_run_claims.sql` as skipped; this does not establish the database's ledger state. An operator must apply and verify the migration before enabling admission. The patched wallet gateway and reaper deployment passed a synthetic worker-loss retirement probe. These observations do not qualify the source, full adapter, guest profile cleanup, provider, merchant, WhatsApp flow, or purchase. Production customer onboarding, tenant activation, and financial release remain closed. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
+The SDK **0.11.0 customer-final-click contract** remains the purchase baseline. Published SDK 0.15.0 adds private wallet-phone correction and optional USD inputs without changing that contract or the approved extension ZIP. Its matching managed sandbox service is deployed. Production customer onboarding, tenant activation, and financial release remain closed. Existing universal fill/review evidence does not qualify every provider, checkout, or real-money purchase. See [Purchase mode](purchase-mode.md).
 
-SDK 0.12.0 includes Dana's run-browser and WhatsApp journal APIs. Their availability in the SDK does not enable merchant admission or establish provider/payment qualification. See the [run browser guide](browser-use-run-browsers.md) and [WhatsApp private messaging guide](whatsapp-private-messaging.md).
+SDK 0.15.0 retains Dana's run-browser and WhatsApp journal APIs introduced in 0.12.0. Since 0.13.0, the supported authenticated fill-only run-browser path no longer needs separate merchant opt-ins or an inventory of other extensions. The existing claim-ledger migration, matching gateway/reaper, runtime pin, browser ownership, fencing, and cleanup requirements remain. See the [run browser guide](browser-use-run-browsers.md) and [WhatsApp private messaging guide](whatsapp-private-messaging.md).
 
 ## What admission checks
 
@@ -48,7 +48,21 @@ Qualify worker-loss cleanup for the selected credential model. With client-owned
 
 ## Release and environment status
 
-The following release and deployment records were verified for SDK 0.12.0 and the patched sandbox wallet rollout:
+### SDK 0.15.0 release
+
+SDK 0.15.0 is published on npm as `latest`. Immutable tag `agent-sdk-v0.15.0` points to source merge [`adb11920bf777c1eb04d5f7bf38dccfebf012ed0`](https://github.com/weaccelerateinc/accelerate/commit/adb11920bf777c1eb04d5f7bf38dccfebf012ed0). The [release record](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0) identifies the archive. No new gateway, backend API, SQL migration, extension ZIP, provider qualification, or production financial enablement is part of this phone-feature rollout.
+
+| Component | Verified record |
+| --- | --- |
+| SDK release and archive | npm `@weaccelerateinc/agent-sdk@0.15.0`, published at **9 November 2026, 21:25:05.449 UTC**. Public version metadata, package metadata, and `latest: 0.15.0` were verified at 21:25:59 UTC. The public registry archive is 114,508 bytes, SHA-256 `5e486515ad886634ac1b4e246ccc92a3ffd34e5ad1cefec0388b785ef20cc689`, matching the reviewed local archive and dry-run/publish artifacts exactly. The [publication workflow](https://github.com/weaccelerateinc/accelerate/actions/runs/42701459566) passed on source `adb11920bf777c1eb04d5f7bf38dccfebf012ed0`. |
+| Managed sandbox service | Canonical `https://accelerate-agent-sdk.vercel.app`, Ready deployment `dpl_HeiPKcnSLSmZc9ZYVDTHTRMMgpYV` on source `adb11920bf777c1eb04d5f7bf38dccfebf012ed0`. Build and `managed_checkout_migration_complete` succeeded. At **9 November 2026, 21:15:27 UTC**, `/healthz` returned HTTP 200 with `status: "ok"`; unauthenticated `/v1/connection` returned HTTP 401. These were deployment and read-only boundary checks. |
+| Extension compatibility | Public [SDK 0.15.0 manifest](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.0.release.json) and [checksums](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.0.SHA256SUMS) returned HTTP 200 without authentication. Approved 0.0.0.1 ZIP SHA-256 remains `65574cbb27ab344687963f72a136f2653551b57458b284e486946b27699099c8`. No new extension artifact or qualification is implied. |
+
+The order is managed service, SDK publication, then customer private-worker upgrade. Pause new private starts while upgrading every private ingress/host worker sharing persistence. Old workers cannot deserialize `private_phone_prompt` outbox items, even after delivery. Existing checkouts that started without wallet-phone negotiation keep their earlier behavior, but that does not make old host readers compatible with new outbox records. Prefer a forward fix after phone-v1 records exist; do not roll back to old readers while affected records remain readable. See [the phone contract and upgrade sequence](agentic-platforms.md#correct-a-wallet-phone-privately).
+
+### Historical SDK 0.12.0 rollout
+
+The following records describe the earlier SDK 0.12.0 and patched sandbox wallet rollout. Their deployment IDs and disabled run-browser merchant flag are historical observations, not current service identity or current admission policy:
 
 | Component | Verified record |
 | --- | --- |
@@ -59,7 +73,9 @@ The following release and deployment records were verified for SDK 0.12.0 and th
 | Synthetic worker-loss retirement probe | In the reaper container, a child was killed with `SIGKILL`. A fresh acknowledgement, provider `404`, and database retirement were confirmed 29,441 ms before the 90-second deadline, without operator fallback. The post-probe check found zero non-closed leases and zero Kernel project browsers. The probe made no wallet, card, token, or payment calls. It did not independently inspect guest-profile removal. Source and the full extension adapter remain unqualified. |
 | Extension release compatibility | Public [compatibility update PR #1](https://github.com/weaccelerateinc/accelerate-extension-downloads/pull/1), merged at `a738d6288d9a10a0dab5b78ae20d1cea73602490`. Manifest SHA-256 `8a7d81138f371159e8cac60514ad9f5e495f28ca259afbe49c3d51dc8749b371`. The ZIP bytes are unchanged. New assets are `accelerate-extension-0.0.0.1.sdk-0.12.0.release.json` and `.SHA256SUMS`. This metadata supports SDK 0.12.0; it does not qualify a new extension or provider. |
 
-These are sandbox release and operational observations. They do not establish real-store payment success, provider qualification, merchant form acceptance, WhatsApp provider qualification, or production readiness. No Dana merchant is enabled. Keep production activation and financial release closed.
+These were sandbox release and operational observations. They did not establish real-store payment success, provider qualification, merchant form acceptance, WhatsApp provider qualification, or production readiness. No Dana merchant was enabled at that verification point. Production activation and financial release remain closed.
+
+### Earlier customer-final-click deployment
 
 At the **3 November 2026, 20:21 UTC** verification point, SDK 0.11.0 was published as npm's `latest` version. The [0.11.0 release tag](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0) identifies source commit `dc30fdaf`. The release deployment and read-only sandbox metadata checked at that time are:
 
@@ -87,7 +103,7 @@ The original approved extension manifest records a narrower demo fill/review bas
 
 ## Deploy a matching release
 
-Accelerate operators perform the coordinated deployment. Customers can install SDK 0.11.0 now and update their authenticated host integration. Production customer use must still complete approved onboarding and provider/payment acceptance.
+Accelerate operators perform coordinated deployment. For the SDK 0.15.0 phone feature, update the managed service and SDK/private workers using [the sequence above](#sdk-0150-release); no wallet gateway, backend API, or SQL change is required for this feature. The steps below apply when changing the broader browser or customer-final-click stack. Production customer use must still complete approved onboarding and provider/payment acceptance.
 
 1. Select reviewed SDK, managed-service, wallet-MCP, gateway, and reaper revisions. Record commits, image digests, extension bytes, configuration version, and test evidence. Publish the SDK only through its reviewed release process; a source version is not an available npm release.
 2. Build the private worker with its pinned `playwright-core@1.62.1`, required native capture dependencies, and reviewed connector modules. Verify the extension installation and runtime against its approved manifest. Preserve isolated private evaluation; there is no merchant-main-world fallback.
