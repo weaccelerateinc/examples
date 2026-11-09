@@ -14,6 +14,8 @@ The six baseline host methods below apply to the published integration. **SDK 0.
 
 SDK 0.12.0 introduced run-created Browser Use provenance and run-control evidence. Since 0.13.0, authenticated integrations can use the supported fill-only path without the earlier merchant opt-ins. The claim ledger, pinned Accelerate extension runtime, ownership, scheduling/viewer fences, and cleanup remain required; see [Browser Use run browser integration](browser-use-run-browsers.md).
 
+SDK 0.15.2 updates private message wording and policy links. The connector interface, final-click callback, browser ownership, fencing, and cleanup requirements are unchanged. Use the matching private SDK workers; this patch needs no new backend rollout. See [release availability](universal-card-rollout.md#sdk-0152-release).
+
 ## Create the connector
 
 ```js

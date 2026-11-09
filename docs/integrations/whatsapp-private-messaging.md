@@ -4,7 +4,7 @@ description: Integrate private WhatsApp replies and review delivery with the pub
 
 # WhatsApp private messaging
 
-**SDK 0.15.0 is published on npm as `latest`.** The matching managed sandbox service is deployed; see the [release and deployment record](universal-card-rollout.md#sdk-0150-release). Use its [immutable release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0). It retains the WhatsApp adapters introduced in 0.12.0 and adds private wallet-phone correction.
+**SDK 0.15.2 is published on npm as `latest`.** This copy patch retains the 0.15.0 service protocol. Its npm installation, GitHub release archive, immutable source, sandbox deployment, and public compatibility metadata are verified; see the [0.15.2 release record](universal-card-rollout.md#sdk-0152-release) and [0.15.0 deployment evidence](universal-card-rollout.md#sdk-0150-release). It retains the WhatsApp adapters introduced in 0.12.0 and private wallet-phone correction introduced in 0.15.0.
 
 The earlier wallet gateway/reaper worker-loss probe and its limits are recorded in the [historical rollout status](universal-card-rollout.md#historical-sdk-0120-rollout). The phone feature needs the matching managed service and updated private workers; it needs no new wallet gateway, backend API, or SQL deployment. This SDK release does not qualify a WhatsApp provider integration or merchant. Provider and payment qualification remain pending. Production activation and financial release remain closed.
 
@@ -36,13 +36,41 @@ Do not log or store raw OTP/CVV replies in application history, workflow inputs,
 
 ## Correct the wallet number before authentication
 
-With SDK 0.15.0 and the matching managed service, private start sends OTP first and shows the destination wallet number. The customer can reply with the code, reply `change` or `change number`, or send the replacement full number starting with `+` and its country code. A different number invalidates the old challenge and receives a new code. The WhatsApp sender and recipient remain unchanged. Correction stops after wallet authentication.
+With SDK 0.15.2 and the compatible managed service, private start sends OTP first and shows the destination wallet number. The prompt asks for the code or a replacement US wallet number starting with `+1`. Phone parsing and validation are unchanged: the handler still accepts `change`, `change number`, or another valid international `+` number. A different number invalidates the old challenge and receives a new code. The WhatsApp sender and recipient remain unchanged. Correction stops after wallet authentication.
 
 The private SDK sends `X-Accelerate-Wallet-Phone: v1`; direct private clients must retain that header on negotiated start, state, and reply calls. Existing checkouts that started without it keep the legacy prompts. Forward only authenticated provider `sent_at` values. After replacement, identity answers and OTP replies must be newer than the number-change message; webhook receipt time is not a substitute.
 
 Phone-bearing prompts use the host's typed `private_phone_prompt` outbox kind. They are rendered only for private delivery to the existing authenticated chat context. Keep the full wallet number out of model prompts, safe progress, ordinary status, analytics, and workflow inputs. Custom hosts must preserve the typed shape and encrypted storage boundary; generic prompt filters remain strict.
 
-Deploy the service first, then publish the SDK and upgrade all private ingress/host workers sharing persistence while new private starts are paused. An older worker cannot deserialize a new phone-prompt item, including one already delivered. Do not roll back to pre-phone readers while affected records remain readable; prefer a forward fix. See [the full wallet-phone contract and upgrade sequence](agentic-platforms.md#correct-a-wallet-phone-privately).
+The 0.15.2 patch needs an SDK install in the private host/ingress workers and no new backend rollout. Existing typed phone outbox rows render the current fixed template at delivery. When migrating from SDK 0.14.1 or earlier, deploy the service first, then publish the SDK and upgrade all private ingress/host workers sharing persistence while new private starts are paused. An older worker cannot deserialize a new phone-prompt item, including one already delivered. Do not roll back to pre-phone readers while affected records remain readable; prefer a forward fix. See [the full wallet-phone contract and upgrade sequence](agentic-platforms.md#correct-a-wallet-phone-privately).
+
+### Private prompts in SDK 0.15.2
+
+The negotiated OTP message is:
+
+```text
+Reply with the verification code sent to {wallet_phone_number}. To use a different US number, provide the full number starting with +1.
+
+By entering the OTP, you agree to our Privacy Policy (https://www.weaccelerate.com/privacy) and Terms of Service (https://www.weaccelerate.com/terms).
+```
+
+WhatsApp and Linq adapters send plain text. The full policy URLs remain clickable; named Markdown hyperlinks are not supported by these adapters. The final OTP and security-code prompts omit the cancellation sentence; cancellation handling is unchanged. The number-change fallback and legacy non-negotiated OTP prompt keep their earlier wording. The agreement sentence is message copy; this patch adds no consent-record or phone-region validation mechanism.
+
+For a single saved address, card selection now says:
+
+```text
+Reply Card {choice}, using the number of your chosen card. Your saved address will be used automatically.
+```
+
+Without a saved address, the final sentence is `No saved address is available.` Multi-address prompts still request both card and address choices. Existing `Card N` and `Wallet N` reply parsing is unchanged.
+
+The after-fill security-code request is:
+
+```text
+We will fill your selected card privately so you can review the checkout before any purchase approval. Reply here with the 3–4 digit security code for {brand} •••• {last4}. This is not shared with your assistant.
+```
+
+These wording changes do not alter private reply interception, storage, checkout ownership, review approval, or payment authority.
 
 ## Send and reconcile the private review
 
@@ -78,6 +106,8 @@ The source tests do not qualify the native WhatsApp client, Meta webhook schema,
 
 ## References
 
-- [SDK 0.15.0 release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0)
-- [SDK Dana integration contract at the release tag](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/dana-integration.md)
+- [SDK 0.15.2 release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.2)
+- [SDK 0.15.2 verification record](universal-card-rollout.md#sdk-0152-release)
+- [SDK 0.15.0 baseline release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.0)
+- [SDK 0.15.0 baseline Dana integration contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/dana-integration.md)
 - [Merged wallet implementation PR #21](https://github.com/weaccelerateinc/accelerate-wallet-mcp/pull/21)
