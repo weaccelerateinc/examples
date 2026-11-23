@@ -130,25 +130,27 @@ body:has(.acc-demo[data-surface="white"]) { background: #fff; }
 }
 .acc-demo .acc-link:hover { color: var(--pine-7); text-decoration-color: currentColor; }
 
-/* ---------- Nav ---------- */
+/* ---------- Nav ----------
+   Same measurements as the weaccelerate.com menu bar: 14px from the top, side margins
+   that grow from 20px (phone) to 40px, at most 1180px wide, 64px tall, 14px corners,
+   8px 10px 8px 22px padding, solid white with the soft shadow and the shine edge. */
 .acc-demo .acc-nav-wrap {
   position: sticky;
   top: 0;
   z-index: 30;
-  padding-top: 14px;
-  padding-bottom: 10px;
+  padding: 14px clamp(20px, 5vw, 40px) 10px;
   background: linear-gradient(to bottom, var(--page-bg) 55%, transparent);
 }
 .acc-demo .acc-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
-  padding: 0 14px 0 20px;
+  max-width: 1180px;
+  height: 64px;
+  margin: 0 auto;
+  padding: 8px 10px 8px 22px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(18px) saturate(1.5);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  background: #fff;
   box-shadow: var(--shadow-2);
 }
 /* "Demo store" tag: a volt chip with a pine dot. */

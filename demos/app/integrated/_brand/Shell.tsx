@@ -41,7 +41,7 @@ export function Shell({
   return (
     <>
       <div className="acc-nav-wrap">
-        <div className="max-w-[1080px] mx-auto px-4 sm:px-8">
+        <div>
           <header className="acc-nav acc-shine">
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
               <Image
@@ -50,7 +50,7 @@ export function Shell({
                 width={560}
                 height={87}
                 priority
-                className="h-[19px] sm:h-[22px] w-auto"
+                className="h-[19px] lg:h-[23px] w-auto"
               />
               <span className="h-5 w-px bg-[var(--border-soft)]" aria-hidden />
               <span className="acc-tag">
@@ -58,7 +58,7 @@ export function Shell({
                 Demo store
               </span>
             </div>
-            <div className="flex items-center gap-2 acc-small !text-[13.5px] !text-[var(--ink-3)]">
+            <div className="flex items-center gap-2 pr-3 acc-small !text-[14.5px] !text-[var(--ink-3)]">
               <Lock size={15} strokeWidth={2} aria-hidden />
               <span className="hidden sm:inline font-medium">Secure checkout</span>
             </div>
