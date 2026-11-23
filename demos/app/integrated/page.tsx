@@ -5,8 +5,8 @@ import { stripeOptions } from "../options"; // Stripe options for payment proces
 import Script from "next/script"; // Next.js component for loading external scripts
 import { useRouter } from "next/navigation"; // Hook for programmatic navigation
 import type { AccelerateWindowAPI, AccelerateUser } from "accelerate-js-types"; // Type definitions for Accelerate API
-import Image from "next/image"; // Next.js component for optimized image loading
-import { Lock } from "lucide-react"; // Icon for secure checkout
+import { ArrowRight, Sparkles } from "lucide-react"; // Icons
+import { Field, Shell } from "./_brand/Shell"; // Accelerate-branded page chrome and fields
 
 // Declare global types for the window object
 declare global {
@@ -37,10 +37,7 @@ export default function CheckoutPage() {
   const router = useRouter(); // Initialize router for navigation
 
   // State variables for form inputs
-  const [phoneNumber, setPhone] = useState(
-    ""
-    //typeof window !== "undefined" && window.location.protocol === "http:" ? "512-123-1111" : "", // Default phone number for HTTP
-  );
+  const [phoneNumber, setPhone] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [addrLine1, setAddrLine1] = useState("");
@@ -48,6 +45,9 @@ export default function CheckoutPage() {
   const [addrCity, setAddrCity] = useState("");
   const [addrZip, setAddrZip] = useState("");
   const [email, setEmail] = useState("");
+  // True once Accelerate has filled in the address, to show where the data came from
+  const [accelFilled, setAccelFilled] = useState(false);
+
   // Function to populate address fields from Accelerate user data
   const maybeUseAccelUser = (user: AccelerateUser) => {
     if (user?.addresses[0]) {
@@ -55,6 +55,7 @@ export default function CheckoutPage() {
       setAddrCity(user.addresses[0].city || addrCity);
       setAddrState(user.addresses[0].state || addrState);
       setAddrZip(user.addresses[0].postalCode || addrZip);
+      setAccelFilled(true);
     }
   };
 
@@ -62,7 +63,7 @@ export default function CheckoutPage() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const params = new URLSearchParams({
-      email: (document.querySelector('input[placeholder="Email"]') as HTMLInputElement)?.value || "",
+      email,
       phone: phoneNumber,
       firstName,
       lastName,
@@ -102,133 +103,134 @@ export default function CheckoutPage() {
 
   // Render the component
   return (
-    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
-      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
-              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                <Image 
-                  src="/avatar-black.png" 
-                  alt="Accelerate Logo" 
-                  width={40} 
-                  height={40} 
-                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
-                />
+    <>
+      <Shell
+        step={1}
+        title="Checkout"
+        lead="Start with your name and mobile number. Accelerate fills in your shipping and payment details, even on your first visit."
+      >
+        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start">
+          <form onSubmit={handleSubmit} className="space-y-6 acc-reveal acc-reveal-2">
+            <section className="acc-card" aria-labelledby="contact-heading">
+              <div className="acc-card-head">
+                <h2 id="contact-heading" className="acc-h4">
+                  Contact
+                </h2>
               </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
-              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
-            </div>
-          </div>
-          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Checkout</h1>
-          <p className="text-slate-600">Complete your purchase securely</p>
-        </div>
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
-          <div className="space-y-8 order-2 lg:order-1">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                <h2 className="text-lg font-semibold text-slate-900 mb-6">Contact Information</h2>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      data-testid="first-name-input"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      onBlur={() => {
-                        maybeLogin(phoneNumber);
-                      }}
-                      placeholder="First name"
-                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                    />
-                    <input
-                      data-testid="last-name-input"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      onBlur={() => {
-                        maybeLogin(phoneNumber);
-                      }}
-                      placeholder="Last name"
-                      className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                    />
-                  </div>
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email address"
-                    type="email"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Field
+                    label="First name"
+                    data-testid="first-name-input"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    onBlur={() => {
+                      maybeLogin(phoneNumber);
+                    }}
+                    autoComplete="given-name"
+                    autoFocus
                   />
-                  <input
+                  <Field
+                    label="Last name"
+                    data-testid="last-name-input"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    onBlur={() => {
+                      maybeLogin(phoneNumber);
+                    }}
+                    autoComplete="family-name"
+                  />
+                </div>
+                <Field
+                  label="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  autoComplete="email"
+                />
+                <div>
+                  <Field
+                    label="Mobile number"
+                    prefix="+1"
+                    mono
                     value={phoneNumber}
                     onChange={(e) => {
                       setPhone(tryFormatPhone(e.target.value));
                       maybeLogin(e?.target.value);
                     }}
-                    placeholder="Phone number"
                     type="tel"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    inputMode="tel"
+                    autoComplete="tel-national"
                   />
+                  <p className="flex items-start gap-2 acc-caption mt-2.5">
+                    <Sparkles size={14} strokeWidth={2} className="mt-[1px] flex-none text-[var(--pine-3)]" aria-hidden />
+                    <span>Accelerate uses your mobile number to find your saved address and cards.</span>
+                  </p>
                 </div>
               </div>
+            </section>
 
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                <h2 className="text-lg font-semibold text-slate-900 mb-6">Billing Address</h2>
-                <div className="space-y-4">
-                  <input
-                    placeholder="Street address"
-                    value={addrLine1}
-                    onChange={(e) => setAddrLine1(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  />
-                  <input
-                    placeholder="City"
-                    value={addrCity}
-                    onChange={(e) => setAddrCity(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  />
-                  <input
-                    placeholder="State"
+            <section className={`acc-card ${accelFilled ? "acc-sheen" : ""}`} aria-labelledby="billing-heading">
+              <div className="acc-card-head">
+                <h2 id="billing-heading" className="acc-h4">
+                  Billing address
+                </h2>
+              </div>
+              {accelFilled && (
+                <div className="mb-5 acc-reveal">
+                  <div className="acc-seam acc-seam-liquid mb-3" aria-hidden />
+                  <p className="flex items-center gap-2 text-[14px] font-medium text-[var(--pine-5)]">
+                    <Sparkles size={15} strokeWidth={2} aria-hidden />
+                    Filled in by Accelerate
+                  </p>
+                </div>
+              )}
+              <div className="space-y-3">
+                <Field
+                  label="Street address"
+                  value={addrLine1}
+                  filled={accelFilled && !!addrLine1}
+                  onChange={(e) => setAddrLine1(e.target.value)}
+                  autoComplete="billing address-line1"
+                />
+                <Field
+                  label="City"
+                  value={addrCity}
+                  filled={accelFilled && !!addrCity}
+                  onChange={(e) => setAddrCity(e.target.value)}
+                  autoComplete="billing address-level2"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Field
+                    label="State"
                     value={addrState}
+                    filled={accelFilled && !!addrState}
                     onChange={(e) => setAddrState(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    autoComplete="billing address-level1"
                   />
-                  <input
-                    placeholder="ZIP"
+                  <Field
+                    label="ZIP"
                     value={addrZip}
+                    filled={accelFilled && !!addrZip}
                     onChange={(e) => setAddrZip(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    autoComplete="billing postal-code"
+                    inputMode="numeric"
+                    mono
                   />
                 </div>
               </div>
+            </section>
 
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30"
-              >
-                Continue to Payment
+            <div>
+              <button type="submit" className="acc-btn acc-btn-primary w-full">
+                Continue to payment
+                <ArrowRight size={18} strokeWidth={2.25} className="acc-btn-arrow" aria-hidden />
               </button>
-            </form>
+              <p className="acc-caption text-center mt-3">This is a demo store. You will never be charged.</p>
+            </div>
+          </form>
 
-            <footer className="flex flex-wrap gap-3.5 py-5 text-sm text-slate-600">
-              <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
-                Privacy policy
-              </a>
-              <a href="https://www.weaccelerate.com/terms" className="hover:underline">
-                Terms of service
-              </a>
-            </footer>
-          </div>
-
-          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
+          <aside className="space-y-6 lg:sticky lg:top-[104px] acc-reveal acc-reveal-3">
             <CheckoutSummary
               shippingCost={0} // Shipping cost
               onTotalChange={(total) => {
@@ -236,9 +238,9 @@ export default function CheckoutPage() {
                 return true; // Return true for total change
               }}
             />
-          </div>
+          </aside>
         </div>
-      </main>
+      </Shell>
 
       <Script
         crossOrigin="anonymous"
@@ -265,6 +267,6 @@ export default function CheckoutPage() {
           });
         }}
       />
-    </div>
+    </>
   );
 }

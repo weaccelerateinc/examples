@@ -8,12 +8,56 @@ import type { AccelerateWindowAPI } from "accelerate-js-types";
 import { CheckoutSummary } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
-import { Lock, Truck, Zap, CreditCard, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Lock, Truck, Zap, CreditCard, ChevronDown, Loader2 } from "lucide-react";
+import { Field, Shell } from "../_brand/Shell";
 
 declare global {
   interface Window {
     accelerate: AccelerateWindowAPI;
   }
+}
+
+/** A selectable row for shipping and payment choices. The native radio stays in the DOM for keyboard use. */
+function OptionRow({
+  name,
+  value,
+  checked,
+  onChange,
+  icon,
+  title,
+  detail,
+  trailing,
+}: {
+  name: string;
+  value: string;
+  checked: boolean;
+  onChange: (value: string) => void;
+  icon: React.ReactNode;
+  title: string;
+  detail?: string;
+  trailing?: React.ReactNode;
+}) {
+  return (
+    <label className={`acc-option ${checked ? "is-selected" : ""}`}>
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={(e) => onChange(e.target.value)}
+        className="sr-only"
+      />
+      <span className="acc-radio" aria-hidden />
+      <span className="acc-icon-chip" aria-hidden>
+        {icon}
+      </span>
+      <span className="flex-1 min-w-0">
+        <span className="block text-[15.5px] font-semibold acc-strong leading-snug">{title}</span>
+        {detail && <span className="block acc-caption mt-0.5">{detail}</span>}
+      </span>
+      {trailing}
+    </label>
+  );
 }
 
 function PaymentContent() {
@@ -61,6 +105,11 @@ function PaymentContent() {
   const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // On phones the summary sits above the form, so start it collapsed there
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1023px)").matches) setIsOrderSummaryExpanded(false);
+  }, []);
+
   console.log({
     selectedPayment,
     accelLoaded,
@@ -106,254 +155,242 @@ function PaymentContent() {
     }
   };
 
-  return (
-    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
-      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
-              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                <Image 
-                  src="/avatar-black.png" 
-                  alt="Accelerate Logo" 
-                  width={40} 
-                  height={40} 
-                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
-              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-slate-600 text-xs sm:text-sm">
-            <Lock className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span className="font-medium hidden sm:inline">Secure Checkout</span>
-          </div>
-        </div>
-      </header>
+  const choosePayment = (value: string) => setSelectedPayment(value);
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Payment</h1>
-          <p className="text-slate-600">Complete your secure checkout</p>
-        </div>
-        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12">
-          <div className="space-y-8 order-2 lg:order-1">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Shipping Information */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Address</h2>
-                <div className="space-y-4">
-                  <input
-                    placeholder="Street address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  />
-                  <input
-                    placeholder="Apartment, suite, etc. (optional)"
-                    value={apartment}
-                    onChange={(e) => setApartment(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  />
-                  <input
-                    placeholder="City"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  />
-                  <input
-                    placeholder="State"
+  return (
+    <Shell
+      step={2}
+      title="Payment"
+      lead="Complete your secure checkout."
+    >
+      <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start">
+        <div className="space-y-6 order-2 lg:order-1 acc-reveal acc-reveal-2">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Shipping Information */}
+            <section className="acc-card" aria-labelledby="ship-heading">
+              <div className="acc-card-head">
+                <h2 id="ship-heading" className="acc-h4">
+                  Shipping address
+                </h2>
+              </div>
+              <div className="space-y-3">
+                <Field
+                  label="Street address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  autoComplete="shipping address-line1"
+                />
+                <Field
+                  label="Apartment, suite, etc."
+                  optional
+                  value={apartment}
+                  onChange={(e) => setApartment(e.target.value)}
+                  autoComplete="shipping address-line2"
+                />
+                <Field
+                  label="City"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  autoComplete="shipping address-level2"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Field
+                    label="State"
                     value={state}
                     onChange={(e) => setState(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    autoComplete="shipping address-level1"
                   />
-                  <input
-                    placeholder="ZIP"
+                  <Field
+                    label="ZIP"
                     value={zip}
                     onChange={(e) => setZip(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    autoComplete="shipping postal-code"
+                    inputMode="numeric"
+                    mono
                   />
                 </div>
               </div>
+            </section>
 
-              {/* Shipping Method */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                <h2 className="text-lg font-semibold text-slate-900 mb-6">Shipping Method</h2>
-                <div className="space-y-3">
-                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input
-                      type="radio"
-                      name="shippingMethod"
-                      value="standard"
-                      checked={selectedShipping === "standard"}
-                      onChange={(e) => {
-                        setSelectedShipping(e.target.value);
-                        setShippingCost(0);
-                      }}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
-                      <Truck className="w-5 h-5 text-slate-600" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-slate-900">Standard Shipping</div>
-                      <div className="text-sm text-slate-500">4-10 business days</div>
-                    </div>
-                    <div className="font-semibold text-green-600">FREE</div>
-                  </label>
+            {/* Shipping Method */}
+            <section className="acc-card" aria-labelledby="delivery-heading">
+              <div className="acc-card-head">
+                <h2 id="delivery-heading" className="acc-h4">
+                  Delivery
+                </h2>
+              </div>
+              <div className="space-y-3" role="radiogroup" aria-labelledby="delivery-heading">
+                <OptionRow
+                  name="shippingMethod"
+                  value="standard"
+                  checked={selectedShipping === "standard"}
+                  onChange={(v) => {
+                    setSelectedShipping(v);
+                    setShippingCost(0);
+                  }}
+                  icon={<Truck size={19} strokeWidth={1.75} />}
+                  title="Standard shipping"
+                  detail="4–10 business days"
+                  trailing={<span className="text-[15px] font-medium text-[var(--pine-5)]">Free</span>}
+                />
+                <OptionRow
+                  name="shippingMethod"
+                  value="express"
+                  checked={selectedShipping === "express"}
+                  onChange={(v) => {
+                    setSelectedShipping(v);
+                    setShippingCost(9.99);
+                  }}
+                  icon={<Zap size={19} strokeWidth={1.75} />}
+                  title="Express shipping"
+                  detail="2–5 business days"
+                  trailing={<span className="acc-num text-[15px] acc-strong">$9.99</span>}
+                />
+              </div>
+            </section>
 
-                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input
-                      type="radio"
-                      name="shippingMethod"
-                      value="express"
-                      checked={selectedShipping === "express"}
-                      onChange={(e) => {
-                        setSelectedShipping(e.target.value);
-                        setShippingCost(9.99);
-                      }}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
-                      <Zap className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-slate-900">Express Shipping</div>
-                      <div className="text-sm text-slate-500">2-5 business days</div>
-                    </div>
-                    <div className="font-semibold text-slate-900">$9.99</div>
-                  </label>
-                </div>
+            {/* Payment Method */}
+            <section className="acc-card" aria-labelledby="pay-heading">
+              <div className="acc-card-head">
+                <h2 id="pay-heading" className="acc-h4">
+                  Payment
+                </h2>
+                <span className="flex items-center gap-1.5 acc-caption">
+                  <Lock size={13} strokeWidth={2} aria-hidden />
+                  Encrypted
+                </span>
               </div>
 
-              {/* Payment Method */}
-              <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-slate-900">Payment Method</h2>
-                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                    <Lock className="w-3 h-3" />
-                    <span>Encrypted & Secure</span>
+              <div className="space-y-3" role="radiogroup" aria-labelledby="pay-heading">
+                <OptionRow
+                  name="paymentMethod"
+                  value="card"
+                  checked={selectedPayment === "card"}
+                  onChange={choosePayment}
+                  icon={<CreditCard size={19} strokeWidth={1.75} />}
+                  title="Card"
+                  detail="Saved cards from Accelerate"
+                  trailing={
+                    <span className="acc-brand-logos hidden sm:flex">
+                      <Image src="/visa.svg" alt="Visa" width={34} height={22} />
+                      <Image src="/mastercard.svg" alt="Mastercard" width={34} height={22} />
+                      <Image src="/amex.svg" alt="Amex" width={34} height={22} />
+                    </span>
+                  }
+                />
+
+                {/* The wallet opens once and stays open. When PayPal or Zip is chosen it is only
+                    hidden (kept at full width, collapsed to zero height), so switching back to Card
+                    shows it instantly instead of closing and reloading the Accelerate frame. */}
+                {accelLoaded && (
+                  <div
+                    className={selectedPayment === "card" ? "px-1 py-2" : "!mt-0 h-0 overflow-hidden invisible px-1"}
+                    aria-hidden={selectedPayment !== "card"}
+                  >
+                    <AccelerateWallet />
                   </div>
-                </div>
+                )}
 
-                <div className="space-y-3 mb-6">
-                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="card"
-                      checked={selectedPayment === "card"}
-                      onChange={(e) => setSelectedPayment(e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
-                      <CreditCard className="w-5 h-5 text-slate-600" />
-                    </div>
-                    <div className="flex-1 font-medium text-slate-900">Credit Card</div>
-                    <div className="flex gap-2">
-                      <Image src="/visa.svg" alt="Visa" className="h-[21px]" width={31} height={31} />
-                      <Image src="/mastercard.svg" alt="Mastercard" className="h-[21px]" width={31} height={31} />
-                      <Image src="/amex.svg" alt="Amex" className="h-[21px]" width={31} height={31} />
-                    </div>
-                  </label>
+                <OptionRow
+                  name="paymentMethod"
+                  value="paypal"
+                  checked={selectedPayment === "paypal"}
+                  onChange={choosePayment}
+                  icon={<span className="text-[15px] font-bold">P</span>}
+                  title="PayPal"
+                  trailing={<Image src="/paypal.svg" alt="" width={56} height={22} className="h-[20px] w-auto" />}
+                />
 
-                  {selectedPayment === "card" && accelLoaded && (
-                    <div className="pt-4 border-t border-slate-200">
-                      <AccelerateWallet />
-                    </div>
-                  )}
-
-                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="paypal"
-                      checked={selectedPayment === "paypal"}
-                      onChange={(e) => setSelectedPayment(e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
-                      <div className="text-lg font-bold text-blue-600">P</div>
-                    </div>
-                    <div className="flex-1 font-medium text-slate-900">PayPal</div>
-                    <Image src="/paypal.svg" alt="PayPal" className="h-[21px]" width={51} height={51} />
-                  </label>
-
-                  <label className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition border-2 border-transparent has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="zip"
-                      checked={selectedPayment === "zip"}
-                      onChange={(e) => setSelectedPayment(e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className="flex items-center justify-center w-10 h-10 bg-white rounded-lg border border-slate-200">
-                      <div className="text-lg font-bold text-slate-600">Z</div>
-                    </div>
-                    <div className="flex-1 font-medium text-slate-900">Zip - Pay in 4 installments</div>
-                    <Image src="/zip.svg" alt="Zip" className="h-[21px]" width={51} height={51} />
-                  </label>
-                </div>
+                <OptionRow
+                  name="paymentMethod"
+                  value="zip"
+                  checked={selectedPayment === "zip"}
+                  onChange={choosePayment}
+                  icon={<span className="text-[15px] font-bold">Z</span>}
+                  title="Zip"
+                  detail="Pay in 4 installments"
+                  trailing={<Image src="/zip.svg" alt="" width={56} height={22} className="h-[20px] w-auto" />}
+                />
               </div>
+            </section>
 
-              <button
-                type="submit"
-                disabled={!selectedCard || isSubmitting}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold py-4 rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30 disabled:from-slate-400 disabled:to-slate-400 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
+            <div>
+              <button type="submit" disabled={!selectedCard || isSubmitting} className="acc-btn acc-btn-primary w-full">
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing...
+                    <Loader2 size={18} className="animate-spin" aria-hidden />
+                    Processing
                   </>
                 ) : (
-                  <>Complete Payment {totalPrice > 0 && `• $${totalPrice.toFixed(2)}`}</>
+                  <>
+                    {totalPrice > 0 ? (
+                      <span>
+                        Pay <span className="acc-num">${totalPrice.toFixed(2)}</span>
+                      </span>
+                    ) : (
+                      "Complete payment"
+                    )}
+                    <Lock size={16} strokeWidth={2.25} aria-hidden />
+                  </>
                 )}
               </button>
-            </form>
-
-            <p className="text-center text-sm text-slate-500">
-              By completing this purchase you agree to our{" "}
-              <a href="https://www.weaccelerate.com/terms" className="text-blue-600 hover:underline">Terms of Service</a>
-              {" "}and{" "}
-              <a href="https://www.weaccelerate.com/privacy" className="text-blue-600 hover:underline">Privacy Policy</a>
-            </p>
-          </div>
-
-          <div className="lg:sticky lg:top-8 h-fit order-1 lg:order-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-              <button
-                onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)}
-                className="w-full px-8 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors"
-              >
-                <h2 className="text-lg font-semibold text-slate-900">Order Summary</h2>
-                {isOrderSummaryExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-slate-600" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-slate-600" />
-                )}
-              </button>
-              {isOrderSummaryExpanded && (
-                <div className="px-8 pb-8 [&>div>h2]:hidden [&>div]:bg-transparent [&>div]:p-0 [&>div]:shadow-none [&>div]:border-0 [&>div]:rounded-none">
-                  <CheckoutSummary
-                    selectedShipping={selectedShipping === "express"}
-                    shippingCost={shippingCost}
-                    onTotalChange={(total: number) => {
-                      setTotalPrice(total);
-                      return true;
-                    }}
-                  />
-                </div>
-              )}
+              <p className="acc-caption text-center mt-3">
+                {!selectedCard && !isSubmitting && "Choose a card to continue. "}
+                This is a demo store. You will never be charged.
+              </p>
             </div>
-          </div>
+          </form>
+
+          <p className="acc-caption text-center">
+            By completing this purchase you agree to our{" "}
+            <a href="https://www.weaccelerate.com/terms" className="acc-link">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="https://www.weaccelerate.com/privacy" className="acc-link">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </div>
-      </main>
+
+        <aside className="lg:sticky lg:top-[104px] order-1 lg:order-2 acc-reveal acc-reveal-3">
+          <section className="acc-card acc-summary !p-0 overflow-hidden" aria-labelledby="summary-toggle">
+            <button
+              id="summary-toggle"
+              type="button"
+              onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)}
+              aria-expanded={isOrderSummaryExpanded}
+              className="w-full px-7 py-5 flex items-center justify-between gap-4 hover:bg-[var(--hover-wash)] transition-colors"
+            >
+              <span className="acc-h4">Order summary</span>
+              <span className="flex items-center gap-3">
+                {!isOrderSummaryExpanded && totalPrice > 0 && (
+                  <span className="acc-num text-[15px] acc-strong">${totalPrice.toFixed(2)}</span>
+                )}
+                <ChevronDown
+                  size={18}
+                  className={`text-[var(--ink-4)] transition-transform duration-200 ${isOrderSummaryExpanded ? "rotate-180" : ""}`}
+                  aria-hidden
+                />
+              </span>
+            </button>
+            {isOrderSummaryExpanded && (
+              <div className="px-7 pb-7">
+                <CheckoutSummary
+                  selectedShipping={selectedShipping === "express"}
+                  shippingCost={shippingCost}
+                  hideHeading
+                  onTotalChange={(total: number) => {
+                    setTotalPrice(total);
+                    return true;
+                  }}
+                />
+              </div>
+            )}
+          </section>
+        </aside>
+      </div>
 
       <Script
         crossOrigin="anonymous"
@@ -377,13 +414,13 @@ function PaymentContent() {
           setAccelerateLoaded(true);
         }}
       />
-    </div>
+    </Shell>
   );
 }
 
 export default function PaymentPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <PaymentContent />
     </Suspense>
   );

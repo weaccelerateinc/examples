@@ -1,6 +1,8 @@
 import * as React from "react";
 import Image from "next/image";
-import { ShieldCheck } from "lucide-react";
+import { Lock } from "lucide-react";
+
+const money = (n: number) => `$${n.toFixed(2)}`;
 
 const ProductItem = ({
   imageSrc,
@@ -15,24 +17,29 @@ const ProductItem = ({
   price: number;
   quantity?: number;
 }) => (
-  <div className="flex gap-4">
-    <div className="w-20 h-20 rounded-lg border border-slate-200 flex items-center justify-center bg-slate-50 flex-shrink-0 overflow-hidden">
-      <Image
-        src={imageSrc}
-        alt={name}
-        width={80}
-        height={80}
-        className="w-full h-full object-contain"
-      />
+  <div className="flex gap-4 items-center">
+    <div className="acc-thumb">
+      <Image src={imageSrc} alt={name} width={152} height={152} className="w-full h-full object-contain p-1.5" />
+      <span className="acc-qty" aria-label={`Quantity ${quantity}`}>
+        {quantity}
+      </span>
     </div>
-    <div className="flex-1">
-      <h3 className="font-medium text-slate-900 text-sm">{name}</h3>
-      <p className="text-sm text-slate-500 mt-1">Size {size}</p>
-      <p className="text-sm text-slate-500">Qty: {quantity}</p>
+    <div className="flex-1 min-w-0">
+      <h3 className="text-[15px] leading-snug font-semibold acc-strong text-pretty">{name}</h3>
+      <p className="acc-caption mt-1">Size {size} · Qty {quantity}</p>
     </div>
-    <div className="text-right">
-      <p className="font-semibold text-slate-900">${price.toFixed(2)}</p>
-    </div>
+    <p className="acc-num text-[15px] acc-strong self-start">{money(price)}</p>
+  </div>
+);
+
+const Row = ({ label, value, accent }: { label: string; value: string; accent?: boolean }) => (
+  <div className="flex justify-between items-baseline text-[15px]">
+    <span className="text-[var(--ink-4)]">{label}</span>
+    <span
+      className={`${value.startsWith("$") ? "acc-num" : ""} ${accent ? "text-[var(--pine-5)] font-medium" : "text-[var(--ink-2)]"}`}
+    >
+      {value}
+    </span>
   </div>
 );
 
@@ -45,48 +52,55 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange,
   };
 
   const subtotal = 99.99;
-  const shipping = selectedShipping === undefined ? "Enter shipping address" : `$${shippingCost.toFixed(2)}`;
   const estimatedTax = 8.0;
   const total = subtotal + (shippingCost || 0) + estimatedTax;
+  const shipping = shippingCost === 0 ? "Free" : selectedShipping === undefined ? "Calculated next" : money(shippingCost);
 
   React.useEffect(() => {
     if (onTotalChange) onTotalChange(total);
   }, [total, onTotalChange]);
 
-  return (
-    <div className={`bg-white p-8 ${hideHeading ? "rounded-none border-0 shadow-none" : "rounded-2xl shadow-sm border border-slate-200"}`}>
-      {!hideHeading && <h2 className="text-lg font-semibold text-slate-900 mb-6">Order Summary</h2>}
-      
-      {/* Order Items */}
-      <div className="space-y-4 mb-6 pb-6 border-b border-slate-200">
-        <ProductItem {...product} quantity={1} />
+  const body = (
+    <>
+      <ProductItem {...product} quantity={1} />
+
+      <hr className="acc-rule my-6" />
+
+      <div className="space-y-3">
+        <Row label="Subtotal" value={money(subtotal)} />
+        <Row label="Shipping" value={shipping} accent={shippingCost === 0} />
+        <Row label="Estimated tax" value={money(estimatedTax)} />
       </div>
 
-      <div className="space-y-4 mb-6">
-        <div className="flex justify-between text-slate-600">
-          <span>Subtotal</span>
-          <span>${subtotal.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-slate-600">
-          <span>Shipping</span>
-          <span className={shippingCost === 0 ? "text-green-600 font-medium" : ""}>
-            {shippingCost === 0 ? "FREE" : shipping}
-          </span>
-        </div>
-        <div className="flex justify-between text-slate-600">
-          <span>Tax</span>
-          <span>${estimatedTax.toFixed(2)}</span>
-        </div>
-        <div className="border-t border-slate-200 pt-4 flex justify-between text-lg font-bold text-slate-900">
-          <span>Total</span>
-          <span>${Number(total).toFixed(2)}</span>
-        </div>
+      <hr className="acc-rule my-6" />
+
+      <div className="flex justify-between items-baseline">
+        <span className="text-[17px] font-semibold acc-strong">Total</span>
+        <span className="flex items-baseline gap-2">
+          <span className="acc-caption acc-num">USD</span>
+          <span className="acc-num text-[26px] leading-none font-medium acc-strong tracking-[-0.02em]">{money(total)}</span>
+        </span>
       </div>
-      <div className="bg-blue-50 rounded-xl p-4 flex items-center gap-3">
-        <ShieldCheck className="w-5 h-5 text-blue-600 flex-shrink-0" />
-        <p className="text-sm text-blue-900">Your payment information is secure and encrypted</p>
+
+      <div className="acc-note mt-6">
+        <Lock size={15} strokeWidth={2} className="mt-[2px] flex-none text-[var(--pine-5)]" aria-hidden />
+        <p className="acc-caption !text-[var(--ink-4)]">Your payment information is secure and encrypted.</p>
       </div>
-    </div>
+    </>
+  );
+
+  if (hideHeading) return <div>{body}</div>;
+
+  return (
+    <section className="acc-card acc-summary" aria-labelledby="order-summary-heading">
+      <div className="acc-card-head">
+        <h2 id="order-summary-heading" className="acc-h4">
+          Order summary
+        </h2>
+        <span className="acc-eyebrow">1 item</span>
+      </div>
+      {body}
+    </section>
   );
 }
 

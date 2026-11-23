@@ -3,9 +3,18 @@
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckoutSummary } from "../CheckoutSummary";
-import Image from "next/image";
 import { Suspense, useState } from "react";
-import { Lock, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowRight, ChevronDown, Sparkles } from "lucide-react";
+import { Shell } from "../../_brand/Shell";
+
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="acc-eyebrow mb-2.5">{label}</h3>
+      <div className="text-[15px] leading-[1.6] text-[var(--ink-2)]">{children}</div>
+    </div>
+  );
+}
 
 function ConfirmationContent() {
   const searchParams = useSearchParams();
@@ -15,230 +24,177 @@ function ConfirmationContent() {
 
   const getShippingText = () => {
     if (selectedShipping === "express") {
-      return "Express Shipping (2-5 business days)";
+      return "Express shipping · 2–5 business days";
     }
-    return "Standard Shipping (4-10 business days)";
+    return "Standard shipping · 4–10 business days";
   };
 
-  const fullName = `${searchParams.get("firstName")} ${searchParams.get("lastName")}`;
-
+  const firstName = searchParams.get("firstName") || "";
+  const lastName = searchParams.get("lastName") || "";
+  const fullName = `${firstName} ${lastName}`.trim();
+  const email = searchParams.get("email");
   const totalPrice = searchParams.get("totalPrice");
+  const cardLast4 = searchParams.get("cardLast4");
 
-  const getPaymentMethodDisplay = () => {
-    //const cardBrand = searchParams.get("cardBrand");
-    const cardLast4 = searchParams.get("cardLast4");
+  const shipLine1 = searchParams.get("shippingAddress") || searchParams.get("address");
+  const shipApt = searchParams.get("shippingApartment");
+  const shipCity = searchParams.get("shippingCity") || searchParams.get("city");
+  const shipState = searchParams.get("shippingState") || searchParams.get("state");
+  const shipZip = searchParams.get("shippingZip") || searchParams.get("zip");
+  const billLine1 = searchParams.get("billingAddress") || searchParams.get("address");
+  const billCity = searchParams.get("billingCity") || searchParams.get("city");
+  const billState = searchParams.get("billingState") || searchParams.get("state");
+  const billZip = searchParams.get("billingZip") || searchParams.get("zip");
 
-    if (!cardLast4) {
-      return <span className="text-slate-900">Payment method not available</span>;
-    }
-
-    //const brandImage = cardBrand
-    //? {
-    //    visa: "/visa.svg",
-    //    mastercard: "/mastercard.svg",
-    //    amex: "/amex.svg",
-    //  }[cardBrand.toLowerCase()]
-    //  : "/generic-card.svg";
-
-    return (
-      <div className="flex items-center gap-2">
-        {/* <Image src={brandImage!} alt={cardBrand || "Card Brand"} className="h-5" width={20} height={20} /> */}      
-        <span className="text-slate-900 font-medium">{`•••• ${cardLast4}`}</span>
-        {totalPrice && (
-          <span className="text-slate-500 text-sm">{`$${Number(totalPrice).toFixed(2)}`}</span>
-        )}
-      </div>
-    );
-  };
+  const summary = (hideHeading: boolean) => (
+    <CheckoutSummary
+      selectedShipping={selectedShipping === "express"}
+      shippingCost={shippingCost}
+      onTotalChange={(total) => {
+        console.log("Total changed:", total);
+        return true;
+      }}
+      hideHeading={hideHeading}
+    />
+  );
 
   return (
-    <div className="min-h-screen w-screen bg-slate-100 ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]">
-      <header className="w-full bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl blur-sm opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
-              <div className="relative bg-white rounded-xl p-1.5 sm:p-2 shadow-md group-hover:shadow-lg transition-all duration-300 transform group-hover:scale-105">
-                <Image 
-                  src="/avatar-black.png" 
-                  alt="Accelerate Logo" 
-                  width={40} 
-                  height={40} 
-                  className="w-7 h-7 sm:w-9 sm:h-9 object-contain"
-                />
+    <Shell
+      step={3}
+      title={firstName ? `Thank you, ${firstName}.` : "Thank you."}
+      lead={
+        <>
+          We&apos;ve sent a confirmation to {email ? <span className="acc-strong font-medium">{email}</span> : "your email"}.
+          You&apos;ll get an update when your order ships.
+        </>
+      }
+    >
+      {/* Order summary on small screens: collapsible, above the details */}
+      <div className="lg:hidden mb-6">
+        <section className="acc-card acc-summary !p-0 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-expanded={!isCollapsed}
+            className="w-full px-5 py-4 flex items-center justify-between gap-4 hover:bg-[var(--hover-wash)] transition-colors"
+          >
+            <span className="acc-h4">Order summary</span>
+            <span className="flex items-center gap-3">
+              {totalPrice && <span className="acc-num text-[15px] acc-strong">${Number(totalPrice).toFixed(2)}</span>}
+              <ChevronDown
+                size={18}
+                className={`text-[var(--ink-4)] transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`}
+                aria-hidden
+              />
+            </span>
+          </button>
+          {!isCollapsed && <div className="px-5 pb-5">{summary(true)}</div>}
+        </section>
+      </div>
+
+      <div className="grid gap-8 lg:gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-start">
+        <div className="space-y-6 acc-reveal acc-reveal-2">
+          {/* Confirmation receipt */}
+          <section className="acc-card acc-sheen">
+            <div className="acc-seam acc-seam-liquid mb-6" aria-hidden />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+              <div className="col-span-2 sm:col-span-1">
+                <p className="acc-eyebrow mb-2.5">Confirmation</p>
+                <p className="acc-num text-[20px] font-medium acc-strong tracking-[0.04em]">DQFDHG5E0</p>
+              </div>
+              <div>
+                <p className="acc-eyebrow mb-2.5">Paid</p>
+                <p className="acc-num text-[20px] font-medium acc-strong">
+                  {totalPrice ? `$${Number(totalPrice).toFixed(2)}` : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="acc-eyebrow mb-2.5">Card</p>
+                <p className="acc-num text-[20px] font-medium acc-strong">{cardLast4 ? `•••• ${cardLast4}` : "—"}</p>
               </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 bg-clip-text text-transparent tracking-tight">Accelerate Store</span>
-              <span className="text-xs text-slate-500">Powered by Accelerate Checkout</span>
+            <div className="mt-6 pt-5 border-t border-[var(--border-hairline)] flex items-center gap-2.5 text-[14px] font-medium text-[var(--pine-5)]">
+              <Sparkles size={15} strokeWidth={2} aria-hidden />
+              <span>Checked out with Accelerate</span>
             </div>
-          </div>
-          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
-        </div>
-      </header>
+          </section>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Order Summary - Mobile: Top and Collapsible, Desktop: Right Side */}
-        <div className="lg:hidden mb-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors border-b border-slate-200"
-            >
-              <h2 className="text-lg font-semibold text-slate-900">Order Summary</h2>
-              {isCollapsed ? (
-                <ChevronDown className="w-5 h-5 text-slate-500" />
-              ) : (
-                <ChevronUp className="w-5 h-5 text-slate-500" />
-              )}
-            </button>
-            <div className={`transition-all duration-300 ease-in-out ${isCollapsed ? "max-h-0 overflow-hidden" : "max-h-[2000px]"}`}>
-              <div className="p-0">
-                <CheckoutSummary
-                  selectedShipping={selectedShipping === "express"}
-                  shippingCost={shippingCost}
-                  onTotalChange={(total) => {
-                    console.log("Total changed:", total);
-                    return true;
-                  }}
-                  hideHeading={true}
-                />
-              </div>
+          {/* Order details */}
+          <section className="acc-card" aria-labelledby="details-heading">
+            <div className="acc-card-head">
+              <h2 id="details-heading" className="acc-h4">
+                Order details
+              </h2>
             </div>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-12">
-          <div className="space-y-8">
-            {/* Success Confirmation */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <p className="text-slate-500 text-sm mb-1">Order Confirmed</p>
-                  <h1 className="text-3xl font-bold text-slate-900">Thank you, {fullName}!</h1>
-                </div>
-              </div>
-
-              <div className="bg-slate-50 rounded-xl p-4 mb-6">
-                <p className="text-sm text-slate-600 mb-1">Confirmation Number</p>
-                <p className="text-lg font-semibold text-slate-900">DQFDHG5E0</p>
-              </div>
-
-              <p className="text-slate-600">
-                We&apos;ve sent a confirmation email to {searchParams.get("email") || "your email"}. You&apos;ll receive an update when your order ships.
-              </p>
+            <div className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+              <Detail label="Contact">
+                <p className="acc-strong">{fullName || "—"}</p>
+                {email && <p className="text-[var(--ink-4)]">{email}</p>}
+              </Detail>
+              <Detail label="Payment">
+                {cardLast4 ? (
+                  <p className="acc-strong">
+                    Card <span className="acc-num">•••• {cardLast4}</span>
+                  </p>
+                ) : (
+                  <p>Payment method not available</p>
+                )}
+                {totalPrice && <p className="acc-num text-[var(--ink-4)]">${Number(totalPrice).toFixed(2)}</p>}
+              </Detail>
+              <Detail label="Shipping address">
+                <p>
+                  {fullName}
+                  <br />
+                  {shipLine1}
+                  {shipApt && `, ${shipApt}`}
+                  <br />
+                  {shipCity}, {shipState} {shipZip}
+                  <br />
+                  United States
+                </p>
+              </Detail>
+              <Detail label="Billing address">
+                <p>
+                  {fullName}
+                  <br />
+                  {billLine1}
+                  <br />
+                  {billCity}, {billState} {billZip}
+                  <br />
+                  United States
+                </p>
+              </Detail>
+              <Detail label="Delivery">
+                <p>{getShippingText()}</p>
+              </Detail>
             </div>
+          </section>
 
-            {/* Order Details */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900 mb-6">Order Details</h2>
-
-              <div className="grid md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-2">Contact Information</h3>
-                    <p className="text-slate-900">{fullName}</p>
-                    {searchParams.get("email") && (
-                      <p className="text-slate-600 text-sm mt-1">{searchParams.get("email")}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-2">Shipping Address</h3>
-                    <p className="text-slate-900">
-                      {fullName}
-                      <br />
-                      {searchParams.get("shippingAddress") || searchParams.get("address")}
-                      {searchParams.get("shippingApartment") && ` ${searchParams.get("shippingApartment")}`}
-                      <br />
-                      {searchParams.get("shippingCity") || searchParams.get("city")}, {searchParams.get("shippingState") || searchParams.get("state")} {searchParams.get("shippingZip") || searchParams.get("zip")}
-                      <br />
-                      United States
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-2">Shipping Method</h3>
-                    <p className="text-slate-900">{getShippingText()}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-2">Payment Method</h3>
-                    {getPaymentMethodDisplay() || (
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-900">Payment method not available</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-medium text-slate-500 mb-2">Billing Address</h3>
-                    <p className="text-slate-900">
-                      {fullName}
-                      <br />
-                      {searchParams.get("billingAddress") || searchParams.get("address")}
-                      <br />
-                      {searchParams.get("billingCity") || searchParams.get("city")}, {searchParams.get("billingState") || searchParams.get("state")} {searchParams.get("billingZip") || searchParams.get("zip")}
-                      <br />
-                      United States
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="text-sm text-slate-600">
-                Need help?{" "}
-                <Link href="/contact" className="text-blue-600 hover:underline font-medium">
-                  Contact us
-                </Link>
-              </div>
-              <Link 
-                href="/" 
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-600 transition shadow-lg shadow-blue-500/30"
-              >
-                Continue Shopping
-              </Link>
-            </div>
-
-            {/* Footer */}
-            <footer className="flex flex-wrap gap-3.5 py-5 text-sm text-slate-600">
-              <a href="https://www.weaccelerate.com/privacy" className="hover:underline">
-                Privacy policy
+          {/* Actions */}
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-4">
+            <p className="acc-small text-center sm:text-left">
+              Need help?{" "}
+              <a href="https://www.weaccelerate.com/help" className="acc-link">
+                Contact us
               </a>
-              <a href="https://www.weaccelerate.com/terms" className="hover:underline">
-                Terms of service
-              </a>
-            </footer>
-          </div>
-
-          {/* Order Summary - Desktop: Right Side, Always Visible */}
-          <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
-            <CheckoutSummary
-              selectedShipping={selectedShipping === "express"}
-              shippingCost={shippingCost}
-              onTotalChange={(total) => {
-                console.log("Total changed:", total);
-                return true;
-              }}
-            />
+            </p>
+            <Link href="/" className="acc-btn acc-btn-primary">
+              Continue shopping
+              <ArrowRight size={18} strokeWidth={2.25} className="acc-btn-arrow" aria-hidden />
+            </Link>
           </div>
         </div>
-      </main>
-    </div>
+
+        {/* Order summary on large screens */}
+        <aside className="hidden lg:block lg:sticky lg:top-[104px] acc-reveal acc-reveal-3">{summary(false)}</aside>
+      </div>
+    </Shell>
   );
 }
 
 export default function PaymentConfirmationPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <ConfirmationContent />
     </Suspense>
   );

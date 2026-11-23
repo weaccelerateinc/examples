@@ -1,0 +1,522 @@
+/* Accelerate brand layer for the integrated demo (/demo-integrated).
+   Tokens and effects are taken from the weaccelerate.com design system (_ds/ in the
+   website repo). Every rule is scoped under .acc-demo so the other demos in this app
+   are not affected. */
+
+body:has(.acc-demo) {
+  margin: 0;
+  background: #f8f7f4;
+  overflow-x: clip;
+}
+body:has(.acc-demo[data-surface="white"]) { background: #fff; }
+
+.acc-demo {
+  /* Ink: warm-neutral near-black through white */
+  --ink-1: #0e1216; --ink-2: #1b2228; --ink-3: #3a444c; --ink-4: #5c666e; --ink-5: #828c94;
+  --ink-6: #aeb6bc; --ink-7: #d5dadd; --ink-8: #e6e9ea; --ink-9: #f1f2f0;
+  --porcelain: #f8f7f4; --porcelain-deep: #f1efe9;
+  /* Volt: the signature. Always with ink type, never white */
+  --volt-1: #f5fadf; --volt-2: #e8f5b2; --volt-3: #d9f27a; --volt-4: #c9f24d; --volt-5: #b4e02f; --volt-7: #5e7614;
+  /* Pine: the serious dark */
+  --pine-0: #f2f6f3; --pine-1: #eaf1ed; --pine-2: #cbded5; --pine-3: #3e8f73; --pine-4: #1d5b49;
+  --pine-5: #124436; --pine-6: #0c3129; --pine-7: #07211c;
+  --sheen-deep: var(--pine-7); --sheen-core: var(--pine-5); --sheen-jade: var(--pine-3); --sheen-spec: #cfe8dc;
+
+  --border-hairline: rgba(14, 18, 22, 0.08);
+  --border-soft: rgba(14, 18, 22, 0.12);
+  --border-strong: rgba(14, 18, 22, 0.2);
+  --hairline: inset 0 0 0 1px var(--border-hairline);
+  --hairline-soft: inset 0 0 0 1px var(--border-soft);
+
+  --shadow-1: 0 1px 2px rgba(14, 18, 22, 0.05), 0 1px 0 rgba(14, 18, 22, 0.03);
+  --shadow-2: 0 2px 6px -1px rgba(14, 18, 22, 0.07), 0 10px 24px -8px rgba(14, 18, 22, 0.09);
+  --shadow-3: 0 1px 1px rgba(14, 18, 22, 0.04), 0 18px 44px -14px rgba(14, 18, 22, 0.15);
+  --shadow-volt: 0 10px 26px -10px rgba(148, 186, 32, 0.55);
+
+  --ease-swift: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-glide: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-liquid: 4.6s;
+  --dur-shine: 7s;
+
+  /* Page surface. Default is porcelain; data-surface="white" (set in layout.tsx) switches to white. */
+  --page-bg: var(--porcelain);
+  --hover-wash: var(--porcelain);
+
+  --font-core: var(--font-instrument), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  min-height: 100vh;
+  background: var(--page-bg);
+  color: var(--ink-3);
+  font-family: var(--font-core);
+  font-size: 16.5px;
+  line-height: 1.6;
+  letter-spacing: 0.011em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Type ---------- */
+.acc-demo .acc-h1 {
+  font-weight: 600;
+  font-size: clamp(30px, 4.2vw, 42px);
+  line-height: 1.04;
+  letter-spacing: -0.012em;
+  color: var(--ink-1);
+  text-wrap: balance;
+}
+/* Pine gradient text: the same treatment as "confirmed." in the weaccelerate.com/for-shoppers hero. Static. */
+.acc-demo .acc-pine-text {
+  background-image: linear-gradient(115deg, var(--sheen-deep) 0%, var(--sheen-core) 30%, var(--sheen-jade) 55%, var(--sheen-core) 80%, var(--sheen-deep) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  padding: 0 0.06em;
+  margin: 0 -0.06em;
+}
+.acc-demo .acc-h4 {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.3;
+  letter-spacing: 0.003em;
+  color: var(--ink-1);
+}
+.acc-demo .acc-lead {
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: 0.008em;
+  color: var(--ink-4);
+  text-wrap: pretty;
+}
+.acc-demo .acc-small {
+  font-size: 14.5px;
+  line-height: 1.5;
+  letter-spacing: 0.014em;
+  color: var(--ink-4);
+}
+.acc-demo .acc-caption {
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: var(--ink-5);
+}
+.acc-demo .acc-eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11.5px;
+  line-height: 1;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.acc-demo .acc-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.006em;
+}
+.acc-demo .acc-strong { color: var(--ink-1); }
+.acc-demo .acc-link {
+  color: var(--pine-5);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(18, 68, 54, 0.3);
+  text-underline-offset: 3px;
+  transition: color 150ms var(--ease-swift), text-decoration-color 150ms var(--ease-swift);
+}
+.acc-demo .acc-link:hover { color: var(--pine-7); text-decoration-color: currentColor; }
+
+/* ---------- Nav ---------- */
+.acc-demo .acc-nav-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding-top: 14px;
+  padding-bottom: 10px;
+  background: linear-gradient(to bottom, var(--page-bg) 55%, transparent);
+}
+.acc-demo .acc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 14px 0 20px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  box-shadow: var(--shadow-2);
+}
+/* "Demo store" tag: a volt chip with a pine dot. */
+.acc-demo .acc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: var(--volt-4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(94, 118, 20, 0.18), var(--shadow-volt);
+  font-family: var(--font-core);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+.acc-demo .acc-tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--pine-5);
+  box-shadow: 0 0 0 3px rgba(18, 68, 54, 0.14);
+}
+
+/* ---------- Cards ---------- */
+.acc-demo .acc-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: var(--hairline), var(--shadow-2);
+  padding: 28px;
+}
+@media (max-width: 639px) {
+  .acc-demo .acc-card { padding: 20px; border-radius: 16px; }
+}
+.acc-demo .acc-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.acc-demo .acc-rule { height: 1px; background: var(--border-hairline); border: 0; }
+
+/* ---------- White surface (data-surface="white") ----------
+   Matches weaccelerate.com: white page, white cards lifted by a hairline and soft shadow
+   at the site's 14px radius, and the order summary set apart on the site's mist green. */
+.acc-demo[data-surface="white"] {
+  --page-bg: #fff;
+  --hover-wash: rgba(14, 18, 22, 0.035);
+}
+.acc-demo[data-surface="white"] .acc-card { border-radius: 14px; }
+.acc-demo[data-surface="white"] .acc-summary { background: var(--pine-1); box-shadow: none; }
+
+/* ---------- Fields ---------- */
+.acc-demo .acc-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.014em;
+  color: var(--ink-2);
+}
+.acc-demo .acc-label .acc-optional { color: var(--ink-5); font-weight: 400; }
+/* Every field has the same hairline border at rest. The focused field, and only that one,
+   gets the liquid pine border, so it follows the shopper from field to field. */
+.acc-demo .acc-field {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  height: 50px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--hairline-soft), var(--shadow-1);
+  transition: box-shadow 150ms var(--ease-swift), background 150ms var(--ease-swift);
+}
+.acc-demo .acc-field:hover { box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-1); }
+.acc-demo .acc-field:focus-within { box-shadow: none; }
+.acc-demo .acc-field:focus-within::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  left: 50%;
+  top: 50%;
+  width: 140%;
+  aspect-ratio: 1;
+  margin: -70% 0 0 -70%;
+  background: conic-gradient(var(--sheen-deep) 0%, var(--sheen-core) 14%, var(--sheen-jade) 25%, var(--sheen-spec) 31%,
+    var(--sheen-jade) 37%, var(--sheen-core) 48%, var(--sheen-deep) 62%, var(--sheen-core) 84%, var(--sheen-deep) 100%);
+  animation: acc-rotate var(--dur-liquid) linear infinite;
+  pointer-events: none;
+}
+.acc-demo .acc-field:focus-within::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1.5px;
+  border-radius: 8.5px;
+  background: inherit;
+  pointer-events: none;
+}
+.acc-demo .acc-field input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 14px;
+  background: transparent;
+  border: 0;
+  outline: none;
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0.008em;
+  color: var(--ink-1);
+}
+.acc-demo .acc-field input::placeholder { color: var(--ink-5); opacity: 1; }
+.acc-demo .acc-field .acc-prefix {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  padding: 0 12px 0 14px;
+  margin-right: -2px;
+  border-right: 1px solid var(--border-hairline);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--ink-4);
+}
+.acc-demo .acc-field.is-filled { background: var(--volt-1); }
+
+/* ---------- Buttons ---------- */
+.acc-demo .acc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 26px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.006em;
+  cursor: pointer;
+  transition: transform 150ms var(--ease-swift), background 150ms var(--ease-swift),
+    box-shadow 150ms var(--ease-swift), opacity 150ms var(--ease-swift);
+}
+.acc-demo .acc-btn:focus-visible { outline: 2px solid var(--pine-5); outline-offset: 2px; }
+.acc-demo .acc-btn svg { transition: transform 150ms var(--ease-swift); }
+.acc-demo .acc-btn-primary {
+  background: var(--volt-4);
+  color: var(--ink-1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(94, 118, 20, 0.18), var(--shadow-1);
+}
+.acc-demo .acc-btn-primary:hover:not(:disabled) {
+  background: var(--volt-3);
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 0 0 1px rgba(94, 118, 20, 0.18), var(--shadow-volt);
+}
+.acc-demo .acc-btn-primary:hover:not(:disabled) .acc-btn-arrow { transform: translateX(2px); }
+.acc-demo .acc-btn-primary:active:not(:disabled) {
+  background: var(--volt-5);
+  transform: translateY(0) scale(0.992);
+  box-shadow: inset 0 0 0 1px rgba(94, 118, 20, 0.22);
+}
+.acc-demo .acc-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.acc-demo .acc-btn-ghost {
+  background: transparent;
+  color: var(--ink-1);
+  box-shadow: inset 0 0 0 1px var(--border-soft);
+}
+.acc-demo .acc-btn-ghost:hover { background: #fff; transform: translateY(-1px); box-shadow: inset 0 0 0 1px var(--border-soft), var(--shadow-1); }
+
+/* ---------- Option rows (shipping, payment) ---------- */
+.acc-demo .acc-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--hairline-soft);
+  cursor: pointer;
+  transition: box-shadow 150ms var(--ease-swift), background 150ms var(--ease-swift);
+}
+.acc-demo .acc-option:hover { background: var(--hover-wash); }
+.acc-demo .acc-option.is-selected { background: #fff; box-shadow: inset 0 0 0 1.5px var(--ink-1); }
+.acc-demo .acc-option:has(input:focus-visible) { outline: 2px solid var(--pine-5); outline-offset: 2px; }
+.acc-demo .acc-radio {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1.5px var(--border-strong);
+  transition: box-shadow 240ms var(--ease-settle);
+}
+.acc-demo .acc-radio::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  background: var(--ink-1);
+  transform: scale(0);
+  transition: transform 240ms var(--ease-settle);
+}
+.acc-demo .is-selected .acc-radio { box-shadow: inset 0 0 0 1.5px var(--ink-1); }
+.acc-demo .is-selected .acc-radio::after { transform: scale(1); }
+.acc-demo .acc-icon-chip {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--ink-9);
+  color: var(--ink-2);
+  transition: background 150ms var(--ease-swift);
+}
+.acc-demo .is-selected .acc-icon-chip { background: var(--volt-3); color: var(--ink-1); }
+.acc-demo .acc-brand-logos { gap: 6px; align-items: center; }
+.acc-demo .acc-brand-logos img { height: 22px; width: auto; border-radius: 4px; box-shadow: var(--hairline); }
+
+/* ---------- Notes (seam above copy, no box) ---------- */
+.acc-demo .acc-note { display: flex; gap: 10px; align-items: flex-start; padding-top: 14px; border-top: 1px solid var(--border-hairline); }
+.acc-demo .acc-recognized {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--pine-0);
+  color: var(--pine-5);
+  font-size: 14px;
+  font-weight: 500;
+}
+.acc-demo .acc-seam { height: 2px; border-radius: 2px; }
+
+/* ---------- Step trail ---------- */
+.acc-demo .acc-steps { display: flex; align-items: center; gap: 12px; }
+.acc-demo .acc-step { display: flex; align-items: center; gap: 9px; font-size: 13.5px; font-weight: 500; color: var(--ink-5); white-space: nowrap; }
+.acc-demo .acc-step.is-current { color: var(--ink-1); }
+.acc-demo .acc-step.is-done { color: var(--ink-3); }
+.acc-demo .acc-step-dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+.acc-demo .is-done .acc-step-dot { background: var(--volt-4); box-shadow: inset 0 0 0 1px rgba(94, 118, 20, 0.25); color: var(--ink-1); }
+.acc-demo .is-current .acc-step-dot { --acc-liquid-w: 2px; box-shadow: none; }
+.acc-demo .is-current .acc-step-dot > i { width: 6px; height: 6px; border-radius: 999px; background: var(--ink-1); }
+.acc-demo .acc-step-rail { flex: 1; min-width: 16px; max-width: 64px; height: 1px; background: var(--border-soft); }
+.acc-demo .acc-step-rail.is-done { height: 2px; background: var(--pine-4); }
+
+/* ---------- Product image frame ---------- */
+.acc-demo .acc-thumb {
+  position: relative;
+  flex: none;
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--hairline-soft);
+}
+.acc-demo .acc-qty {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 0 12px 0 8px;
+  background: var(--ink-1);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* ---------- Signature effects (from the design system) ---------- */
+.acc-demo .acc-liquid { position: relative; isolation: isolate; overflow: hidden; --acc-liquid-w: 1.5px; }
+.acc-demo .is-current .acc-step-dot.acc-liquid { --acc-liquid-w: 2px; }
+.acc-demo .acc-liquid::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  left: 50%;
+  top: 50%;
+  width: 180%;
+  aspect-ratio: 1;
+  margin: -90% 0 0 -90%;
+  background: conic-gradient(var(--sheen-deep) 0%, var(--sheen-core) 14%, var(--sheen-jade) 25%, var(--sheen-spec) 31%,
+    var(--sheen-jade) 37%, var(--sheen-core) 48%, var(--sheen-deep) 62%, var(--sheen-core) 84%, var(--sheen-deep) 100%);
+  animation: acc-rotate var(--dur-liquid) linear infinite;
+  pointer-events: none;
+}
+.acc-demo .acc-liquid::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--acc-liquid-w);
+  border-radius: inherit;
+  background: inherit;
+  pointer-events: none;
+}
+@keyframes acc-rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+.acc-demo .acc-shine { position: relative; }
+.acc-demo .acc-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(104deg, rgba(207, 232, 220, 0.95) 0%, rgba(62, 143, 115, 0.85) 13%, rgba(7, 33, 28, 0.3) 34%,
+    rgba(7, 33, 28, 0.1) 52%, rgba(29, 91, 73, 0.62) 73%, rgba(207, 232, 220, 0.92) 94%);
+  background-size: 230% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: acc-drift var(--dur-shine) var(--ease-glide) infinite alternate;
+  pointer-events: none;
+}
+@keyframes acc-drift { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+
+.acc-demo .acc-sheen { position: relative; overflow: hidden; }
+.acc-demo .acc-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 38%;
+  left: -40%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+  animation: acc-sweep 1.5s var(--ease-glide) 0.1s 1 forwards;
+  pointer-events: none;
+}
+@keyframes acc-sweep { to { left: 120%; } }
+
+.acc-demo .acc-seam-liquid {
+  background-image: linear-gradient(90deg, var(--sheen-deep) 0%, var(--sheen-core) 16%, var(--sheen-jade) 32%, var(--sheen-spec) 41%,
+    var(--sheen-jade) 50%, var(--sheen-core) 68%, var(--sheen-deep) 100%);
+  background-size: 260% 100%;
+  animation: acc-seam var(--dur-liquid) var(--ease-glide) infinite alternate;
+}
+@keyframes acc-seam { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+
+/* Content reveal: a fade plus a 4px rise, never a slide or a scale-up. */
+.acc-demo .acc-reveal { animation: acc-rise 520ms var(--ease-glide) both; }
+.acc-demo .acc-reveal-2 { animation-delay: 60ms; }
+.acc-demo .acc-reveal-3 { animation-delay: 120ms; }
+@keyframes acc-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .acc-demo { --dur-liquid: 0s; --dur-shine: 0s; }
+  .acc-demo .acc-liquid::before,
+  .acc-demo .acc-shine::after,
+  .acc-demo .acc-seam-liquid,
+  .acc-demo .acc-sheen::after,
+  .acc-demo .acc-reveal { animation: none; }
+}
