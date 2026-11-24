@@ -128,7 +128,6 @@ export default function CheckoutPage() {
                       maybeLogin(phoneNumber);
                     }}
                     autoComplete="given-name"
-                    autoFocus
                   />
                   <Field
                     label="Last name"

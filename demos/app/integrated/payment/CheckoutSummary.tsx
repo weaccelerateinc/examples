@@ -4,6 +4,12 @@ import { Lock } from "lucide-react";
 
 const money = (n: number) => `$${n.toFixed(2)}`;
 
+const SUBTOTAL = 99.99;
+const ESTIMATED_TAX = 8.0;
+
+/** Order total in dollars, rounded to cents. The payment page and the summary both use this, so they always agree. */
+export const orderTotal = (shippingCost: number) => Math.round((SUBTOTAL + (shippingCost || 0) + ESTIMATED_TAX) * 100) / 100;
+
 const ProductItem = ({
   imageSrc,
   name,
@@ -51,9 +57,9 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange,
     price: 99.99,
   };
 
-  const subtotal = 99.99;
-  const estimatedTax = 8.0;
-  const total = subtotal + (shippingCost || 0) + estimatedTax;
+  const subtotal = SUBTOTAL;
+  const estimatedTax = ESTIMATED_TAX;
+  const total = orderTotal(shippingCost);
   const shipping = shippingCost === 0 ? "Free" : selectedShipping === undefined ? "Calculated next" : money(shippingCost);
 
   React.useEffect(() => {
@@ -107,6 +113,6 @@ export function CheckoutSummary({ selectedShipping, shippingCost, onTotalChange,
 interface CheckoutSummaryProps {
   selectedShipping?: boolean | undefined;
   shippingCost: number;
-  onTotalChange: (total: number) => void;
+  onTotalChange?: (total: number) => void;
   hideHeading?: boolean;
 }

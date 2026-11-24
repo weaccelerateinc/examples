@@ -408,7 +408,6 @@ body:has(.acc-demo[data-surface="white"]) { background: #fff; }
 }
 .acc-demo .is-done .acc-step-dot { background: var(--volt-4); box-shadow: inset 0 0 0 1px rgba(94, 118, 20, 0.25); color: var(--ink-1); }
 .acc-demo .is-current .acc-step-dot { --acc-liquid-w: 2px; box-shadow: none; }
-.acc-demo .is-current .acc-step-dot > i { width: 6px; height: 6px; border-radius: 999px; background: var(--ink-1); }
 .acc-demo .acc-step-rail { flex: 1; min-width: 16px; max-width: 64px; height: 1px; background: var(--border-soft); }
 .acc-demo .acc-step-rail.is-done { height: 2px; background: var(--pine-4); }
 

@@ -15,7 +15,7 @@ export function StepTrail({ current }: { current: 1 | 2 | 3 }) {
             {i > 0 && <span className={`acc-step-rail ${n <= current ? "is-done" : ""}`} aria-hidden />}
             <span className={`acc-step ${state}`} aria-current={n === current ? "step" : undefined}>
               <span className={`acc-step-dot ${n === current ? "acc-liquid" : ""}`} aria-hidden>
-                {n < current ? <Check size={11} strokeWidth={3} /> : n === current ? <i /> : null}
+                {n < current && <Check size={11} strokeWidth={3} />}
               </span>
               <span className={n === current ? "" : "hidden sm:inline"}>{label}</span>
             </span>

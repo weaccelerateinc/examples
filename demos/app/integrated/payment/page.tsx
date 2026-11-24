@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { stripeOptions } from "../../options";
 import type { AccelerateWindowAPI } from "accelerate-js-types";
-import { CheckoutSummary } from "./CheckoutSummary";
+import { CheckoutSummary, orderTotal } from "./CheckoutSummary";
 import Image from "next/image";
 import { AccelerateWallet } from "../../../components/AccelerateWallet";
 import { Lock, Truck, Zap, CreditCard, ChevronDown, Loader2 } from "lucide-react";
@@ -101,14 +101,19 @@ function PaymentContent() {
   const [selectedShipping, setSelectedShipping] = useState("standard");
   const [shippingCost, setShippingCost] = useState(0);
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
-  const [totalPrice, setTotalPrice] = useState<number>(0);
-  const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState(true);
+  // Computed here, not reported by CheckoutSummary, so it stays correct while the summary is collapsed
+  const totalPrice = orderTotal(shippingCost);
+  // null = not chosen yet: CSS shows the summary open on desktop and closed on phones, so it does not jump after load
+  const [isOrderSummaryExpanded, setIsOrderSummaryExpanded] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // On phones the summary sits above the form, so start it collapsed there
+  // Record the state the CSS already shows, so the toggle and aria-expanded are correct
   useEffect(() => {
-    if (window.matchMedia("(max-width: 1023px)").matches) setIsOrderSummaryExpanded(false);
+    setIsOrderSummaryExpanded(!window.matchMedia("(max-width: 1023px)").matches);
   }, []);
+
+  // Only a card from the Accelerate wallet can pay. A card picked earlier must not be charged when PayPal or Zip is selected.
+  const canPay = selectedPayment === "card" && !!selectedCard;
 
   console.log({
     selectedPayment,
@@ -117,7 +122,7 @@ function PaymentContent() {
   const handleSubmit = async (e: FormEvent) => {
     console.log("EVENT", e);
     e.preventDefault();
-    if (selectedCard) {
+    if (canPay && selectedCard) {
       setIsSubmitting(true);
       try {
         const card = await window.accelerate.requestSource(selectedCard);
@@ -315,7 +320,7 @@ function PaymentContent() {
             </section>
 
             <div>
-              <button type="submit" disabled={!selectedCard || isSubmitting} className="acc-btn acc-btn-primary w-full">
+              <button type="submit" disabled={!canPay || isSubmitting} className="acc-btn acc-btn-primary w-full">
                 {isSubmitting ? (
                   <>
                     <Loader2 size={18} className="animate-spin" aria-hidden />
@@ -335,7 +340,9 @@ function PaymentContent() {
                 )}
               </button>
               <p className="acc-caption text-center mt-3">
-                {!selectedCard && !isSubmitting && "Choose a card to continue. "}
+                {!canPay &&
+                  !isSubmitting &&
+                  (selectedPayment === "card" ? "Choose a card to continue. " : "Only card payment works in this demo. ")}
                 This is a demo store. You will never be charged.
               </p>
             </div>
@@ -359,35 +366,32 @@ function PaymentContent() {
             <button
               id="summary-toggle"
               type="button"
-              onClick={() => setIsOrderSummaryExpanded(!isOrderSummaryExpanded)}
-              aria-expanded={isOrderSummaryExpanded}
+              onClick={() => setIsOrderSummaryExpanded(!(isOrderSummaryExpanded ?? true))}
+              aria-expanded={isOrderSummaryExpanded ?? undefined}
               className="w-full px-7 py-5 flex items-center justify-between gap-4 hover:bg-[var(--hover-wash)] transition-colors"
             >
               <span className="acc-h4">Order summary</span>
               <span className="flex items-center gap-3">
-                {!isOrderSummaryExpanded && totalPrice > 0 && (
-                  <span className="acc-num text-[15px] acc-strong">${totalPrice.toFixed(2)}</span>
+                {isOrderSummaryExpanded !== true && (
+                  <span className={`acc-num text-[15px] acc-strong ${isOrderSummaryExpanded === null ? "lg:hidden" : ""}`}>
+                    ${totalPrice.toFixed(2)}
+                  </span>
                 )}
                 <ChevronDown
                   size={18}
-                  className={`text-[var(--ink-4)] transition-transform duration-200 ${isOrderSummaryExpanded ? "rotate-180" : ""}`}
+                  className={`text-[var(--ink-4)] transition-transform duration-200 ${isOrderSummaryExpanded === null ? "lg:rotate-180" : isOrderSummaryExpanded ? "rotate-180" : ""}`}
                   aria-hidden
                 />
               </span>
             </button>
-            {isOrderSummaryExpanded && (
-              <div className="px-7 pb-7">
-                <CheckoutSummary
-                  selectedShipping={selectedShipping === "express"}
-                  shippingCost={shippingCost}
-                  hideHeading
-                  onTotalChange={(total: number) => {
-                    setTotalPrice(total);
-                    return true;
-                  }}
-                />
-              </div>
-            )}
+            {/* Always mounted; collapsing only hides it */}
+            <div
+              className={`px-7 pb-7 ${
+                isOrderSummaryExpanded === null ? "hidden lg:block" : isOrderSummaryExpanded ? "" : "hidden"
+              }`}
+            >
+              <CheckoutSummary selectedShipping={selectedShipping === "express"} shippingCost={shippingCost} hideHeading />
+            </div>
           </section>
         </aside>
       </div>
