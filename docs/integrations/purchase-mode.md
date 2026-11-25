@@ -1,34 +1,29 @@
 ---
-description: Configure a customer-owned final click and distinguish purchase support from fill-only testing.
+description: Configure the customer's final click, test without an order, and understand which checkout pages Accelerate supports.
 ---
 
 # Purchase mode and checkout support
 
-The customer's agent performs the final payment click through its own browser connection. Accelerate verifies the shopper, fills the bound payment document, delivers the masked review, and checks fresh private approval. The agent's trusted browser host sends its one authorized click under the existing restriction. Accelerate fills the form; its executor does not click.
+The customer's agent makes the final payment click through its own browser connection. Accelerate verifies the shopper, fills the payment form, sends the masked review, and checks the customer's approval. Your trusted browser host then sends one authorized click. Accelerate never clicks submit and never presses Enter.
 
-**Release status:** This page documents **SDK 0.17.0** (published 25 November 2026). SDK 0.11.0 introduced the customer final-click contract ([release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.11.0), source commit `dc30fdaf`). SDK 0.16.0 keeps that contract and removes Accelerate's own browser and the before-fill approval flow. SDK 0.16.1 changed only shopper message wording. SDK 0.17.0 removes the browser extension; the customer final-click contract is unchanged, and Accelerate never clicks submit. Sandbox and separate production infrastructure are deployed. Production customer onboarding, tenant activation, and financial release remain closed pending qualification. Neither deployment health nor sandbox evidence establishes production payment qualification. See the [0.16.1 release record](universal-card-rollout.md#sdk-0161-release).
+Each checkout has one of two purposes:
 
-`universal_card_v1` is the private form-admission contract. It has already been exercised in sandbox on real merchant checkout documents. It has no demo-hostname restriction and does not require fill-only purpose. This does not qualify every form for a purchase. See [Universal checkout rollout](universal-card-rollout.md).
-
-## Versions and migration
-
-| Version or integration | Behavior |
+| Purpose | Behavior |
 | --- | --- |
-| Published SDK `0.10.3` | Its purchase switches select the older executor-submit contract. It cannot perform the new customer-final-click handshake. |
-| `0.10.4` source change | Changes new existing-browser starter defaults to purchase. It does not add the customer final-click contract. |
-| Published SDK `0.11.0` | Adds customer final-click orchestration through the agent's trusted browser host. Sandbox and production infrastructure are deployed; production onboarding and qualification remain separate gates. |
-| Published SDK `0.16.0` (breaking) | Every checkout attaches the agent's own browser; `browser` is required. Accelerate's own browser, the before-fill approval flow, and hosted checkouts are removed. The agent can choose `purpose` for each checkout. The customer final-click contract is unchanged. |
-| Published SDK `0.16.1` | Changes only the wording and layout of shopper messages. The protocol and the final-click contract are unchanged. |
-| Published SDK `0.17.0` (breaking) | Removes the browser extension and its settings. The private executor types the card with trusted keystrokes. The customer's agent still makes the final click; Accelerate never clicks submit. See [Upgrading from 0.16.1](agentic-platforms.md#upgrading-from-0161). |
-| Already generated application | Keeps its copied runtime after an SDK package upgrade. Update its integration and host explicitly. |
+| `purchase` | After the customer approves, the customer's agent clicks the order button. This can place a real order. |
+| `sandbox_fill_only` | Accelerate fills the form and sends an informational review. Submission is disabled. The checkout ends with cancellation and cleanup. |
 
-In the new contract, the old direct executor-submit path is disabled. An old SDK or a new environment flag cannot restore the disabled purchase path. Keep old version documentation as historical behavior, not migration instructions.
+## Configure a purchase
 
-SDK 0.16.0 removes Accelerate's own browser. `browserMode: 'accelerate_managed'` and the Kernel starter no longer exist. Registration requires a `browserConnector`, or `browserMode: 'customer_backend_trusted'` with `browser` in the creation scope. `client.checkouts.create` and `POST /v1/checkouts` reject a request without `browser` with `invalid_input`. SDK 0.16.0 also removes the before-fill approval flow. Registration rejects `profile: 'legacy_before_fill_v1'`, `approvalPolicy: 'before_fill'`, and `verificationTiming: 'on_start'` with `invalid_input`. The managed service no longer supports hosted checkouts or `purpose: 'sandbox_source_comparison'`. Finish shopping in the agent's browser before you call `accelerate_checkout_start`.
+Purchase registration requires:
 
-## Configure an existing-browser purchase
+- `profile: 'managed_review_v2'`
+- `purpose: 'purchase'` and `enableSubmit: true`
+- A browser host that implements `performFinalClick`. See [Browser connector interface](browser-connector-interface.md#customer-final-click).
 
-The existing-browser starter uses these server settings. Since SDK 0.16.0, `accelerate-agent init <dir>` always generates this starter:
+Every purchase uses an owned existing browser with `custody_mode: 'customer_backend_trusted'`, `interaction_mode: 'chat'`, `approval_policy: 'after_fill'`, and `final_click_actor: 'customer'`.
+
+The generated starter reads these server settings:
 
 ```dotenv
 ACCELERATE_STARTER_MODE=live
@@ -38,46 +33,38 @@ ACCELERATE_ENABLE_PURCHASE_SUBMIT=true
 ACCELERATE_CONTEXT_MODULE=/absolute/protected/partner-host.mjs
 ```
 
-`live` selects real backend dependencies. It does not select the production wallet environment. After approved onboarding and qualification, set `ACCELERATE_BASE_URL` explicitly to `https://accelerate-agent-sdk-prd.politemushroom-4a4cad1b.eastus2.azurecontainerapps.io` and use the separate Production key and Merchant ID. The canonical Vercel default is sandbox. Use the approved add-card URL supplied during onboarding; a dashboard-generated link requires the dashboard deployment to be configured for the production wallet origin. See [Choose the wallet environment](agentic-platforms.md#choose-the-wallet-environment).
+`live` selects real backend dependencies. It does not select the production wallet. The starter does not load `.env` automatically. Export the values through your deployment configuration, or load the file explicitly, for example `node --env-file=.env server.mjs`.
 
-The environment selects Accelerate's wallet data, credentials, verification, and fill backend. The merchant's existing processor handles a charge after the customer's agent clicks through its own browser. Sandbox does not turn a live merchant into a test processor; use approved test data and synthetic or no-order checkouts during testing.
-
-The starter does not load `.env` automatically. Export the values through deployment configuration or load the file explicitly, for example with `node --env-file=.env server.mjs`.
-
-Your context module must supply authenticated identity, durable ownership, private messaging, and a [browser connector host](browser-connector-interface.md) that can perform the final click. The purchase must use an owned existing browser with `custody_mode: 'customer_backend_trusted'`, `interaction_mode: 'chat'`, `approval_policy: 'after_fill'`, and `final_click_actor: 'customer'`. Since SDK 0.16.0, the service accepts only `interaction_mode: 'chat'` with `approval_policy: 'after_fill'`.
-
-`ACCELERATE_STARTER_PURPOSE` sets the default purpose. Since SDK 0.16.0, the agent can choose `purpose` (`purchase` or `sandbox_fill_only`) for each checkout on `accelerate_checkout_start`. A purchase still requires a host that implements `performFinalClick`. The submit setting defaults to that capability.
-
-If the browser provider reports that the customer's browser has stopped or expired, the SDK returns `browser_ended` with next action `stop`. Do not retry that checkout. Create a fresh browser and a new checkout.
-
-Before OTP, the service internally requires a private gateway admission receipt with `customer_final_click_supported: true`. The initial release requires exactly one top-level document, no iframes, and no shadow roots, with card and address controls in that document. The service's public checkout exposes `final_click_actor: 'customer'`; it does not expose the private receipt. Quote inspection requires a simple USD total equal to the approved amount. The gateway reads a bare `$` total as USD. A visible non-USD currency code rejects the total. Unique exact total and submit selectors are checked before credential fill. Existing iframe or shadow-root fill/review support does not qualify those layouts for this purchase flow.
-
-Initial admission also rejects active or registered origin service workers. The gateway requests service-worker bypass through CDP as an additional browser control. During the initial click flow, non-main-frame and worker requests are blocked. A new page is closed and makes the outcome `outcome_unknown`. These controls do not establish a provider firewall or WebRTC protection.
-
-Phase 1 also excludes merchant flows that call `form.submit()` or `requestSubmit()`. Those programmatic submissions are blocked; an observed attempt returns `outcome_unknown`.
-
-The gate rechecks the bound submit control's identity, tag, type, name, form, and disabled state. It also checks native card/address values and metadata, the submit-form control inventory, exact total text, and URL. Unrelated banner or countdown text and button hover/focus class changes are allowed. The initial release also requires a browser-clock probe round trip of at most 500 ms and clock skew of at most 250 ms. These are current compatibility conditions, not broad merchant qualification.
+The registration purpose is a default. The agent can pass `purpose` on `accelerate_checkout_start` for each checkout. `registerPartnerCheckoutTools` defaults to `purpose: 'sandbox_fill_only'` and `enableSubmit: false`. Set both values explicitly. Without `enableSubmit: true`, the agent has no submit tool. A purchase always requires `performFinalClick`.
 
 ## Approval and the final click
 
-Purchase still requires private shopper verification, an exact quote and revision, fresh CVV verification, one successful bound fill, and delivery of the masked review with its actual provider receipt. The shopper must approve within the five-minute decision window.
+A purchase requires all of these, in order:
 
-The model-facing `accelerate_checkout_submit` tool orchestrates four backend operations inside the same durable owned-checkout lock and automation restriction:
+1. Private shopper verification.
+2. An exact quote and revision.
+3. Fresh CVV verification and one successful fill.
+4. Delivery of the masked review, with the provider's sent receipt.
+5. The customer's yes, within five minutes of that receipt.
 
-1. Run `browserConnector.prepareFinalClick` to check the owned fenced document, and live provider resource before opening a click window.
-2. Arm the approved revision through Accelerate's private final-click API.
-3. Consume the one-use preparation and invoke the platform's `BrowserConnectorHost.performFinalClick` implementation once through the platform's own browser connection.
-4. Complete that arm through Accelerate and start cleanup.
+Then the agent calls `accelerate_checkout_submit` with `{ checkout_id, revision }`. Inside the durable owned-checkout lock, the SDK runs these steps once:
 
-The private preparation is valid for at most 60 seconds and remains bound to its connector, owner, and checkout. It does not require ten minutes of remaining browser lifetime. After arming, the connector performs local binding/deadline checks and calls the host without another provider network read. The host receives the exact fenced document, target, and deadline; it never receives `arm_id`. Only the SDK orchestrator retains that completion token. See the [browser connector contract](browser-connector-interface.md#customer-final-click-in-sdk-0110).
+1. **Prepare.** `browserConnector.prepareFinalClick` checks the fenced document and the live browser before anything is armed. It returns a one-use preparation that is valid for at most 60 seconds. If preparation fails, nothing is armed.
+2. **Arm.** The SDK arms the approved revision through Accelerate's private final-click API. The response contains an opaque `arm_id` and the click target.
+3. **Click.** The SDK consumes the preparation and calls your `performFinalClick` once, with the exact document, submit selector, and deadline. Your host never receives `arm_id`.
+4. **Complete.** The SDK completes the arm and Accelerate starts cleanup.
 
-The callback must preserve the checkout, browser, document, revision, and submit-target binding. It must not read credential fields, enable general browser tools, or retry the click. The gateway's click window is at most 10 seconds and cannot exceed the original approval deadline. Approval alone never sends a click. Arming does not release payment network requests; admission of the one authorized click opens the restricted merchant/provider request policy.
+The click window is at most 10 seconds and never extends past the original approval. Arming does not release payment network requests. Only the one authorized click opens the restricted merchant and payment-provider requests.
 
-The Accelerate executor fills the card fields with trusted keystrokes. It never presses Enter and never clicks purchase. The platform's trusted browser backend performs the one authorized action requested by its agent.
+Your `performFinalClick` must:
+
+- Send one trusted pointer click on the bound submit control, in the exact browser, document, and URL.
+- Finish before the returned deadline.
+- Not read credential fields, lift the ordinary automation restriction, or retry the click.
 
 ## Direct HTTP final-click API
 
-These calls use the same authenticated tenant and Merchant ID headers as the [checkout API](agentic-platforms.md#http-api-integrate-without-the-sdk). Keep their requests and responses in backend handlers. Do not expose an arm or browser target as a model tool result.
+HTTP integrations run the same steps in backend handlers. The calls use the same headers as the [checkout API](agentic-platforms.md#http-api-integrate-without-the-sdk). Never expose an arm or a click target to the model.
 
 ```http
 POST /v1/checkouts/{id}/final-click/arm
@@ -86,7 +73,7 @@ Content-Type: application/json
 {"revision": 3}
 ```
 
-The response supplies an opaque `arm_id`, `armed_expires_at`, and `target: { checkout_url, submit_selector }`, with `retry_safe: false` and `payment_confirmed: false`. The gateway permits at most 10 seconds; always honor the returned expiry. Complete readiness preflight before this call. Pass only the exact document binding, target, and deadline to the trusted click callback. Retain `arm_id` in the orchestrator for completion; do not pass it to the browser host.
+The response contains `arm_id`, `armed_expires_at`, and `target: { checkout_url, submit_selector }`, with `retry_safe: false` and `payment_confirmed: false`. Always honor the returned expiry. Check browser readiness before this call. Pass only the target and deadline to your click code. Keep `arm_id` for completion.
 
 ```http
 POST /v1/checkouts/{id}/final-click/complete
@@ -95,27 +82,66 @@ Content-Type: application/json
 {"revision": 3, "arm_id": "OPAQUE_ARM_FROM_THE_ARM_RESPONSE"}
 ```
 
-Completion returns ordinary checkout status, `submit_attempted` or `outcome_unknown`. Only an attested `submit_attempted` result includes `submit_actor: 'customer'`. An armed or unknown checkout makes no such actor claim. The caller does not submit an assertion that a payment succeeded. A click acknowledgement, navigation, `submit_attempted`, or `outcome_unknown` is not an order confirmation. Resolve uncertainty through the merchant's independent order channel before another purchase.
+Completion returns the checkout status: `submit_attempted` or `outcome_unknown`. Only `submit_attempted` includes `submit_actor: 'customer'`. Neither status confirms an order. Check the merchant's order system and [record the result](agentic-platforms.md#record-the-merchants-result).
 
-If preparation fails, nothing is armed. An explicit refusal before the arm is consumed returns its ordinary error, such as `approval_required`, `revision_conflict`, or `checkout_expired`. Any ambiguous arm failure, including transport, timeout, schema, or upstream failure, becomes `outcome_unknown`; the host is never called.
+Failure handling:
 
-After a successful arm, call completion once even if the host reports no dispatch or throws. Completion observes the existing attempt; it does not authorize or send another click. A completion failure also becomes `outcome_unknown`. Retain the restriction and reconcile the existing checkout. Do not automatically re-arm, click again, or create a replacement attempt.
+- An explicit refusal before the arm, such as `approval_required`, `revision_conflict`, or `checkout_expired`, returns that error. Nothing is armed.
+- Any unclear arm failure (transport error, timeout, or unexpected response) becomes `outcome_unknown`. Do not click.
+- After a successful arm, call completion once, even if your click code failed or did not click. Completion only observes. It does not authorize another click.
+- If completion fails, treat the attempt as `outcome_unknown`. Keep the restriction. Do not re-arm, click again, or start a replacement checkout.
+- Cancellation during the click window or the observation period after it returns 409 `final_click_in_progress`. Keep observing through completion or status.
 
-The click window and outcome-observation lifetime are separate. The service sends a private `not_after` bound by the approval, submit, and workflow deadlines. The gateway also returns an authoritative private `execution_expires_at`, at least the click expiry and at most 30 seconds after arming. The service retains that observation deadline and strips it from the five-field SDK arm response.
+`POST /v1/checkouts/{id}/submit` is closed. It returns 403 `customer_click_required`.
 
-After the click deadline, only outcome observation remains; it does not extend click or purchase authority. Click-window expiry does not immediately retire the browser. Cancellation during the retained execution period returns HTTP `409` with `final_click_in_progress`; a caller disconnect also does not immediately close it. Keep the restriction and observe the existing arm through completion or safe status. Do not treat cancellation failure or an expired click window as permission for another click.
-
-## Select fill-only for a no-order test
+## Test without an order
 
 ```dotenv
 ACCELERATE_STARTER_PURPOSE=sandbox_fill_only
 ACCELERATE_ENABLE_PURCHASE_SUBMIT=false
 ```
 
-Fill-only permanently disables submission for that checkout. It sends an informational review and ends through cancellation and cleanup. An explicit submit `true` with fill-only is rejected. Purchase purpose with explicit submit `false` can withhold the model's submit tool. The agent can also select `purpose: 'sandbox_fill_only'` for one checkout on `accelerate_checkout_start`.
+Fill-only permanently disables submission for that checkout. It sends an informational review and ends through cancellation and cleanup. An explicit `enableSubmit: true` with fill-only is rejected. The agent can also select `purpose: 'sandbox_fill_only'` for one checkout.
 
-Changing configuration cannot convert an existing fill-only checkout into a purchase. Purpose belongs to its original admission and idempotency binding. After confirmed cleanup and resolution of uncertainty, use a separately authorized new purchase with a fresh owned browser and creation key.
+You cannot change a fill-only checkout into a purchase. For a purchase, start a new checkout after cleanup is confirmed.
 
-For a controlled purchase qualification, the qualification runner accepts `--purpose purchase`. It places a real order through the customer final click in a Browser Use browser. Fill-only stays the default.
+See [Test in sandbox](agentic-platforms.md#7-test-in-sandbox) for test wallets and the safe test checkout page.
 
-See [Universal checkout rollout](universal-card-rollout.md) for sandbox evidence, provider enablement, deployment checks, and production qualification. See [Private CVV and credential delivery](agentic-platforms-private-payments.md) for the data path.
+## Supported checkout pages
+
+Accelerate inspects the actual HTTPS payment page before it sends any OTP. There is no merchant allowlist. A page is admitted when Accelerate finds one unambiguous set of card controls and can produce a safe masked review. If the page is not supported, the checkout returns `checkout_unsupported` before any private step.
+
+Admission binds the exact checkout URL, including query and fragment, and the checkout purpose. A changed document, ambiguous controls, an unsupported frame, a missing review capability, or too little browser lifetime stops admission.
+
+### Fill support
+
+Accelerate fills card controls in the checkout document and in permitted payment-provider frames. If it finds two controls for the same value, it types nothing and returns `checkout_unsupported` with reason `card_form_ambiguous`.
+
+### Purchase support
+
+A purchase has stricter page requirements than a fill-only test. Accelerate checks them before any OTP:
+
+- One top-level document, with no iframes or shadow roots. Card and address controls are in that document.
+- A simple total in USD that equals the approved amount. A bare `$` total is read as USD. A visible non-USD currency code rejects the total.
+- Unique, exact total and submit selectors.
+- No active or registered service worker for the page's origin.
+- A normal submit button. Merchant flows that submit through `form.submit()` or `requestSubmit()` are not supported.
+- A browser-clock round trip of at most 500 ms and clock skew of at most 250 ms.
+
+Between approval and the click, Accelerate checks that the submit control, the filled card and address values, the form's controls, the total text, and the URL did not change. Unrelated banner or countdown text and hover or focus style changes are allowed.
+
+During the click, requests from other frames and workers are blocked. A new page is closed and the outcome becomes `outcome_unknown`. These are browser controls. They are not a network firewall or WebRTC protection.
+
+These are the current purchase requirements. Fill support for iframe or shadow-root layouts does not qualify those layouts for a purchase.
+
+## Before production purchases
+
+Agree the browser provider, merchant checkouts, payment flows, and success criteria with Accelerate. Qualification covers:
+
+- Correct field writes, the final amount, the private review receipt, and customer approval.
+- The customer's final click and an independently verified merchant order.
+- Independent cleanup and failure handling.
+
+A click, a redirect, `submit_attempted`, or your own assertion is not payment confirmation. Keep uncertain attempts restricted until you reconcile them. Do not retry a click or start a replacement purchase after an unknown result.
+
+See [Private CVV and credential delivery](agentic-platforms-private-payments.md) for the data path.

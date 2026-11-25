@@ -4,11 +4,11 @@ description: How private CVV collection, one-use credential release, and private
 
 # Private CVV and credential delivery
 
-Accelerate separates **customer verification** from **credential delivery to the checkout browser**. Your private handler receives the customer's CVV reply. A later one-use Direct release supplies the payment fields to Accelerate's private executor. The executor types them into the payment fields of the customer's existing checkout browser.
+Accelerate separates **customer verification** from **credential delivery to the checkout browser**. Your private handler receives the customer's CVV reply. A later one-use release supplies the card values to Accelerate's private executor. The executor types them into the payment fields of the customer's existing browser.
 
-Here, private means that sensitive replies and payment credentials stay outside model prompts, ordinary chat history, and agent tools. Trusted backend services, the messaging provider, the private executor, and the merchant payment fields still handle raw values. This is not a claim of end-to-end encryption between the customer and the merchant payment fields.
+Here, private means that sensitive replies and card credentials stay outside model prompts, ordinary chat history, and agent tools. Trusted backend services, the messaging provider, the private executor, and the merchant's payment fields still handle raw values. This is not end-to-end encryption between the customer and the merchant's payment fields.
 
-Start with [Agentic platforms](agentic-platforms.md) for setup. The [OpenInstinct reference](openinstinct-reference.md) shows how one application implements the same boundaries.
+Start with [Agentic platforms](agentic-platforms.md) for setup.
 
 ## The two data paths
 
@@ -17,7 +17,7 @@ sequenceDiagram
     participant Customer
     participant Ingress as Platform private handler
     participant Service as Accelerate managed service
-    participant Wallet as Accelerate wallet and VGS
+    participant Wallet as Accelerate wallet and vault
     participant Executor as Accelerate private executor
     participant Checkout as Merchant payment fields
     Customer->>Ingress: Private CVV reply through messaging provider
@@ -25,90 +25,73 @@ sequenceDiagram
     Service->>Wallet: Collect CVV for this checkout attempt
     Wallet-->>Service: Scoped verification result
     Service->>Executor: Continue the one-use armed fill
-    Executor->>Wallet: Consume handoff and request Direct credentials
-    Wallet-->>Executor: PAN, expiry, and checkout CVV
+    Executor->>Wallet: Consume handoff and request credentials
+    Wallet-->>Executor: Card number, expiry, and checkout CVV
     Executor->>Checkout: Type values into the bound document and permitted frames
     Executor-->>Service: Safe status and masked review
     Service-->>Ingress: Private review image and amount
     Ingress-->>Customer: Deliver review and request purchase decision
 ```
 
-The agent receives safe status and progress events. It does not receive the original CVV reply, Direct credential response, or access to the populated payment page through ordinary tools.
+The agent receives safe status and progress events. It never receives the CVV reply, the card credentials, or access to the filled payment page.
 
-## 1. Collect CVV outside the agent
+## 1. Collect the CVV outside the agent
 
-Your messaging ingress authenticates the provider request and resolves the customer, workspace, and direct conversation. It routes sensitive replies before logging, history caching, tracing, ordinary queues, or model processing.
+Your messaging ingress authenticates the provider request and resolves the customer, workspace, and direct conversation. It routes sensitive replies before any logging, history, tracing, ordinary queues, or model processing. See [Private messaging](private-messaging.md).
 
-The server-only `AcceleratePrivateChatClient.chat.reply()` sends the reply to `/v1/checkouts/{id}/private-chat/reply`. It binds the reply to the existing customer/workspace/conversation and the provider's stable message ID. The ordinary SDK and MCP tools have no CVV argument.
+The server-only `AcceleratePrivateChatClient.chat.reply()` sends the reply to `/v1/checkouts/{id}/private-chat/reply`. It binds the reply to the customer, workspace, and conversation, and to the provider's message ID. The agent tools have no CVV argument.
 
-The managed service accepts CVV as a three- or four-digit string, preserving leading zeroes. It checks the selected card/address, frozen quote, checkout revision, staged fill intent, and remaining review time. It then submits the transient CVV to Accelerate's authenticated sensitive handler. That handler sends an HTTPS collection request to the configured VGS origin at `/wallet/vgs-inbound`.
+The managed service accepts a CVV as a three- or four-digit string and keeps leading zeros. It checks the selected card and address, the frozen quote, the checkout revision, the armed fill, and the remaining review time. It then sends the CVV to Accelerate's sensitive handler, which collects it into the card vault.
 
-In chat mode, this is a backend API submission to VGS. The raw reply passes through your messaging provider, private server handler, and Accelerate's sensitive handlers. It is not entered through a hosted VGS field in the chat application.
+The raw reply passes through your messaging provider, your private handler, and Accelerate's sensitive handlers. It is not entered in a hosted secure field.
 
-The private challenge is claimed once. Collection and subsequent verification receipts must match the authenticated merchant, shopper, selected card, `Direct` mode, and exact checkout attempt, with `requiresFreshCvv: true` and an unexpired verification result. The sealed challenge also binds the quote and address. A generic success response is insufficient.
+The CVV challenge is used once. The verification must match the authenticated merchant, shopper, selected card, and exact checkout attempt, and must not be expired. The challenge also binds the quote and address.
 
-Handlers clear mutable reply objects and buffers after use. Clients must also disable body capture and secret-bearing error logging. Clearing an object cannot remove a message already stored by a provider or framework.
-
-Source references: [private ingress](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/private-ingress.js), [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/private-chat.md), and [sensitive checkout handler](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/lib/sensitive-checkout-service.js).
+Handlers clear reply objects and buffers after use. Disable request-body capture and secret-bearing error logs in your own stack. Clearing an object cannot remove a message that a provider or framework already stored.
 
 ## 2. Bind the fresh CVV to credential release
 
-VGS collection produces a CVV alias. The wallet backend records a short-lived verification proof for the authenticated user, merchant, card, vault, and checkout attempt. The application database references the alias rather than storing the raw CVV digits.
+The vault returns a CVV alias. The wallet records a short-lived verification proof for the shopper, merchant, card, and checkout attempt. The database stores the alias, not the CVV digits.
 
-For required fresh-CVV Direct release, the backend captures the exact collected alias for that attempt before atomically claiming its proof. That alias remains authoritative if a provider supplies a different CVV or another checkout updates the card's cached alias. The outbound Direct response must reveal that collected alias and report `cvvSource: 'collected_checkout'`.
+At release, the wallet uses the exact alias collected for that checkout attempt, even if another checkout later updates the card. The release reports `cvvSource: 'collected_checkout'`. The executor receives the CVV only through this release, together with the selected card's number and expiry. It never receives the original chat reply.
 
-The executor does not receive the original chat reply from the SDK. It receives the CVV returned through this separately authorized Direct release, together with the selected card's PAN and expiry.
+CVV collection and proof are not an issuer authorization or a purchase.
 
-**Deployment requirement:** VGS must reveal the Direct response's `$.cvv` through the configured `VOLATILE` storage transform. The checked-in backend and proxy configuration do not prove that the deployed route returns the exact collected digits. The Node client checks the provenance metadata; it does not compare the Direct response with the original CVV reply. Accelerate must qualify that behavior in the selected environment before live use.
+## 3. Fill once
 
-CVV collection and proof creation do not constitute an issuer authorization or a successful purchase.
+At creation, the checkout declares `fill_after_verification: true`. The approval request arms one fill for the exact checkout revision.
 
-Source reference: [fresh CVV and Direct release contract](https://github.com/weaccelerateinc/accelerate/blob/main/docs/checkout-cvv-policy.md#direct-release).
+When the private CVV verifies, the service continues the fill inside the same private reply, under its exclusive checkout lease. It consumes the armed fill before it prepares the handoff or releases credentials. The agent does not need another turn or a fill tool.
 
-## 3. Continue one armed fill
+The fill uses an expiring one-use handoff. It binds the shopper, card, address, amount and currency, destination, and checkout attempt. The executor consumes the handoff with its own authentication. The wallet then validates the credential formats, the selected card and amount, the fresh-CVV rule, and the `collected_checkout` marker before the fill.
 
-The `managed_review_v2` flow declares `fill_after_verification: true` at creation. The subsequent verified quote separately arms one fill for the exact checkout revision. Both requests require the service's acknowledgement.
+A duplicate reply, an expired grant, a lost response, or an uncertain fill cannot authorize another release. Recovery reads the existing checkout. It never repeats the payment operation.
 
-After successful private CVV verification, the service continues the fill under its existing exclusive checkout lease. It consumes the staged fill intent before preparing the handoff or releasing credentials. The model does not need another turn or a fill-tool call.
+## 4. Fill the card fields
 
-The fill request uses an expiring one-use handoff. Its sealed context binds the configured credential source, shopper, card, address fingerprint, amount/currency, destination, and checkout attempt. The executor consumes it through the private `/api/checkout/consume` route with executor authentication and the merchant header.
+Accelerate's private executor attaches to the customer's existing browser over the trusted browser-control connection. It types each value with trusted browser keystrokes. Nothing is installed in the browser.
 
-The wallet service then calls the fixed Direct endpoint, `/outbound/get-source-direct`, using the authenticated shopper session and exact checkout attempt. This path does not issue or redeem an authorization token. It validates credential formats, the selected card and amount, fresh-CVV policy, and the `collected_checkout` provenance marker before filling.
+Before the fill, the executor checks the owned browser, the exact checkout document, the permitted payment frames, recording, the paused automation, and the remaining lifetime.
 
-A duplicate reply, expired grant, lost response, or uncertain fill cannot authorize another release. Recovery reads the existing checkout and reconciles uncertainty; it does not replay the payment operation.
+- It uses one visible, editable control for each value, in the admitted document or permitted payment-provider frames. If it finds two controls for one value, it types nothing and returns `checkout_unsupported` with reason `card_form_ambiguous`. This check runs at attachment and again before the credential release.
+- It reads each value back after it types it. Provider formatting and masks are accepted when every visible digit matches. If a value does not read back, it empties the card fields and stops.
+- Card values are never logged, returned to the agent, or put in an error.
+- It never presses Enter and never clicks submit. Autosave is disabled.
 
-Source references: [v2 continuation](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md), [handoff consumption](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/lib/checkout-service.js), and [Direct client](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/lib/direct-handoff-client.js).
+Navigation, reload, URL changes, or tab removal invalidate the binding.
 
-## 4. Fill the card fields in the browser
+These controls limit what happens in a trusted browser. They do not revoke the browser provider account owner's access. Customer-owned browsers keep the `customer_backend_trusted` custody model.
 
-Accelerate's private executor fills the card fields itself. It attaches to the customer's existing checkout browser over the trusted browser-control connection and types each value with trusted browser keystrokes. Nothing is installed in the customer's browser. Card values do not come from a public credential endpoint or an agent message.
+## 5. Masked review, approval, final click, and cleanup
 
-Before the fill, the executor checks the owned browser, exact checkout document, permitted payment frames, recording policy, paused ordinary automation, and remaining lifetime.
+The executor applies display masks before the fill. The review shows the card number as stars plus the last four digits, the CVV as stars, and the expiry. The real payment fields keep the values that the merchant needs.
 
-The executor finds the card controls only in the admitted checkout document and the permitted payment-provider HTTPS frames. It uses one visible editable control for each kind of value. If it finds two controls of one kind, it types nothing, and the checkout returns `checkout_unsupported` with reason `card_form_ambiguous`. This check runs when the checkout attaches and again before the one-use credential is released.
+**Display masking protects the screen only.** It does not encrypt or remove the field values. Ordinary agent DOM, screenshot, and browser-control tools stay blocked during this period.
 
-After each write, the executor reads the value back inside the page. Provider formatting and provider masks are accepted when every visible digit matches. If a value does not read back, the executor empties the card fields and stops. The gateway reports that it could not confirm the fill; this is not an SDK error code. Card values are never logged, returned to the agent, or put in an error. The executor never presses Enter and never clicks a submit control. Autosave is disabled.
+The customer receives the masked image and the exact final amount in the private channel. For a purchase, the confirmed sent receipt starts the five-minute decision window. The fill, the CVV, and the image do not approve a purchase. Fill-only tests cancel after the review.
 
-The binding covers the target document and the permitted frames. Navigation, reload, URL/history changes, or tab removal invalidate it. The executor privately verifies the actual filled values before producing the customer review.
+After the customer approves, the customer's agent calls submit. The SDK checks readiness, arms the exact revision, calls your browser host's `performFinalClick` once, and completes the arm. Accelerate's executor never clicks. See [Purchase mode and checkout support](purchase-mode.md).
 
-These controls authorize a specific operation in a trusted browser. They do not make the executor cryptographically unable to read card values or revoke the browser provider account owner's access. Client-owned browsers retain the `customer_backend_trusted` custody model.
+An in-page timer clears the card fields at a deadline, even if the executor's connection drops. When the checkout ends, cleanup empties every card control and confirms that each one is empty. The worker drops its credential references and retires the browser. An independent cleanup service handles any remaining cleanup after a worker failure.
 
-SDK 0.16.1 and earlier used a browser extension; SDK 0.17.0 and the current gateway do not.
-
-Source references: [private executor fill](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/lib/extension-manual-checkout.js) and [trusted-keystroke card entry](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/docs/cdp-key-fill.md).
-
-## 5. Mask review, approve, submit, and clean up
-
-The executor installs display masks before filling. The review displays PAN as stars plus the last four digits, CVV as stars, and expiry visibly. The actual native payment fields retain the values needed for the merchant payment while review and authorized submission are pending.
-
-**Display masking is presentation protection.** It does not encrypt or remove the native field values. The merchant's payment code and trusted browser operators remain within the relevant trust boundary. Ordinary agent DOM, screenshot, and browser-control tools must remain blocked during this period.
-
-The customer receives the masked image and exact final amount through the private channel. For purchases, the confirmed sent receipt starts the five-minute decision window. Filling, CVV entry, and image delivery do not approve or submit a purchase. Fill-only tests cancel after informational review delivery.
-
-**Published SDK 0.11.0** lets the customer's agent perform the final physical click through its own browser connection and trusted host. After fresh private approval, the agent requests submit. Inside the owned-checkout lock, the handler prepares one-use browser readiness before arming, arms the exact revision, invokes the agent's final-click callback once, then completes the arm. The completion token stays in the SDK orchestrator; the host receives only the exact document, target, and deadline. The Accelerate executor does not click purchase. Ordinary browser tools stay blocked; the callback does not read credential fields or perform a late provider read. The matching stack is deployed in sandbox. Older SDKs cannot perform this handshake; real-money production provisioning and qualification remain separate. See [Purchase mode](purchase-mode.md) for the short-lived arm and failure handling.
-
-An in-page retention timer clears the card fields at the deadline, even if the executor's connection drops. The executor chooses the permitted lifetime. When the checkout ends, cleanup empties every card control and must confirm that each one is empty. Worker cleanup drops mutable credential references and retires the browser; an independent reaper handles remaining cleanup after worker loss.
-
-These are cleanup controls, not a guarantee of physical memory zeroization. Immutable strings, browser-engine memory, messaging-provider retention, and VGS storage have separate boundaries. Expiring the database's CVV alias does not itself delete the value in VGS.
-
-Source references: [display masking](https://github.com/weaccelerateinc/accelerate-wallet-mcp/blob/main/lib/payment-display-mask.js) and [private review delivery](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/postfill-review.md).
+These are cleanup controls, not a guarantee of memory zeroization. Browser memory, messaging-provider retention, and vault storage have separate boundaries.
