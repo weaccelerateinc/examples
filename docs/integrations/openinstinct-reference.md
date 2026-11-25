@@ -6,7 +6,7 @@ description: Reference configuration for an agent platform using private messagi
 
 OpenInstinct is an example of an agent platform that connects its existing browser and private customer conversation to Accelerate. Clients can implement the same boundaries with their own framework, supported browser connector, and messaging provider. Start with the general [agentic platforms guide](agentic-platforms.md).
 
-This page describes the repository implementation. It does not inspect deployed secret values or establish that a deployment is qualified for live purchases. OpenInstinct uses an application-specific integration and a pinned SDK runtime with recorded compatibility patches. New clients should use the current npm SDK and partner starter instead of copying its vendored files.
+The OpenInstinct demo application was removed from the Accelerate monorepo on 16 November 2026. The source links on this page point to its last version in the repository history. This page describes that repository implementation. It does not inspect deployed secret values or establish that a deployment is qualified for live purchases. OpenInstinct uses an application-specific integration and a pinned SDK runtime with recorded compatibility patches. New clients should use the current npm SDK and partner starter instead of copying its vendored files.
 
 The described pinned application predates the **published 0.11.0 customer-final-click release**. Do not treat its older submit integration as an implementation of the new contract. That migration requires the 0.11.0 SDK and a trusted customer-browser click callback; it is not established by this reference. The matching managed stack is deployed in sandbox. See [Purchase mode](purchase-mode.md).
 
@@ -20,20 +20,17 @@ OpenInstinct configures these integration values in its protected server environ
 | `ACCELERATE_MERCHANT_ID` | Merchant UUID for the platform and environment. |
 | `ACCELERATE_BASE_URL` | Managed-service origin. The default `https://accelerate-agent-sdk.vercel.app` uses the sandbox wallet environment. Real-money production requires the explicitly configured, validated production origin. |
 | `BROWSER_USE_API_KEY` | Browser project key used by OpenInstinct's browser backend. This is specific to its selected provider. |
-| `ACCELERATE_AGENT_BROWSER_USE_EXTENSION_ID` | Approved extension upload ID in that browser project. |
-| `ACCELERATE_AGENT_BROWSER_USE_EXTENSION_SHA256` | Exact ZIP checksum from the verified upload record. |
-| `ACCELERATE_AGENT_BROWSER_USE_EXTENSION_VERSION` | Approved installed manifest version. |
 | `LINQ_CONNECTOR` | Existing Linq connection used for the private iMessage channel. |
 
 The application also needs its existing authentication, database, and encrypted-state configuration. These systems provide the verified customer, workspace ownership, browser reservation, and private conversation binding.
 
 The ordinary `AccelerateClient` and separate `AcceleratePrivateChatClient` use the same Accelerate key and Merchant ID. The private client is called only by trusted server handlers. Its OTP/CVV reply methods are absent from the agent's tool schema.
 
-Source references: [configuration](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/shared/accelerate/config.ts), [environment validation](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/shared/environment/env.ts), and [SDK provenance](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/docs/vendor/accelerate-agent-sdk/provenance.json).
+Source references: [configuration](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/shared/accelerate/config.ts), [environment validation](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/shared/environment/env.ts), and [SDK provenance](https://github.com/weaccelerateinc/accelerate/blob/e6786b8b460db05425ae43f688f332b64f015280/products/agent-platform-demo/docs/vendor/accelerate-agent-sdk/provenance.json).
 
 ## Browser setup and attachment
 
-OpenInstinct creates its browser before shopping. Its provider request installs the configured Accelerate extension and sets `enableRecording: false`. For payment attachment, it uses an ephemeral browser. It checks the approved installation, extension runtime, customer/workspace ownership, current document, and remaining browser lifetime.
+OpenInstinct creates its browser before shopping. Its provider request sets `enableRecording: false`. It installs nothing for Accelerate in the browser. For payment attachment, it uses an ephemeral browser. It checks customer/workspace ownership, the current document, and the remaining browser lifetime. Earlier releases used a browser extension; it is no longer used.
 
 The agent receives an opaque session ID. Provider keys and connection URLs remain in the backend. The cart, cookies, merchant login, and checkout stay in that same session.
 
@@ -49,7 +46,7 @@ OpenInstinct's browser binding uses `provider: 'browser_use'` and `custody_mode:
 
 The workspace's **Use Accelerate by default** setting controls payment-method selection. It does not approve a purchase or bypass private verification.
 
-Source references: [browser setup](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/docs/browser-use.md), [browser creation](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/subagents/browser-agent/lib/browser-use.ts), and [managed checkout orchestration](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/accelerate/managed.ts).
+Source references: [browser setup](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/docs/browser-use.md), [browser creation](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/agent/subagents/browser-agent/lib/browser-use.ts), and [managed checkout orchestration](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/agent/lib/accelerate/managed.ts).
 
 ## Private iMessage replies
 
@@ -67,7 +64,7 @@ This ordering matters. An ordinary `onMessage` callback can run after a framewor
 
 The iMessage provider and private server handler still receive the customer's raw reply. See [Private CVV and credential delivery](agentic-platforms-private-payments.md) for the complete data path and trust boundary.
 
-Source references: [private webhook verifier](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/channels/linq.ts), [bundled adapter regression test](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/tests/agent/channels/linq-bundled-adapter.test.ts), and [sensitive ingress notes](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/docs/accelerate-wallet.md#sensitive-ingress-and-retention-boundary).
+Source references: [private webhook verifier](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/agent/channels/linq.ts), [bundled adapter regression test](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/tests/agent/channels/linq-bundled-adapter.test.ts), and [sensitive ingress notes](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/docs/accelerate-wallet.md#sensitive-ingress-and-retention-boundary).
 
 ## CVV, private review, and final submission
 
@@ -79,4 +76,4 @@ OpenInstinct calls `deliverPrivateCheckoutReview` from its private handler. It r
 
 In this older integration, private approval still precedes a separate explicit submit request. The new contract disables direct executor submission and requires preflight → arm → customer host click → complete instead. The completion token stays in its SDK orchestrator. Do not enable purchases in the pinned app by changing a flag alone. For `sandbox_fill_only`, OpenInstinct cancels the same checkout after confirmed informational review delivery. An uncertain fill, delivery, cancellation, or click cannot authorize a new payment attempt.
 
-Source references: [managed private reply and review handlers](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/accelerate/managed.ts), [native message receipts](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-platform-demo/agent/lib/linq/transport.ts), and [private payment flow](agentic-platforms-private-payments.md).
+Source references: [managed private reply and review handlers](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/agent/lib/accelerate/managed.ts), [native message receipts](https://github.com/weaccelerateinc/accelerate/blob/00c2a2bedbe4b52fe7d20e869aef0b7cdf30844c/products/agent-platform-demo/agent/lib/linq/transport.ts), and [private payment flow](agentic-platforms-private-payments.md).
