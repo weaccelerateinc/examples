@@ -6,7 +6,7 @@ description: Add Accelerate as a payment option in your agent platform, using th
 
 Accelerate agent wallets are pre filled with up to date card details, and address information for ~90% of US shoppers. Add Accelerate as a payment option in your agent platform, using the SDK, HTTP API, or MCP tools.
 
-Connect Accelerate to the agent framework, browser provider, and customer messaging channel your platform already uses. Your platform creates the browser, and the customer's agent shops in it. At payment, Accelerate connects to that same browser session through a connector configured for your integration.
+Connect Accelerate to the agent framework, browser provider, and customer messaging channel your platform already uses. Your platform creates the browser, and the customer's agent shops in it. At payment, Accelerate connects to that same browser session through a connector configured for your integration. Since SDK 0.16.0, Accelerate does not create, host, or own a browser.
 
 The customer's agent performs the final payment click through its own browser connection. Accelerate fills the payment fields and does not click. The click callback is the agent's trusted browser host; it is not Accelerate's executor.
 
@@ -14,9 +14,23 @@ Your platform is the Accelerate integration customer and receives a **Merchant I
 
 For implementation detail, see [Private CVV and credential delivery](agentic-platforms-private-payments.md). The separate [OpenInstinct configuration reference](openinstinct-reference.md) shows one application's browser and private messaging setup.
 
-**SDK release status:** **SDK 0.15.2 is published on npm as `latest`.** The commands below install this verified copy patch. It uses the existing managed sandbox service and retains the 0.15.0 protocol. Its npm installation, GitHub release archive, immutable source, sandbox deployment, and public compatibility metadata are verified. No new backend configuration or gateway rollout is required. See the [0.15.2 release record](universal-card-rollout.md#sdk-0152-release) and the preserved [0.15.0 service and archive evidence](universal-card-rollout.md#sdk-0150-release). Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
+**SDK release status:** This guide documents **SDK 0.17.0** (published 25 November 2026). The commands below install it. The matching managed sandbox service and wallet gateway are deployed. SDK 0.17.0 is a breaking release: it removes the browser extension. See [Upgrading from 0.16.1](#upgrading-from-0161), the [0.17.0 release record](universal-card-rollout.md#sdk-0170-release), and the [0.16.0 release record](universal-card-rollout.md#sdk-0160-release). Production customer onboarding, tenant activation, and financial release remain closed; provider and payment qualification are pending. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
-SDK 0.15.2 shortens private OTP, card-selection, and security-code prompts and adds Privacy Policy and Terms of Service links. It retains the private wallet-phone correction and optional USD currency inputs introduced in 0.15.0. Phone validation, reply parsing, and the private protocol are unchanged. It retains Dana's run-created Browser Use and WhatsApp adapters. Since SDK 0.13.0, authenticated integrations use the supported fill-only run-browser path without the earlier merchant opt-ins or an inventory of other browser extensions. Migration 004, the matching gateway/reaper, the pinned Accelerate extension, ownership checks, and cleanup remain required. SDK 0.12.0 keeps its earlier local restrictions until upgraded. See [Browser Use run browser integration](browser-use-run-browsers.md), [WhatsApp private messaging](whatsapp-private-messaging.md), and [deployment status](universal-card-rollout.md#release-and-environment-status).
+**SDK 0.16.0 is a breaking release.** Upgrade from 0.15.x before you rely on the flow below:
+
+- Accelerate does not create or own a browser. Every checkout attaches the agent's own browser: Browser Use or a registered connector. `browser` is required on `POST /v1/checkouts` and `client.checkouts.create`. A request without it returns `invalid_input`.
+- `browserMode: 'accelerate_managed'` and the Kernel starter are removed. MCP registration requires a `browserConnector`, or `browserMode: 'customer_backend_trusted'` with `browser` in the creation scope.
+- `accelerate_checkout_browser` is read-only: `browser_snapshot`, `browser_text`, `browser_find`, and `browser_wait_for`. `browser_act` and `navigate` return `invalid_input` (400). Finish shopping in your browser before you call `accelerate_checkout_start`.
+- Every checkout uses after-fill review. Before-fill approval is removed: `profile: 'legacy_before_fill_v1'`, `approvalPolicy: 'before_fill'`, and `verificationTiming: 'on_start'` return `invalid_input` at registration. The profiles are `managed_review_v1` (default) and `managed_review_v2`.
+- The service accepts only `interaction_mode: "chat"` with `approval_policy: "after_fill"`. Hosted checkouts (`/checkout/:id`, `/hosted/*`, bootstrap tickets, `wallet_url`) and `purpose: "sandbox_source_comparison"` are removed.
+- The agent can choose `purpose` (`purchase` or `sandbox_fill_only`) for each checkout on `accelerate_checkout_start`. The registration `purpose` is only the default.
+- The new error `browser_ended` (next action `stop`) reports a stopped or expired customer browser. Create a new browser and a new checkout. Do not retry the old session.
+
+SDK 0.16.1 changed only the wording and layout of private shopper messages, and SDK 0.17.0 keeps that wording. Reply parsing, stages, the approval window, and agent progress messages are unchanged. See [WhatsApp private messaging](whatsapp-private-messaging.md#private-prompts) for the exact text.
+
+The managed service now also accepts more natural card choices, such as `1`, `one`, `first card`, a brand name, or the last four digits. After a checkout ends, a reply that is not a credential goes to the assistant. The masked review image is sent once for each review. A checkout URL can contain a long merchant ID, such as eBay's `sessionid`. The SDK refuses a digit run in a URL only when it passes the card-number (Luhn) check.
+
+Dana's run-created Browser Use and WhatsApp adapters remain available. Migration 004, the matching gateway/reaper, ownership checks, and cleanup remain required. See [Browser Use run browser integration](browser-use-run-browsers.md), [WhatsApp private messaging](whatsapp-private-messaging.md), and [deployment status](universal-card-rollout.md#release-and-environment-status).
 
 ## Choose the wallet environment
 
@@ -63,60 +77,72 @@ See [Adding a new card](adding-a-new-card.md) for the shopper steps, embedded UI
 
 MCP controls how the agent invokes checkout actions. It does not replace backend authentication or the private customer verification channel.
 
-## 3. Install the SDK and browser extension
+## 3. Install the SDK
 
 Use Node.js 22 or later. The server-only SDK includes TypeScript declarations and has no runtime dependencies.
 
-- **SDK on npm:** [@weaccelerateinc/agent-sdk@0.15.2](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.15.2), published as `latest`.
-- **Immutable source tag:** `agent-sdk-v0.15.2`, source merge [`e6786b8b`](https://github.com/weaccelerateinc/accelerate/tree/e6786b8b460db05425ae43f688f332b64f015280/products/agent-sdk). The [GitHub release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.15.2) contains the verified archive.
-- **SDK source and guides:** [Accelerate Agent SDK 0.15.2 at the reviewed source](https://github.com/weaccelerateinc/accelerate/tree/e6786b8b460db05425ae43f688f332b64f015280/products/agent-sdk).
-- **Approved extension download:** [Extension release 0.0.0.1](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/tag/extension-v0.0.0.1). Download `accelerate-extension-0.0.0.1.zip` and its checksum files from the release assets.
+- **SDK on npm:** [@weaccelerateinc/agent-sdk@0.17.0](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.17.0), published as `latest`.
+- **Immutable source tag:** `agent-sdk-v0.17.0`, source commit [`334381effd8783ac58d5b92ac283a3ea63711f7a`](https://github.com/weaccelerateinc/accelerate/tree/334381effd8783ac58d5b92ac283a3ea63711f7a/products/agent-sdk). The [GitHub release](https://github.com/weaccelerateinc/accelerate/releases/tag/agent-sdk-v0.17.0) contains the verified archive. Its SHA-256 is `cec4d2f9875bea076eca94775efc9bc74261881fb49001759a0e23c01c6edf71`.
+- **SDK source and guides:** [Accelerate Agent SDK 0.17.0 at the reviewed source](https://github.com/weaccelerateinc/accelerate/tree/334381effd8783ac58d5b92ac283a3ea63711f7a/products/agent-sdk).
 
-The commands below install published SDK 0.15.2 and generate its matching existing-browser starter. Connect and qualify your own trusted browser host before payment use. SDK and extension versions are independent.
+The commands below install published SDK 0.17.0 and generate its existing-browser starter. Connect and qualify your own trusted browser host before payment use.
 
-Generate the matching starter:
+Generate the starter:
 
 ```sh
-npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.15.2
+npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.17.0
 npx --no-install accelerate-agent --version
 npx --no-install accelerate-agent init ./accelerate-demo --browser existing
 cd accelerate-demo
-npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.15.2
+npm install --ignore-scripts @weaccelerateinc/agent-sdk@0.17.0
 npm test
 npm run smoke
 ```
 
-The version command must print `0.15.2`. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order. Existing generated projects keep their copied runtime; upgrading the package does not rewrite that runtime.
+The version command must print `0.17.0`. Since SDK 0.16.0, `accelerate-agent init <dir>` always generates the existing-browser starter. `--browser existing` remains an accepted alias. The starter tests and smoke use synthetic browser, verification, and messaging fixtures. They do not create a real order. Existing generated projects keep their copied runtime; upgrading the package does not rewrite that runtime.
 
 To update an existing integration, run these commands in the backend project that imports Accelerate:
 
 ```sh
-npm install --save-exact @weaccelerateinc/agent-sdk@0.15.2
+npm install --save-exact @weaccelerateinc/agent-sdk@0.17.0
 npm ls @weaccelerateinc/agent-sdk
 npx --no-install accelerate-agent --version
 ```
 
-Commit the updated `package.json` and lockfile. Rebuild and redeploy that backend, then restart every private-ingress, checkout-host, and outbox worker that uses the package. Existing SDK 0.15.x workers use the same private protocol; this patch needs no new backend configuration or gateway rollout. For SDK 0.14.1 or earlier, pause new starts and upgrade every worker sharing host persistence together before resuming. Start a new sandbox checkout and confirm the final OTP, `Card N`, and security-code prompts below. Keep verification replies out of logs and model history.
+Commit the updated `package.json` and lockfile. Rebuild and redeploy that backend, then restart every private-ingress, checkout-host, and outbox worker that uses the package. SDK 0.17.0 needs no data migration. Accelerate has already deployed the matching service and gateway. Before you upgrade, make the code changes in [Upgrading from 0.16.1](#upgrading-from-0161). For SDK 0.14.1 or earlier, pause new starts and upgrade every worker sharing host persistence together before resuming. Start a new sandbox checkout and confirm the OTP, card-selection, and security-code prompts. Keep verification replies out of logs and model history.
 
-Install the approved extension through your browser's image, profile, or launch configuration **before shopping starts**. Accelerate supplies a release manifest approved for your browser connector during qualification. Use SDK 0.15.2's bundled Browser Use compatibility manifest or its verified public [compatibility manifest](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.2.release.json) and [checksums](https://github.com/weaccelerateinc/accelerate-extension-downloads/releases/download/extension-v0.0.0.1/accelerate-extension-0.0.0.1.sdk-0.15.2.SHA256SUMS); the approved ZIP bytes are unchanged. Verify the ZIP against the appropriate manifest with `verifyApprovedExtensionArtifact` from `@weaccelerateinc/agent-sdk/approved-extension`. A matching version number alone does not verify the ZIP. The `0.0.0.2` extension is a qualification candidate and must not replace the approved artifact.
+When you upgrade from 0.15.x, remove every use of the features that 0.16.0 removed. The 0.15.x `connection.check()` and `accelerate-agent doctor` report `invalid_response` against the current service until you upgrade. Checkouts are not affected.
+
+You install nothing in your browser. Accelerate's private executor attaches to your existing browser session at payment time and types the card fields itself with trusted browser keystrokes. SDK 0.16.1 and earlier used a browser extension; SDK 0.17.0 removes it.
+
+### Upgrading from 0.16.1
+
+SDK 0.17.0 is a breaking release. Make these changes in the same deploy as the version upgrade:
+
+1. Delete the extension settings. `createExistingBrowserConnector` and `createBrowserUseConnector` no longer accept `extensionRelease`. `createBrowserUseHost` no longer accepts `extensionId`, `extensionRelease`, `extensionRuntimeId`, or `additionalExtensions`. A configuration that still has one of these keys throws `configuration_invalid`. The error message names the key, and `error.removedSetting` holds it.
+2. Stop returning `extension` from `inspectBrowser` (connector hosts) and `inspectDocument` (Browser Use hosts). The SDK refuses a result that contains `extension`.
+3. Browser Use hosts: change `inspectDocument` to `inspectDocument(context, document, options)`. The former third `runtime` argument is removed, so `options` is now the third argument.
+4. Remove any extension download, preload, or health check from your browser setup. You do not install anything in your browser.
+
+Accelerate deployed the gateway and the managed service in the required order. You do not need to coordinate a deploy with Accelerate. The shopper messages, the private CVV path, after-fill review, and the customer final click are unchanged.
 
 ### Connect your existing browser
 
-Keep your browser provider and browser creation code. The current integration supports compatible Chromium/CDP browsers with the approved extension. Coordinate with Accelerate to provision and qualify a connector for your browser stack and Merchant ID.
+Keep your browser provider and browser creation code. Every checkout uses this browser; Accelerate does not supply one. The current integration supports compatible Chromium/CDP browsers. Coordinate with Accelerate to provision and qualify a connector for your browser stack and Merchant ID.
 
 Connect your existing browser controls to the SDK's `BrowserConnectorHost` interface:
 
 | Host method | Your platform supplies |
 | --- | --- |
 | `resolveOwnedBrowser` | Resolve the authenticated customer's browser, exact checkout document, and expiry from backend records. |
-| `inspectBrowser` | Check the current document, installed extension, recording disabled, remaining lifetime, and automation access state. |
+| `inspectBrowser` | Check the current document, recording disabled, remaining lifetime, and automation access state. |
 | `drainAndFence` | Block new ordinary browser actions and wait for in-flight actions to finish. Persist this restriction across processes. |
 | `bindCheckout` | Save the checkout, attempt, browser, document, and access restriction together. |
 | `resolveCheckoutBrowser` | Retrieve that same association for later payment checks. |
 | `confirmCleanup` | Independently verify that the browser stopped and payment credentials were cleared. Retain restrictions for an uncertain payment. |
-| `performFinalClick` | SDK 0.11.0 purchase only: send one trusted click through your own browser connection on the bound target, while ordinary automation stays blocked. |
+| `performFinalClick` | Purchases only (since SDK 0.11.0): send one trusted click through your own browser connection on the bound target, while ordinary automation stays blocked. |
 
-The first six methods describe the baseline host. Purchases using 0.11.0 additionally require `performFinalClick`; fill-only hosts can omit it. The connector adds a one-use `prepareFinalClick` check before arming. The host callback receives the exact fenced browser/document, target, and deadline, but no `arm_id` completion token. It must not read credential fields, lift the ordinary automation restriction, or retry a click. See the [browser connector interface](browser-connector-interface.md#customer-final-click-in-sdk-0110).
+The first six methods describe the baseline host. Purchases additionally require `performFinalClick`; fill-only hosts can omit it. The connector adds a one-use `prepareFinalClick` check before arming. The host callback receives the exact fenced browser/document, target, and deadline, but no `arm_id` completion token. It must not read credential fields, lift the ordinary automation restriction, or retry a click. See the [browser connector interface](browser-connector-interface.md#customer-final-click-in-sdk-0110).
 
 After implementing your host, create the SDK connector in your backend startup code:
 
@@ -125,18 +151,17 @@ import { createExistingBrowserConnector } from '@weaccelerateinc/agent-sdk/brows
 
 const browserConnector = createExistingBrowserConnector({
   connectorId: platformConfig.accelerateConnectorId,
-  extensionRelease: approvedExtensionRelease,
   host: platformBrowserHost,
 });
 ```
 
-`platformConfig`, `approvedExtensionRelease`, and `platformBrowserHost` are values supplied by your application. Use the connector ID provisioned by Accelerate. Set `approvedExtensionRelease` to the manifest Accelerate approved for `provider: 'connector'` and your intended checkout use. The packaged `approved-extension-releases/0.0.0.1.json` manifest covers the Browser Use baseline; it does not qualify a generic connector.
+`platformConfig` and `platformBrowserHost` are values supplied by your application. Use the connector ID provisioned by Accelerate.
 
-Pass `browserConnector` to the partner SDK integration described below. Accelerate configures the matching private executor connector to resolve and connect to your existing browser, then stop it and verify cleanup after payment. Registering a connector alone does not qualify its extension runtime or merchant checkout support.
+Pass `browserConnector` to the partner SDK integration described below. Accelerate configures the matching private executor connector to resolve and connect to your existing browser, then stop it and verify cleanup after payment. Registering a connector alone does not qualify its browser stack or merchant checkout support.
 
 Browser credentials and connection URLs stay in trusted backend components. The agent receives only safe checkout state. Browser Use has an optional packaged adapter for platforms that already use it; the general connector contract does not require Browser Use.
 
-See the [browser connector interface](browser-connector-interface.md), [provider connector contract](provider-connector-contract.md), and [extension contract](extension-contract.md).
+See the [browser connector interface](browser-connector-interface.md) and [provider connector contract](provider-connector-contract.md).
 
 ## 4. Connect your backend
 
@@ -178,21 +203,21 @@ The generated existing-browser starter uses the explicit **`managed_review_v2`**
 - A verified private webhook that intercepts sensitive replies before ordinary message processing.
 - A `PrivateMessagingAdapter` for your customer messaging channel. It must send the masked review image and amount together and record the actual delivery receipt.
 
-The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. In SDK 0.11.0, purchase registration uses `purpose: 'purchase'` with `enableSubmit: true` and a host that implements `performFinalClick`. For a no-order test, select `purpose: 'sandbox_fill_only'` with submission disabled. See [Purchase mode and checkout support](purchase-mode.md) for version-specific migration.
+The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/new-customer-integration.md) and [packaged starter guide](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/partner-starter/README.md) show these contracts. Purchase registration uses `purpose: 'purchase'` with `enableSubmit: true` and a host that implements `performFinalClick`. For a no-order test, select `purpose: 'sandbox_fill_only'` with submission disabled. Since SDK 0.16.0, the registration `purpose` is the default only: the agent can pass `purpose` for each checkout on `accelerate_checkout_start`. A purchase still requires a host that implements `performFinalClick`. See [Purchase mode and checkout support](purchase-mode.md) for version-specific migration.
 
 ### Correct a wallet phone privately
 
-SDK 0.15.0 introduced private wallet-number correction. SDK 0.15.2 keeps the same service protocol and updates the prompt wording:
+SDK 0.15.0 introduced private wallet-number correction. SDK 0.17.0 keeps the same service protocol and the approved prompt wording from 0.16.1:
 
 1. At payment, private `chat.start` sends the verification code first. Its OTP prompt shows the wallet number that received it.
-2. The customer replies with the code or sends a replacement US wallet number starting with `+1`. The parser still accepts `change`, `change number`, and other valid international `+` numbers; this patch changes the guidance, not phone validation.
+2. The customer replies with the code or sends a replacement US wallet number starting with `+1`. The parser still accepts `change`, `change number`, and other valid international `+` numbers; the prompt wording does not change phone validation.
 3. A different wallet number invalidates the old challenge and sends a new code. Verification continues against the new wallet number. Changes are refused after authentication.
 
-The OTP prompt includes clickable Privacy Policy and Terms of Service URLs and the OTP agreement sentence. Single-address and no-address card instructions now say `Reply Card N`; multi-address instructions retain both choice numbers. After-fill security-code prompts are shorter. See the [exact private prompt text](whatsapp-private-messaging.md#private-prompts-in-sdk-0152).
+The OTP prompt ends with the agreement sentence and the combined Privacy Policy and Terms of Service URL. Card lists show `Option N:` rows. With one or no saved address, the instruction is `Reply with the option #.` With several addresses, it is `Reply with the option # and address #, like 1 1.` See the [exact private prompt text](whatsapp-private-messaging.md#private-prompts).
 
 The wallet number can differ from the authenticated chat phone. Correcting it does not change the WhatsApp recipient, checkout owner, customer/workspace/conversation binding, original checkout phone, or creation idempotency key. Keep the original identity resolver and messaging destination.
 
-The private SDK negotiates `X-Accelerate-Wallet-Phone: v1`. A new checkout opts in when its first private start uses the header. Later private start, state, and reply calls retain it. Existing checkouts that started without negotiation keep the legacy prompts. Direct HTTP integrations must preserve this negotiation and validate the private fields; see the [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.15.0/products/agent-sdk/docs/private-chat.md).
+The private SDK negotiates `X-Accelerate-Wallet-Phone: v1`. A new checkout opts in when its first private start uses the header. Later private start, state, and reply calls retain it. Existing checkouts that started without negotiation keep the legacy prompts. Direct HTTP integrations must preserve this negotiation and validate the private fields; see the [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/docs/private-chat.md).
 
 Before authentication, private state can include `wallet_phone_number`. While waiting for another number, it also includes `wallet_phone_entry_required: true`. These fields disappear after authentication.
 
@@ -200,25 +225,25 @@ Phone changes require the authenticated provider's `sent_at`. Later identity ans
 
 The durable host uses a typed `private_phone_prompt` outbox item with `{checkout_id, idempotency_key, template, wallet_phone_number}`. Its fixed templates are `wallet_otp` and `wallet_phone_entry`; private ingress renders text only immediately before delivery. Custom hosts must support this item without weakening their generic prompt or card-number filters.
 
-The 0.15.2 copy patch retains the 0.15.0 managed-service protocol; the current release-source sandbox deployment is verified in the [release record](universal-card-rollout.md#sdk-0152-release). Install 0.15.2 in the private host/ingress workers to use the new wording; existing typed phone outbox rows render the current fixed template when delivered. For an upgrade from SDK 0.14.1 or earlier, deploy the matching managed service first, publish the SDK, then upgrade the private ingress and host workers. Pause new private starts while upgrading **all workers that share host persistence**, including workers serving existing checkouts and copied starter runtimes. SDK 0.14.1 and earlier cannot deserialize `private_phone_prompt` items, even after delivery. Resume starts only when every reader supports them. After phone-v1 records exist, prefer a forward fix; do not roll back to pre-phone SDK/service readers while those records remain readable. This feature needs no new SQL migration, wallet gateway deployment, or backend API deployment. Existing browser migration and qualification requirements remain in force.
+SDK 0.17.0 retains the wallet-phone protocol introduced in 0.15.0; see the [release record](universal-card-rollout.md#sdk-0170-release). Install 0.17.0 in the private host/ingress workers; existing typed phone outbox rows render the current fixed template when delivered. For an upgrade from SDK 0.14.1 or earlier, deploy the matching managed service first, publish the SDK, then upgrade the private ingress and host workers. Pause new private starts while upgrading **all workers that share host persistence**, including workers serving existing checkouts and copied starter runtimes. SDK 0.14.1 and earlier cannot deserialize `private_phone_prompt` items, even after delivery. Resume starts only when every reader supports them. After phone-v1 records exist, prefer a forward fix; do not roll back to pre-phone SDK/service readers while those records remain readable. This feature needs no new SQL migration, wallet gateway deployment, or backend API deployment. Existing browser migration and qualification requirements remain in force.
 
 ## 5. Follow the payment flow
 
-The SDK 0.11.0 purchase sequence is:
+The SDK 0.17.0 purchase sequence is:
 
-1. **Shop in your existing browser.** Keep the cart, merchant login, and cookies in the same session. Complete required non-secret contact, shipping, and cardholder-name fields. Leave card number, expiry, and CVV empty.
+1. **Shop in your existing browser.** Keep the cart, merchant login, and cookies in the same session. Complete required non-secret contact, shipping, and cardholder-name fields. Leave card number, expiry, and CVV empty. Finish shopping before you start the Accelerate checkout. The Accelerate browser tool can only read the page.
 2. **Attach at the payment step.** Resolve the browser from authenticated ownership records. Stop and drain ordinary browser automation before handing the document to Accelerate. Declare `final_click_actor: 'customer'` and require the service to echo that actor. The service internally requires the gateway's private `customer_final_click_supported: true` admission before OTP. Do not create a replacement browser.
-3. **Verify the customer privately.** The customer completes OTP and masked card selection through the private channel. SDK 0.15.0 shows the destination wallet number and permits [private correction](#correct-a-wallet-phone-privately) before authentication. Ordinary agent tools receive safe checkout status.
+3. **Verify the customer privately.** The customer completes OTP and masked card selection through the private channel. The customer can choose a card by option number, a word such as `one`, a brand name, or the last four digits. SDK 0.15.0 and later show the destination wallet number and permits [private correction](#correct-a-wallet-phone-privately) before authentication. Ordinary agent tools receive safe checkout status.
 4. **Apply the address and verify the final amount.** Include shipping and tax. Bind the quote to the exact checkout URL, total, currency, revision, and submit control.
 5. **Collect CVV and fill once.** In `managed_review_v2`, creation declares `fill_after_verification: true`. The later verified quote separately arms that fill. Private CVV success continues the fill in the backend. The agent does not call a fill tool.
-6. **Send the private review.** The customer receives the masked payment form and final amount together. Purchase approval has a five-minute window from the confirmed sent receipt. Filling the form does not approve the purchase.
-7. **The customer's agent clicks through its own browser.** After fresh private approval, the agent requests submit. Inside the owned-checkout lock, the trusted SDK handler checks readiness, arms the exact revision, consumes the preparation to call the agent's trusted browser host once, and completes the arm. That host sends the final payment click through the agent's own browser connection. Provider inspection occurs before arming, and the host receives no completion token. Accelerate fills the form; its executor and extension do not click. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
+6. **Send the private review.** The customer receives the masked payment form and final amount together, once for each review. Purchase approval has a five-minute window from the confirmed sent receipt. Filling the form does not approve the purchase.
+7. **The customer's agent clicks through its own browser.** After fresh private approval, the agent requests submit. Inside the owned-checkout lock, the trusted SDK handler checks readiness, arms the exact revision, consumes the preparation to call the agent's trusted browser host once, and completes the arm. That host sends the final payment click through the agent's own browser connection. Provider inspection occurs before arming, and the host receives no completion token. Accelerate fills the form; its executor does not click. Fill-only tests cancel after review. Keep ordinary browser access blocked until cleanup is confirmed.
 
 These steps apply to the SDK, HTTP API, and optional MCP tools. Your integration binds them to your own browser lifecycle and messaging channel. See the [v2 checkout contract](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/docs/managed-review-v2.md).
 
 ## HTTP API: integrate without the SDK
 
-Call the managed checkout service from your backend. The final-click routes and purchase example below use the matching 0.11.0 service contract. All routes use:
+Call the managed checkout service from your backend. The routes and purchase example below use the current managed service contract (SDK 0.17.0). All routes use:
 
 ```http
 Authorization: Bearer YOUR_TENANT_API_KEY
@@ -241,15 +266,15 @@ curl --fail-with-body "$ACCELERATE_BASE_URL/v1/connection" \
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `GET` | `/v1/connection` | Check the API key and Merchant ID. |
-| `POST` | `/v1/checkouts` | Create a checkout or attach an owned existing browser. |
+| `POST` | `/v1/checkouts` | Create a checkout on an owned existing browser. `browser`, `interaction_mode: "chat"`, and `approval_policy: "after_fill"` are required. |
 | `GET` | `/v1/checkouts/{id}` | Read safe status and the current revision. |
-| `POST` | `/v1/checkouts/{id}/browser` | Perform permitted preparation operations. Existing-browser mode allows bounded reads before the quote is frozen. |
+| `POST` | `/v1/checkouts/{id}/browser` | Read the checkout page before the quote is frozen: snapshot, text, find, and wait. `browser_act` and `navigate` return `invalid_input`. |
 | `POST` | `/v1/checkouts/{id}/details` | Apply the privately selected address. |
 | `POST` | `/v1/checkouts/{id}/verify-quote` | Verify the actual final amount and currency. The updated service defaults omitted `expected_currency` to `USD`. |
 | `POST` | `/v1/checkouts/{id}/approval` | Freeze the quote and request private verification. The updated service defaults omitted `currency` to `USD`. With v2, arm the exact fill. This does not approve a purchase. |
 | `POST` | `/v1/checkouts/{id}/fill` | Manual one-use fill for compatible v1 clients. V2 uses private backend continuation. |
-| `POST` | `/v1/checkouts/{id}/final-click/arm` | SDK 0.11.0, backend only: arm the approved revision and receive its short-lived private click target. |
-| `POST` | `/v1/checkouts/{id}/final-click/complete` | SDK 0.11.0, backend only: complete the arm after the customer backend's one click, or observe uncertainty after an error. |
+| `POST` | `/v1/checkouts/{id}/final-click/arm` | Backend only (since SDK 0.11.0): arm the approved revision and receive its short-lived private click target. |
+| `POST` | `/v1/checkouts/{id}/final-click/complete` | Backend only (since SDK 0.11.0): complete the arm after the customer backend's one click, or observe uncertainty after an error. |
 | `POST` | `/v1/checkouts/{id}/cancel` | Cancel and start cleanup. Send `{}`. |
 | `POST` | `/v1/checkouts/{id}/reconcile` | Record your backend's independently checked merchant order result. This does not change checkout status or prove payment. |
 
@@ -267,7 +292,7 @@ After that update, callers can omit these fields:
 
 Only `USD` is accepted when a currency is supplied. Non-USD values, `null`, and empty strings are rejected. The retired `ACCELERATE_ANY_CURRENCY` setting cannot enable other currencies. For `declined` or `not_found` reconciliation, omitted currency stays absent and appears as `null` in the result.
 
-The default does not establish the merchant page's currency. The backend still verifies the observed currency and binds it to the quote and private approval. A dollar symbol alone does not establish USD. Responses still include explicit currency.
+The default does not establish the merchant page's currency. The backend still verifies the observed currency and binds it to the quote and private approval. The gateway reads a bare `$` total as USD. A visible non-USD currency code rejects the total. Responses still include explicit currency.
 
 After applying the selected address, send this body to `POST /v1/checkouts/{id}/verify-quote` on the updated service:
 
@@ -324,17 +349,17 @@ Example body for `POST /v1/checkouts` using a registered connector for your plat
 
 Replace `connector_id` with the ID provisioned by Accelerate for your Merchant ID. Resolve `browser_id` from your backend's authenticated browser ownership record. The private executor uses that connector to find the exact existing browser; a browser ID alone does not establish readiness. Keep provider keys and connection URLs outside the request body, model input, and logs.
 
-Replace all example customer and checkout values with your authenticated records and the browser's exact current HTTPS checkout URL, including its query and fragment. The example URL is a placeholder. Qualify the actual checkout with Accelerate before payment use.
+Replace all example customer and checkout values with your authenticated records and the browser's exact current HTTPS checkout URL, including its query and fragment. The URL can contain a long merchant ID; a digit run is refused only when it passes the card-number (Luhn) check. The example URL is a placeholder. Qualify the actual checkout with Accelerate before payment use.
 
-This 0.11.0 example creates an owned existing-browser purchase with the customer as final-click actor. Accelerate-managed Kernel purchases are rejected. For a no-order test, use `purpose: 'sandbox_fill_only'` and omit `final_click_actor`. Explicitly set the mode, purpose, approval policy, and fill flag. Raw API defaults do not select this flow. Require `fill_after_verification: true` and `final_click_actor: 'customer'` in the service response before OTP. The service checks supported customer-click admission internally; it does not expose the private receipt. Creation does not arm a fill or click. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. The updated service defaults omitted `currency` to `USD`; older SDK clients still require explicit `currency: 'USD'`. See [Currency inputs](#currency-inputs). Require the fill acknowledgement before private CVV collection.
+This example creates an owned existing-browser purchase with the customer as final-click actor. Since SDK 0.16.0, the service returns `invalid_input` for a create without `browser`, `interaction_mode: "chat"`, or `approval_policy: "after_fill"`. Purposes are `purchase` and `sandbox_fill_only`. For a no-order test, use `purpose: 'sandbox_fill_only'` and omit `final_click_actor`. Explicitly set the mode, purpose, approval policy, and fill flag. Raw API defaults do not select this flow. Require `fill_after_verification: true` and `final_click_actor: 'customer'` in the service response before OTP. The service checks supported customer-click admission internally; it does not expose the private receipt. Creation does not arm a fill or click. The subsequent `/approval` body must include the verified `checkout_url`, `amount_cents`, `checkout_total_selector`, `submit_selector`, and `fill_after_verification: true`. The updated service defaults omitted `currency` to `USD`; older SDK clients still require explicit `currency: 'USD'`. See [Currency inputs](#currency-inputs). Require the fill acknowledgement before private CVV collection.
 
-The initial purchase flow requires one top-level document with no iframes or shadow roots. Its card/address controls, explicitly USD-labelled simple total, and unique exact total/submit selectors must belong to that document. Separate iframe or shadow-root fill support does not qualify those layouts for purchase. After private approval, follow the backend-only [arm, customer click, and complete sequence](purchase-mode.md#direct-http-final-click-api) within the gateway's at-most-10-second window. The old `/v1/checkouts/{id}/submit` route fails closed in the new contract; it cannot invoke an Accelerate executor click.
+The initial purchase flow requires one top-level document with no iframes or shadow roots. Its card/address controls, simple total, and unique exact total/submit selectors must belong to that document. Since SDK 0.16.0, the gateway reads a bare `$` total as USD. A visible non-USD currency code still rejects the total. Separate iframe or shadow-root fill support does not qualify those layouts for purchase. After private approval, follow the backend-only [arm, customer click, and complete sequence](purchase-mode.md#direct-http-final-click-api) within the gateway's at-most-10-second window. The old `/v1/checkouts/{id}/submit` route fails closed in the new contract; it cannot invoke an Accelerate executor click.
 
 Active or registered origin service workers are also unsupported. Non-main-frame and worker requests are blocked. New pages are closed and produce `outcome_unknown`. Browser request controls and CDP service-worker bypass do not establish a provider firewall or WebRTC protection.
 
 Programmatic merchant `form.submit()`/`requestSubmit()` flows are unsupported. The gate preserves bound fields, quote, URL, submit target, and submit-form controls; it permits unrelated banner/countdown text and hover/focus class changes. The click deadline cannot exceed the original approval. Arming does not release payment requests before click admission. After that deadline, retained observation grants no further click authority. Early cancellation can return `final_click_in_progress`. See [Purchase mode](purchase-mode.md) for the clock-probe limits and recovery contract.
 
-Store the returned `id` as `checkout_id` in your durable owner record, together with the revision. Use one stable `idempotency_key` per logical checkout attempt. After a timeout, inspect the existing attempt and reconcile uncertainty before further payment actions.
+Store the returned `id` as `checkout_id` in your durable owner record, together with the revision. Use one stable `idempotency_key` per logical checkout attempt. After a timeout, inspect the existing attempt and reconcile uncertainty before further payment actions. If the service returns `browser_ended`, the customer browser stopped or expired. Create a new browser and a new checkout.
 
 ### Private verification and review routes
 
@@ -359,7 +384,7 @@ For complete request shapes, see the [HTTP route implementation](https://github.
 
 **MCP is relevant when your agent uses MCP tools.** For the existing-browser flow, use `registerPartnerCheckoutTools` from `@weaccelerateinc/agent-sdk/partner` on your authenticated MCP server. Select `profile: 'managed_review_v2'` explicitly. The generated starter supplies the composition example.
 
-The tool set includes `accelerate_checkout_start`, `accelerate_checkout_request_payment`, `accelerate_checkout_apply_details`, `accelerate_checkout_request_approval`, `accelerate_checkout_status`, and cancellation. SDK 0.11.0 purchase hosts can enable `accelerate_checkout_submit` with unchanged model inputs `{ checkout_id, revision }`. Its trusted handler performs preflight → arm → customer host click → complete inside the existing restriction. The completion token stays in the SDK orchestrator. Preparations, arms, click targets, browser credentials, OTP, CVV, and private review APIs stay outside model inputs, results, and history. V2 omits the manual fill tool. There is no HTTP `/request-payment` route; that MCP tool dispatches the private payment event.
+The tool set includes `accelerate_checkout_start`, `accelerate_checkout_request_payment`, `accelerate_checkout_apply_details`, `accelerate_checkout_request_approval`, `accelerate_checkout_status`, the read-only `accelerate_checkout_browser`, and cancellation. `accelerate_checkout_start` accepts an optional `purpose` (`purchase` or `sandbox_fill_only`). Purchase hosts can enable `accelerate_checkout_submit` with unchanged model inputs `{ checkout_id, revision }`. Its trusted handler performs preflight → arm → customer host click → complete inside the existing restriction. The completion token stays in the SDK orchestrator. Preparations, arms, click targets, browser credentials, OTP, CVV, and private review APIs stay outside model inputs, results, and history. V2 omits the manual fill tool. There is no HTTP `/request-payment` route; that MCP tool dispatches the private payment event.
 
 The dashboard also shows the hosted wallet MCP endpoint:
 
@@ -373,8 +398,8 @@ You can use the HTTP API with your own agent tools if your runtime does not use 
 
 ## Test and request production access
 
-The 0.11.0 purchase flow requires a separate customer-backend click after private approval. For no-order qualification, select `sandbox_fill_only` and disable submission. Verify same-browser attachment, private verification, final total, one fill, masked review delivery, cancellation, and cleanup. Use **Request production access** in the merchant dashboard and coordinate the intended purchase deployment with Accelerate. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
+The purchase flow requires a separate customer-backend click after private approval. For no-order qualification, select `sandbox_fill_only` and disable submission. Verify same-browser attachment, private verification, final total, one fill, masked review delivery, cancellation, and cleanup. Use **Request production access** in the merchant dashboard and coordinate the intended purchase deployment with Accelerate. See [Purchase mode](purchase-mode.md) and [Universal checkout rollout](universal-card-rollout.md).
 
-The current flow supports saved cards and USD. Browser connector support and merchant checkout support require separate qualification. The extension's original manifest records the normal demo fill/review baseline; [newer sandbox evidence](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) includes additional merchant layouts. That evidence does not establish real-store order submission or production payment qualification. `universal_card_v1` admits supported existing documents for either purchase or fill-only; installing the SDK alone does not establish deployment or checkout support.
+The current flow supports saved cards and USD. Browser connector support and merchant checkout support require separate qualification. The normal demo fill/review flow is the baseline; [newer sandbox evidence](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/qualification/REPORT.md) includes additional merchant layouts. That evidence does not establish real-store order submission or production payment qualification. `universal_card_v1` admits supported existing documents for either purchase or fill-only; installing the SDK alone does not establish deployment or checkout support.
 
 `ready_for_submit` alone does not prove customer approval. `submit_attempted` and `outcome_unknown` do not confirm an order. Check the merchant's independent order status before reporting success or starting a replacement purchase. Never automatically replay an uncertain fill or submit.

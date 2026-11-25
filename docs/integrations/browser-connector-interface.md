@@ -6,15 +6,19 @@ description: Connect your platform's authenticated browser ownership and automat
 
 The SDK browser connector attaches the browser your platform already uses for shopping. Your backend implements `BrowserConnectorHost` to resolve ownership, check readiness, pause ordinary automation, and confirm cleanup. It keeps the cart, cookies, login, and payment document in the same browser session.
 
-The customer's agent performs the final payment click through its own browser connection. `BrowserConnectorHost.performFinalClick` is that agent's trusted browser-host callback. Accelerate fills the payment fields; its executor and extension do not send the click. Private verification, delivered review, fresh approval, and the exact document restriction remain required.
+The customer's agent performs the final payment click through its own browser connection. `BrowserConnectorHost.performFinalClick` is that agent's trusted browser-host callback. Accelerate's private executor types the card values into the payment fields with trusted browser keystrokes. It does not send the click. Private verification, delivered review, fresh approval, and the exact document restriction remain required.
 
 This is the client-side backend interface. Accelerate separately registers the [provider connector](provider-connector-contract.md) in its private executor and cleanup service. Both layers must be configured for the same Merchant ID and connector ID.
 
 The six baseline host methods below apply to the published integration. **SDK 0.11.0** adds a customer final-click callback for purchases and is published on npm. An existing host must implement that callback before migrating; an SDK package upgrade does not add it to application code. Sandbox and production infrastructure are deployed, while production onboarding and qualification remain pending; see [Universal checkout rollout](universal-card-rollout.md).
 
-SDK 0.12.0 introduced run-created Browser Use provenance and run-control evidence. Since 0.13.0, authenticated integrations can use the supported fill-only path without the earlier merchant opt-ins. The claim ledger, pinned Accelerate extension runtime, ownership, scheduling/viewer fences, and cleanup remain required; see [Browser Use run browser integration](browser-use-run-browsers.md).
+SDK 0.12.0 introduced run-created Browser Use provenance and run-control evidence. Since 0.13.0, authenticated integrations can use the supported fill-only path without the earlier merchant opt-ins. The claim ledger, ownership, scheduling/viewer fences, and cleanup remain required; see [Browser Use run browser integration](browser-use-run-browsers.md).
 
-SDK 0.15.2 updates private message wording and policy links. The connector interface, final-click callback, browser ownership, fencing, and cleanup requirements are unchanged. Use the matching private SDK workers; this patch needs no new backend rollout. See [release availability](universal-card-rollout.md#sdk-0152-release).
+Since SDK 0.16.0, Accelerate creates and owns no browser. Every checkout attaches the agent's own browser, through a registered connector or Browser Use. Managed MCP registration requires a `browserConnector`, or `browserMode: 'customer_backend_trusted'` with `browser` in the creation scope. `browserMode: 'accelerate_managed'` is removed. `browser` is required on `client.checkouts.create` and `POST /v1/checkouts`. See the [0.16.0 release record](universal-card-rollout.md#sdk-0160-release).
+
+The agent shops with its own browser tools. `accelerate_checkout_browser` is read-only: it can take a snapshot, read text, find elements and wait. It answers `browser_act` and `navigate` with `invalid_input`. Finish shopping before you call `accelerate_checkout_start`.
+
+This page documents SDK 0.17.0 (published 25 November 2026). SDK 0.17.0 removes the browser extension: `createExistingBrowserConnector` no longer accepts `extensionRelease`, and `inspectBrowser` must not return `extension`. The final-click callback, browser ownership, fencing, and cleanup requirements are unchanged. See [Upgrading from 0.16.1](agentic-platforms.md#upgrading-from-0161) and the [0.17.0 release record](universal-card-rollout.md#sdk-0170-release).
 
 ## Create the connector
 
@@ -23,15 +27,14 @@ import { createExistingBrowserConnector } from '@weaccelerateinc/agent-sdk/brows
 
 const browserConnector = createExistingBrowserConnector({
   connectorId: platformConfig.accelerateConnectorId,
-  extensionRelease: approvedExtensionRelease,
   host: platformBrowserHost,
   minimumRemainingMs: 600000,
 });
 ```
 
-Your application supplies `platformConfig`, the approved release manifest, and the host implementation. Use the connector ID provisioned by Accelerate. The manifest must qualify `provider: 'connector'` and your intended checkout use. The packaged Browser Use baseline manifest does not qualify a generic connector. See the [extension contract](extension-contract.md).
+Your application supplies `platformConfig` and the host implementation. Use the connector ID provisioned by Accelerate. Accelerate qualifies the connector for `provider: 'connector'` and your intended checkout use. See the [provider connector contract](provider-connector-contract.md).
 
-Pass the resulting `browserConnector` into your partner SDK integration. The connector does not create browsers, upload extensions, register a provider, or move a cart. Browser Use has a separate optional `createBrowserUseConnector` adapter for platforms already using that provider.
+Pass the resulting `browserConnector` into your partner SDK integration. The connector does not create browsers, install anything in the browser, register a provider, or move a cart. Browser Use has a separate optional `createBrowserUseConnector` adapter for platforms already using that provider.
 
 ## Authenticated host records
 
@@ -65,13 +68,13 @@ Replace these example IDs with the provisioned connector and the browser owned b
 | Method | Inputs after `context` | Required result and behavior |
 | --- | --- | --- |
 | `resolveOwnedBrowser` | `{ attempt_key, checkout_url }`, request options | Return `OwnedBrowserDocument` from real ownership records. Resolve the existing browser and exact document. |
-| `inspectBrowser` | Owned browser document, request options | Return the same document fields plus `recording_disabled: true`, the observed extension runtime, and current `automation` state. |
+| `inspectBrowser` | Owned browser document, request options | Return the same document fields plus `recording_disabled: true` and current `automation` state. |
 | `drainAndFence` | Owned browser document, `{ attempt_key }`, request options | Persist the restriction, reject new ordinary automation, wait for in-flight work, then return `{ fence_id, ordinary_operations_drained: true, agent_access_fenced: true }`. |
 | `bindCheckout` | Fenced document plus `checkout_id` and `attempt_key`, request options | Persist the exact checkout/attempt/browser/document/fence association. Return no value. A lost acknowledgement must leave the restriction in place. |
 | `resolveCheckoutBrowser` | `{ checkout_id }`, request options | Return that same persisted `FencedBrowserDocument`, including its `fence_id`. |
 | `confirmCleanup` | Fenced document, `{ checkout_id }`, request options | Independently confirm cleanup, then return `{ provider_browser_stopped: true, credentials_cleared: true, fence_retained: true }`. |
 
-`inspectBrowser` returns `automation: { ordinary_operations_drained, agent_access_fenced, fence_id }`. Before fencing, these observations may show that automation is still active. After fencing, both flags must be true and the fence ID must match. Its `extension` field contains actual runtime observations validated against the approved artifact and installation record.
+`inspectBrowser` returns `automation: { ordinary_operations_drained, agent_access_fenced, fence_id }`. Before fencing, these observations may show that automation is still active. After fencing, both flags must be true and the fence ID must match.
 
 Every inspection must preserve the same owner, browser binding, document ID, URL, and expiry. Do not construct readiness evidence by copying requested values into a response. A process-local mutex or instruction to the model does not enforce a durable restriction across workers.
 
@@ -108,9 +111,9 @@ const result = await browserConnector.performFinalClick(context, {
 
 These are the connector method shapes, not a replacement for the complete submit handler. The application supplies the authenticated `context`, owned `checkout_id`, connector, and request options. `privateArm` is the SDK orchestrator's private arm response. The partner SDK also performs completion and handles failures as described below. Keep the preparation, target, arm, and host result outside model inputs, outputs, history, and ordinary logs.
 
-`prepareFinalClick(context, { checkout_id }, options?)` resolves the persisted fenced document and checks the drained restriction, live provider resource, recording policy, and approved extension runtime. It runs before arming and does not apply the attachment's ten-minute headroom requirement. It returns an opaque, frozen `PreparedFinalClick` with no public fields. The preparation belongs to that connector instance, owner, and checkout; it is valid for at most 60 seconds. Do not serialize, reconstruct, or clone it.
+`prepareFinalClick(context, { checkout_id }, options?)` resolves the persisted fenced document and checks the drained restriction, live provider resource, and recording policy. It runs before arming and does not apply the attachment's ten-minute headroom requirement. It returns an opaque, frozen `PreparedFinalClick` with no public fields. The preparation belongs to that connector instance, owner, and checkout; it is valid for at most 60 seconds. Do not serialize, reconstruct, or clone it.
 
-`performFinalClick(context, { checkout_id, preparation, checkout_url, submit_selector, armed_expires_at }, options?)` consumes that preparation on its first use, including a failed check. It checks the same owner/checkout, exact prepared URL, deadline, browser expiry, and cancellation. It does not resolve ownership again or perform a provider/extension network read inside the click window. It calls the host once, without the opaque completion token. The gateway's window is at most 10 seconds; the host must finish before the returned deadline.
+`performFinalClick(context, { checkout_id, preparation, checkout_url, submit_selector, armed_expires_at }, options?)` consumes that preparation on its first use, including a failed check. It checks the same owner/checkout, exact prepared URL, deadline, browser expiry, and cancellation. It does not resolve ownership again or perform a provider network read inside the click window. It calls the host once, without the opaque completion token. The gateway's window is at most 10 seconds; the host must finish before the returned deadline.
 
 The initial purchase flow admits only one top-level document with no iframes or shadow roots. Card/address fields, the simple USD-labelled total, and the unique submit target must belong to that document. These restrictions do not describe all layouts supported for separate fill-only review.
 
@@ -118,7 +121,7 @@ The initial release also rejects active or registered origin service workers. CD
 
 Programmatic merchant `form.submit()` and `requestSubmit()` flows are unsupported. The gate rechecks the submit target's identity and security properties, bound card/address fields, submit-form control inventory, exact total text, and URL. Unrelated banner/countdown text and hover/focus class changes are permitted. Its browser-clock probe requires a round trip of at most 500 ms and skew of at most 250 ms. A rejected or interrupted action is not permission to retry.
 
-`accelerate_checkout_submit` keeps model inputs `{ checkout_id, revision }`. Purchase registration requires both connector methods. Its handler performs readiness preflight → arm → host click → complete, once. A preparation failure leaves nothing armed. An ambiguous arm failure never invokes the host and becomes `outcome_unknown`. After a successful arm, even a host error leads to one completion call. Neither host nor completion failure authorizes another click. See [Purchase mode](purchase-mode.md).
+`accelerate_checkout_submit` keeps model inputs `{ checkout_id, revision }`. Purchase registration requires both connector methods. Since SDK 0.16.0, the agent can choose `purchase` or `sandbox_fill_only` for each checkout; the registration purpose is only the default. A purchase still requires a host that implements `performFinalClick`. Its handler performs readiness preflight → arm → host click → complete, once. A preparation failure leaves nothing armed. An ambiguous arm failure never invokes the host and becomes `outcome_unknown`. After a successful arm, even a host error leads to one completion call. Neither host nor completion failure authorizes another click. See [Purchase mode](purchase-mode.md).
 
 The click deadline is capped by the original approval; arming does not release payment egress. Only admission of the authorized click enables the restricted request policy. Keep the persisted restriction after the click window closes. Later private outcome observation does not extend click authority, and early cancellation can return `final_click_in_progress`. An arm, host dispatch acknowledgement, or unknown outcome does not attest a customer click; only terminal `submit_attempted` carries `submit_actor: 'customer'`.
 
@@ -143,8 +146,10 @@ SDK 0.11.0 adds the two private final-click operations above. They do not releas
 
 After Accelerate reports closure, verify that the exact owned provider browser stopped and payment credentials were cleared. Retain the uncertainty fence. A successful stop request, missing resource, or `404` is not proof of cleanup. Never release a restriction merely to retry an uncertain fill or purchase.
 
-When a Browser Use client keeps its provider key through the `MCP_CLIENT_BROWSER_EXTENSION_JSON` path, Accelerate's reaper can acknowledge and close the lease but cannot stop or read the provider browser after worker loss. A closed lease is not proof that the browser stopped. The customer's trusted host must independently stop and read back that exact browser, retaining the restriction until provider-stop proof or confirmed provider expiry. Registered operator provider connectors supply a separate reaper read/stop capability. Neither cleanup path resolves payment uncertainty by itself.
+The Browser Use host returns `browser_ended` (next action `stop`) when the provider reports a stopped or expired browser. Do not retry that checkout. Create a fresh browser and a new checkout.
 
-Browser provider support, extension approval, merchant checkout support, review delivery, and purchase submission require separate qualification. Your backend retains provider-owner access under `customer_backend_trusted`; restricting ordinary agent tools does not revoke that access.
+When a Browser Use client keeps its provider key (the client-owned key path), Accelerate's reaper can acknowledge and close the lease but cannot stop or read the provider browser after worker loss. A closed lease is not proof that the browser stopped. The customer's trusted host must independently stop and read back that exact browser, retaining the restriction until provider-stop proof or confirmed provider expiry. Registered operator provider connectors supply a separate reaper read/stop capability. Neither cleanup path resolves payment uncertainty by itself.
+
+Browser provider support, merchant checkout support, review delivery, and purchase submission require separate qualification. Your backend retains provider-owner access under `customer_backend_trusted`; restricting ordinary agent tools does not revoke that access.
 
 For exact types, see the [SDK interface source](https://github.com/weaccelerateinc/accelerate/blob/main/products/agent-sdk/packages/sdk/browser-connector.d.ts). Return to [Agentic platforms](agentic-platforms.md) for the full integration flow.

@@ -23,7 +23,6 @@
   * [Browser Use run browser integration](integrations/browser-use-run-browsers.md)
   * [WhatsApp private messaging](integrations/whatsapp-private-messaging.md)
   * [Provider connector contract](integrations/provider-connector-contract.md)
-  * [Extension contract](integrations/extension-contract.md)
   * [Private CVV and credential delivery](integrations/agentic-platforms-private-payments.md)
   * [OpenInstinct configuration reference](integrations/openinstinct-reference.md)
 * [Stripe](integrations/stripe.md)
