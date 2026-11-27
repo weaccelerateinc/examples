@@ -23,8 +23,7 @@ To apply a custom theme when initializing Accelerate, include the `customTheme` 
       amount: stripeOptions.amount,
       merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
       checkoutFlow: "Inline",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      checkoutMode: "CheckoutDotComToken" as any, // TODO: Fix typing
+      checkoutMode: "CheckoutDotComToken",
       onLoginSuccess: (user) => {
         console.log("Accelerate user logged in", { user });
         maybeUseAccelUser(user);
