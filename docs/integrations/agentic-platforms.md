@@ -68,7 +68,7 @@ MCP controls how the agent calls checkout actions. It does not replace backend a
 Use Node.js 22 or later. The SDK is server-only, includes TypeScript declarations, and has no runtime dependencies.
 
 - **npm package:** [@weaccelerateinc/agent-sdk@0.17.0](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.17.0)
-- **Source and guides:** [Agent SDK 0.17.0](https://github.com/weaccelerateinc/accelerate/tree/agent-sdk-v0.17.0/products/agent-sdk)
+- **Type declarations and starter guide:** included in the package. After install, see `node_modules/@weaccelerateinc/agent-sdk/*.d.ts` and `partner-starter/README.md`, or browse the [package files on npm](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.17.0?activeTab=code).
 
 Install the SDK and generate the starter project:
 
@@ -187,7 +187,7 @@ Always set `profile: 'managed_review_v2'`. In this profile, the backend fills th
 
 Set `profile`, `purpose`, and `enableSubmit` explicitly. If you omit them, the defaults are `managed_review_v1`, `sandbox_fill_only`, and `false`. For a no-order test, use `purpose: 'sandbox_fill_only'` with `enableSubmit: false`. The registration purpose is a default. The agent can choose `purchase` or `sandbox_fill_only` for each checkout on `accelerate_checkout_start`. A purchase always requires a browser host that implements `performFinalClick`.
 
-The [partner integration guide](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/docs/new-customer-integration.md) and the [starter guide](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/packages/sdk/partner-starter/README.md) give the full contracts.
+For exact option and callback types, see `partner.d.ts` and `private-ingress.d.ts` in the package. The generated starter's `README.md` (also shipped in the package as `partner-starter/README.md`) walks through a complete server.
 
 ## 6. Follow the payment flow
 
@@ -199,7 +199,7 @@ The [partner integration guide](https://github.com/weaccelerateinc/accelerate/bl
 6. **Send the private review.** The customer receives the masked payment form and the final amount together. The customer has five minutes from the confirmed sent receipt to reply yes or no. A filled form is not an approval.
 7. **The customer's agent clicks.** After the customer approves, the agent calls `accelerate_checkout_submit`. The SDK checks readiness, arms the approved revision, calls your `performFinalClick` once, and records the outcome. Fill-only tests cancel after the review. Ordinary browser access stays blocked until cleanup is confirmed.
 
-These steps are the same for the SDK, HTTP API, and MCP tools. See the [v2 checkout contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/docs/managed-review-v2.md).
+These steps are the same for the SDK, HTTP API, and MCP tools. For the private steps in detail, see [Private CVV and credential delivery](agentic-platforms-private-payments.md) and [Private messaging](private-messaging.md).
 
 ### Wallet phone correction
 
@@ -377,7 +377,7 @@ These routes are for your private message handler only. Never expose them as mod
 
 Private calls bind `customer_id`, `workspace_id`, and `conversation_id` to the checkout. Replies also need the verified provider `message_id` and the transient `text`. Purchase approval replies need the provider's verified `sent_at`. Include `reply_to_message_id` when available. On review delivery, `sent_at` must not be earlier than the service's review time. There is no clock tolerance. Do not forward private state or images to the model.
 
-See the [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/docs/private-chat.md) for the complete request shapes.
+The SDK's `AcceleratePrivateChatClient` sends these requests for you. For exact request and response shapes, see `private-chat.d.ts` in the [package files](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.17.0?activeTab=code), or ask Accelerate for the HTTP contract during onboarding.
 
 ### Record the merchant's result
 

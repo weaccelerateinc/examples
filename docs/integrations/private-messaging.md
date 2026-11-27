@@ -166,4 +166,4 @@ The SDK tests use synthetic providers. Test your actual messaging provider befor
 - Lost send acknowledgements.
 - Interception of every private reply before your logs, history, and AI.
 
-See the [private chat contract](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/docs/private-chat.md) for the complete reference.
+For exact types, see `private-chat.d.ts`, `private-ingress.d.ts`, `linq-messaging.d.ts`, and `whatsapp-messaging.d.ts` in the [package files](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.17.0?activeTab=code).

@@ -22,6 +22,12 @@ const nextConfig = {
         destination: "/integrations/agentic-platforms/browser-connector-interface",
         permanent: true,
       },
+      // The three one-time authorization token pages were merged into one.
+      ...["one-time-authorization-token-1", "one-time-authorization-token-directauthtoken", "authtoken"].map((slug) => ({
+        source: `/integrations/${slug}`,
+        destination: "/integrations/one-time-authorization-token",
+        permanent: true,
+      })),
     ];
   },
 };

@@ -1,120 +1,337 @@
 ---
-hidden: true
 icon: coin
 ---
 
-# One-time authorization token
+# One-Time Authorization Token (DirectAuthToken)
 
-This flow is for processor integrations where it is preferred for payment token or PAN details to be shared server to server as opposed to within the existing payment flow. Instead of returning a clear PAN or network token to the merchant after card selection, Accelerate returns a single-use, short-lived, opaque authorization token. The merchant forwards that token to the processor, and the processor redeems it server-to-server with Accelerate to obtain the clear card details for the authorization.
+The one-time authorization token is a checkout mode (`DirectAuthToken`) for merchants whose processor integrates directly with Accelerate — the first such processor is **Aurus**. Instead of handing your frontend a processor token (Stripe, Braintree, etc.) or raw card credentials (Direct mode), Accelerate hands you a **single-use, short-lived, opaque token**. You forward that token to your processor in place of card data, and the processor redeems it **server-to-server** with Accelerate to receive the actual card details for the authorization.
 
-The merchant's browser and backend only ever hold the opaque token — the clear PAN travels exactly once, from Accelerate to the processor, over an authenticated back channel. This keeps the clear card data out of the merchant's environment and shrinks their PCI scope.
+The result: your browser and your backend only ever hold the opaque token. The clear PAN travels exactly once — **Accelerate → processor** — over an authenticated back channel, keeping card data out of your environment entirely and shrinking your PCI scope.
 
-A few properties are worth calling out up front. The token is an opaque string prefixed `atk_live_…` in production or `atk_test_…` in sandbox. It is short-lived (currently a global default of 5 minutes) and can be redeemed exactly once — any further redemption is rejected. It is bound to a specific `{ user, payment source, merchant, currency }`, and the issue response itself contains no card data.
+This page covers both halves of the integration:
 
-## Flow overview
+* Merchant integration — AccelerateJS setup, receiving tokens, passing them to your processor
+* Processor integration — authentication, the redeem API, error semantics
+* Testing in sandbox — test wallets and self-serve token issuance
 
-```
-1. Shopper selects a card in the Accelerate wallet
-2. Accelerate notifies the merchant and returns the selected CardID
-3. Shopper clicks "Pay now"
-4. Merchant  → Accelerate:  POST /outbound/issue-authorization-token   → { authorizationToken, expiresAt, ... }
-5. Merchant  → Processor:   sends the token as metadata "AccelerateAuthToken"
-6. Processor → Accelerate:  POST /processor/redeem-authorization-token  → { pan, cvv, exp, ... }
-7. Processor authorizes the card with the returned details
-```
+### Key properties
 
-## Issuing the token
+| Property                   | Value                                                                                                                                                                                                                                     |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Token format               | Opaque string: `atk_test_…` (sandbox) or `atk_live_…` (production) followed by 256 bits of URL-safe random. Treat it as opaque — do not parse it or assume a length.                                                                      |
+| Lifetime                   | **15 minutes** from issuance (global default; any per-merchant override is capped at 15 minutes). Expiry is enforced on Accelerate's clock.                                                                                               |
+| Uses                       | **Exactly one** successful redemption. Every subsequent attempt fails with `409`.                                                                                                                                                         |
+| Binding                    | Bound at issuance to `{ user, payment source, merchant, currency }`. The **amount is not bound** — the token behaves like a one-time card reference, and the processor may report the authorized amount at redemption for reconciliation. |
+| Storage                    | Accelerate persists only a SHA-256 hash of the token. The plaintext is returned to your frontend exactly once and cannot be recovered.                                                                                                    |
+| Sensitive data at issuance | None. The issue response contains no card data — only the token and display fields (`last4`, `brand`).                                                                                                                                    |
 
-When the shopper selects a card, Accelerate returns its CardID to the merchant. Do not issue a token at this point. When the shopper clicks "Pay now", the merchant calls this endpoint with that CardID to receive an opaque, single-use token.
-
-This call is authenticated with the end-user bearer token (Firebase JWT), the same as other outbound calls.
-
-```
-POST /outbound/issue-authorization-token
-
-{
-  "merchantId": "b1a7…",        // Accelerate merchant id
-  "paymentSourceId": "9f3c…",   // the CardID returned after card selection
-  "currency": "USD"             // ISO currency code, defaults to USD
-}
-```
-
-The response contains the opaque token and some display-only metadata — but no card data:
+### How the flow fits together
 
 ```
-{
-  "authorizationToken": "atk_test_9df1a2…",   // opaque, single-use 256-bit token to hand to the processor
-  "expiresAt": "2026-07-10T18:35:00Z",        // UTC time after which the token can no longer be redeemed
-  "last4": "4242",                            // card last four, for display only (may be null)
-  "brand": "credit"                           // card brand/type, for display only (may be null)
-}
+Shopper            Merchant site                Accelerate                  Processor
+   |                     |                           |                          |
+   | 1. selects a card   |                           |                          |
+   |   in the wallet     |                           |                          |
+   |-------------------->|                           |                          |
+   |                     | 2. wallet iframe issues a token                      |
+   |                     |    POST /outbound/issue-authorization-token          |
+   |                     |-------------------------->|                          |
+   |                     |<--------------------------|                          |
+   |                     |    onCardSelected(cardId, { authorizationToken })    |
+   |                     |                           |                          |
+   | 3. clicks Pay now   |                           |                          |
+   |-------------------->| 4. authorization request with the token              |
+   |                     |    (metadata "AccelerateAuthToken", no card data)    |
+   |                     |------------------------------------------------------>
+   |                     |                           | 5. redeem, server-to-server
+   |                     |                           |<-------------------------|
+   |                     |                           |  POST /processor/redeem-authorization-token
+   |                     |                           |------------------------->|
+   |                     |                           |    clear card details    |
+   |                     |                           | 6. processor authorizes  |
+   |                     |<------------------------------------------------------
+   |<--------------------|         authorization result                         |
 ```
 
-Issue the token at "Pay now", not at card selection. The token TTL (currently a global default of 15 minutes) is shorter than the shopper session, so issuing it at pay-time avoids the token expiring while the shopper is still deciding.
+1. The shopper logs in and selects a card in the Accelerate wallet (see the Authentication Guide — login, 2FA, and sessions are unchanged in this mode).
+2. As soon as a **verified** card is selected, the wallet automatically issues a one-time token and hands it to your page through the `onCardSelected` callback. No card data is released at this point.
+3. At **Pay now**, your frontend sends the token to your backend, and your backend includes it in the authorization request to your processor — in the field your processor designates for it (for Aurus, the `AccelerateAuthToken` metadata field). You send **no card data of your own**.
+4. The processor redeems the token with Accelerate over an authenticated server-to-server channel and receives the card details.
+5. The processor runs the authorization as normal and returns its result up the chain to your backend.
 
-## Forwarding the token to the processor
+***
 
-The merchant includes the token in the authorization request to the processor as metadata, and sends no card data of its own — only the opaque token:
+### Merchant integration (frontend)
 
+#### Initialization
+
+Initialize AccelerateJS exactly as in the other modes, with `checkoutMode: "DirectAuthToken"`:
+
+```jsx
+window.accelerate.init({
+  merchantId: process.env.NEXT_PUBLIC_MERCHANT_ID!,
+  amount: 1299,                       // cart total in minor units (display/session use)
+  checkoutFlow: "Inline",
+  checkoutMode: "DirectAuthToken",
+  universalAuth: true,
+  onLoginSuccess: (user) => { /* ... */ },
+  onCardSelected: (cardId, details) => {
+    if (cardId && details.authorizationToken) {
+      // Store the token for the Pay now click and enable the Pay button.
+      setAuthToken(details.authorizationToken);
+      setTokenExpiry(details.expiresAt);
+    } else {
+      // No verified card selected (or the token expired) — disable Pay now.
+      setAuthToken(null);
+    }
+  },
+});
 ```
-AccelerateAuthToken: atk_test_9df1a2…
+
+#### Receiving the token: `onCardSelected`
+
+In `DirectAuthToken` mode, the `onCardSelected` callback carries two extra fields in its `details` argument whenever a verified card is selected:
+
+| Field                | Type                     | Description                                           |
+| -------------------- | ------------------------ | ----------------------------------------------------- |
+| `authorizationToken` | `string`                 | The one-time token to hand to your processor.         |
+| `expiresAt`          | `string` (ISO-8601, UTC) | Time after which the token can no longer be redeemed. |
+
+Behavior to build against:
+
+* **A fresh token is issued on every card selection.** Treat the token like you would treat a CardID in the other modes — the latest one wins.
+* **When a token expires before it is used, the wallet deselects the card** and calls `onCardSelected(null, …)`. Disable your Pay button in that case; when the shopper re-selects a card, a fresh token is issued and `onCardSelected` fires again.
+* **Unverified cards never produce a token.** `onCardSelected` is called with `null` until the card passes verification, exactly as in the other modes.
+
+
+
+#### Handling the token on your side
+
+* **Send the token to your processor, nothing else.** Include it in your authorization request where your processor expects it — for Aurus this is the `AccelerateAuthToken` field. Do not send any card data of your own.
+* **Treat it as a credential.** The token is the only thing standing between its holder and a one-time release of card details to your processor. Pass it through your backend, but don't log it, persist it, or put it in URLs or analytics.
+* **Don't cache it across checkouts.** It is single-use and expires in 15 minutes. If an authorization attempt fails before the processor redeemed the token, you can retry with the same token; once the processor has redeemed it, a retry needs a fresh token (re-select the card or call `requestAuthorizationToken`).
+
+***
+
+### Processor integration (redeeming the token)
+
+This section is for the processor (e.g. Aurus) implementing the server-to-server redemption.
+
+#### Environments
+
+| Environment | Base URL                           | Token prefix |
+| ----------- | ---------------------------------- | ------------ |
+| Sandbox     | `https://sbx.api.weaccelerate.com` | `atk_test_…` |
+| Production  | `https://prd.api.weaccelerate.com` | `atk_live_…` |
+
+Your integration contact will confirm the exact hostname to call for redemption and register your credentials during onboarding.
+
+#### Authentication
+
+The `/processor/*` endpoints authenticate the **processor's identity** — not an end user. End-user bearer tokens are not accepted here, and processor credentials grant no access to any other Accelerate endpoint. Two mechanisms are supported:
+
+1. **mTLS client certificate (preferred for production).** You present a client certificate during the TLS handshake; its thumbprint must be on the allowlist Accelerate holds for your processor. Certificate exchange and rotation are coordinated with your integration contact.
+2.  **HMAC request signature (preferred for sandbox).** You send two headers on every request:
+
+    * `X-Processor-Name` — your processor name as registered with Accelerate (e.g. `Aurus`)
+    * `X-Processor-Signature` — hex-encoded HMAC-SHA256 of the **raw request body**, keyed with your shared secret \[shared in the merchant dashboard] (hex case-insensitive; comparison is constant-time)
+
+    Sign the exact bytes you transmit — any re-serialization of the JSON after signing (key reordering, whitespace changes) will invalidate the signature.
+
+```bash
+BODY='{"accelerateAuthToken":"atk_test_Zx8vQ1…","amountCents":1299,"transactionId":"aurus-txn-8817"}'
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SHARED_SECRET" -hex | awk '{print $NF}')
+
+curl -sS https://sbx.api.weaccelerate.com/processor/redeem-authorization-token \
+  -H "Content-Type: application/json" \
+  -H "X-Processor-Name: Aurus" \
+  -H "X-Processor-Signature: $SIG" \
+  --data-raw "$BODY"
 ```
 
-## Redeeming the token
+IP allowlists may additionally apply on top of identity (they are filters, never identity by themselves):
 
-The processor (Aurus) redeems the token server-to-server to exchange it for the clear card details. This call uses processor authentication (see below); the end-user JWT is not accepted here.
+* Exact-IP match in v1 (no CIDR ranges); an empty list means no IP restriction.
+
+Finally, a processor can only redeem tokens for **merchants mapped to it**. Redeeming another processor's token — or a token for a merchant not configured for this flow — fails with `403`.
+
+#### `POST /processor/redeem-authorization-token`
 
 ```
 POST /processor/redeem-authorization-token
+Content-Type: application/json
+X-Processor-Name: Aurus
+X-Processor-Signature: 3f9a…
 
 {
-  "authorizationToken": "atk_test_9df1a2…",  // the token received from the merchant
-  "transactionId": "txn_01J…"                 // optional processor transaction ID for downstream tracing
+  "accelerateAuthToken": "atk_test_Zx8vQ1…",
+  "amountCents": 1299,
+  "transactionId": "aurus-txn-8817"
 }
 ```
 
-Send an idempotency key with every redemption request. Reuse the same key when retrying the same redemption.
+| Field                 | Type                           | Description                                                                                                                                                      |
+| --------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accelerateAuthToken` | `string` (required)            | The token received from the merchant.                                                                                                                            |
+| `amountCents`         | `integer \| null`              | Authorized amount in minor units. **Reporting only** — it is recorded against the token for reconciliation and echoed back; it is never used to gate redemption. |
+| `transactionId`       | `string \| null` (≤ 128 chars) | Your transaction id. Recorded for reconciliation and echoed back in the response.                                                                                |
 
-A successful redemption returns the clear card details:
+Response `200`:
 
-```
+```json
 {
-  "pan": "4242424242424242",     // clear card number
-  "cvv": "123",                  // card verification value
-  "expiryMonth": 12,             // expiry month 1–12; may be null
-  "expiryYear": 2030,            // 4-digit expiry year; may be null
-  "currency": "USD",             // ISO currency code
-  "paymentSourceId": "9f3c…"     // the bound payment source id
+  "pan": "4242424242424242",
+  "cvv": "123",
+  "expiryMonth": 12,
+  "expiryYear": 2030,
+  "amountCents": 1299,
+  "transactionId": "aurus-txn-8817",
+  "currency": "USD",
+  "paymentSourceId": "9f3cf8a2-…"
 }
 ```
 
-The redeem request and response field format shown here is illustrative for the first integration and is open to change according to the client's requirements. Field names, data types, expiry format, and the overall payload shape can all be aligned to the processor's or client's preferred contract once confirmed.
+| Field             | Type              | Description                                                                                                    |
+| ----------------- | ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| `pan`             | `string`          | Clear card number.                                                                                             |
+| `cvv`             | `string \| null`  | Card verification value when available — always handle `null` (see CVV handling).                              |
+| `expiryMonth`     | `integer \| null` | Expiry month, 1–12.                                                                                            |
+| `expiryYear`      | `integer \| null` | Expiry year, 4 digits.                                                                                         |
+| `amountCents`     | `integer \| null` | Echo of the amount you supplied (null if you sent none).                                                       |
+| `transactionId`   | `string \| null`  | Echo of the transaction id you supplied.                                                                       |
+| `currency`        | `string`          | ISO currency code the token was issued with.                                                                   |
+| `paymentSourceId` | `string` (uuid)   | Accelerate's id for the underlying card. Stable across tokens for the same card — usable as a correlation key. |
 
-The redeem call is strict and single-use, so error handling matters. Errors are returned as standard problem responses:
+#### Error responses
 
-* `401` — processor identity or authentication failed. Check credentials.
-* `403` — token revoked, processor↔merchant mismatch, or source IP not on the merchant's allowlist. Do not retry; start a new checkout.
-* `404` — unknown token. Do not retry.
-* `409` — token already redeemed (single-use). Do not retry; the card was already released once.
-* `410` — token expired. Ask the merchant to re-issue a token.
+Errors are standard problem responses (`application/problem+json`) with the reason in `title` (`401` and `429` return an empty body):
 
-Single-use is strict. Once a token is successfully redeemed, it cannot be redeemed again. A retry using the same idempotency key is handled safely. A new key returns `409`. This ensures the clear PAN is released at most once per token.
+```json
+{ "title": "Authorization token has already been redeemed.", "status": 409 }
+```
 
-## Processor authentication
+| Status | Meaning                                                                                                                                                                  | Your action                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| `401`  | Processor authentication failed (certificate, signature, name, or processor-level IP). No body is returned.                                                              | Fix credentials; verify you signed the exact raw body.                     |
+| `403`  | Token is revoked, the merchant is not enabled for this flow, the token belongs to a different processor's merchant, or the source IP is not on the merchant's allowlist. | Do not retry. Surface a decline; the merchant starts a new checkout.       |
+| `404`  | Unknown token.                                                                                                                                                           | Do not retry.                                                              |
+| `409`  | Token already redeemed — **single use is strict**.                                                                                                                       | Do not retry with this token; card details were already released once.     |
+| `410`  | Token expired (15-minute TTL, Accelerate's clock).                                                                                                                       | Fail the authorization; the merchant re-issues by re-selecting the card.   |
+| `429`  | Rate limited: max **60 redemption requests per minute** per processor (fixed one-minute window).                                                                         | Back off and retry after the window; investigate what is hammering redeem. |
 
-The `/processor/*` endpoints authenticate the processor's identity, not an end user. Two mechanisms are supported:
+**Single-use is strict.** Exactly one redemption can ever succeed per token, including under concurrent attempts — the claim is atomic, so parallel redemptions produce one `200` and one `409`. If a redemption succeeds but you lose the response in transit, the token cannot be replayed; the merchant must issue a new token. This is intentional: the card details are released at most once per token.
 
-* **mTLS client certificate (preferred for production).** The processor presents a client certificate whose thumbprint is on the allowlist for that processor.
-* **HMAC signature (preferred for sandbox).** The processor sends `X-Processor-Name: Aurus` and `X-Processor-Signature`, a hex HMAC-SHA256 of the raw request body. The shared secret is 256-bit, vault-stored, and rotated quarterly.
+**Timeouts:** v1 has no idempotency window on redeem. Treat a timeout as unknown-outcome: a retry will either succeed (the first attempt never landed) or return `409` (it did land, and the card was already released to you once).
 
-In addition, a source IP allowlist is applied per merchant. A processor may only redeem tokens for merchants that are mapped to it.
+***
 
-## CVV handling
+### Merchant configuration
 
-Both flows are supported and selectable per merchant in the merchant settings. With CVV, the redeem response includes `cvv` when it is required according to the merchant's specifications. CVV is single-use for authorization only, held as a short-lived VGS alias and never stored after pre-auth.
+The flow is **opt-in per merchant**. Your Accelerate integration contact enables and configures it; the relevant settings are:
 
-## Notes
+| Setting                 | Effect                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DirectAuthToken enabled | Master switch. When off, issuance and redemption for this merchant both fail with `403`, and nothing about the merchant's existing integration changes. |
+| Processor               | The processor allowed to redeem this merchant's tokens (e.g. `Aurus`). Redemption by any other processor fails with `403`.                              |
+| Requires CVV            | Whether a CVV must be on file before a token can be issued (see below).                                                                                 |
+| Allowed redemption IPs  | Optional comma-separated list of source IPs allowed to redeem this merchant's tokens. Empty = no IP restriction.                                        |
 
-* Expiry is enforced on Accelerate's clock. Processors should not rely on their own clock for the TTL.
-* Use the same idempotency key for retries of one redemption. Use a new key only for a new redemption.
-* `atk_test_…` tokens are sandbox and `atk_live_…` are production. Test PANs are provided for sandbox testing.
+### CVV handling
+
+Both CVV flows are supported, selected per merchant:
+
+* **CVV required** — a token is only issued when a CVV is on file for the selected card; issuance fails with `403` otherwise (the wallet will prompt the shopper for the CVV as part of card verification).
+* **CVV-less** — the merchant authorizes without CVV; tokens are issued regardless, and `cvv` may be `null` at redemption.
+
+Processors should treat `cvv` as nullable in **all** cases and be prepared to authorize without it for merchants configured for the CVV-less flow.
+
+### Token lifecycle
+
+A token moves through exactly one of these paths:
+
+```
+Issued ──(processor redeems within TTL)──▶ Redeemed     (terminal; card details released once)
+Issued ──(15 minutes pass)──────────────▶ Expired       (terminal; redeem returns 410)
+Issued ──(revoked by Accelerate)────────▶ Revoked       (terminal; redeem returns 403)
+```
+
+Every successful redemption also emits an Accelerate outbound receipt at the moment of credential release, recording the merchant, customer, card, processor, and amount; the `transactionId` you supplied is stored against the token. Together these are the reconciliation records tying your authorization back to the token.
+
+***
+
+### Testing in sandbox
+
+Sandbox issues `atk_test_…` tokens against `https://sbx.api.weaccelerate.com`. Two sandbox-only endpoints let a merchant admin exercise the full loop without building a storefront first. Both are authenticated as the **merchant dashboard admin** (not an end user) and return `404` in production.
+
+#### 1. Create a test wallet
+
+`POST /sandbox/test-wallets` creates (or reuses) a test customer with cards preloaded into their wallet:
+
+```json
+{
+  "firstName": "Ada",
+  "lastName": "Test",
+  "phoneNumber": "3231231234",
+  "cards": [
+    { "pan": "4242424242424242", "expiryMonth": 12, "expiryYear": 2030, "cvv": "123" }
+  ]
+}
+```
+
+Response:
+
+```json
+{
+  "userId": "…",
+  "phoneNumber": "+13231231234",
+  "otp": "123123",
+  "cards": [
+    { "paymentSourceId": "9f3cf8a2-…", "last4": "4242", "expiryMonth": 12, "expiryYear": 2030 }
+  ]
+}
+```
+
+The phone number is registered as a test number: logging in with it in the sandbox wallet always uses the static OTP **`123123`**, and no SMS is sent. Use this customer to drive the real end-to-end flow through your storefront's Accelerate wallet.
+
+#### 2. Mint a token directly
+
+`POST /sandbox/issue-token` issues a token for a test-wallet card without going through the wallet UI (it skips the end-user session and card-verification gates — sandbox only):
+
+```json
+{ "paymentSourceId": "9f3cf8a2-…" }
+```
+
+```json
+{ "authorizationToken": "atk_test_Zx8vQ1…", "expiresAt": "2026-08-04T21:15:00+00:00", "last4": "4242" }
+```
+
+Hand the resulting `atk_test_…` token to your processor's sandbox (or curl the redeem endpoint yourself, as in the authentication example) to exercise redemption, the single-use `409`, expiry `410`, and the error table above.
+
+#### Suggested test matrix
+
+| Case                     | How                                             | Expect                  |
+| ------------------------ | ----------------------------------------------- | ----------------------- |
+| Happy path               | Issue → redeem once                             | `200` with card details |
+| Replay                   | Redeem the same token again                     | `409`                   |
+| Expiry                   | Issue → wait 15+ minutes → redeem               | `410`                   |
+| Unknown token            | Redeem a made-up `atk_test_…` value             | `404`                   |
+| Bad signature            | Tamper with the body after signing              | `401`                   |
+| Wrong processor/merchant | Redeem a token for a merchant not mapped to you | `403`                   |
+| Rate limit               | 61+ redeems in one minute                       | `429`                   |
+
+***
+
+### Security model overview
+
+* **One-time release.** Card details leave Accelerate at most once per token, enforced atomically — concurrent redemptions cannot double-release.
+* **Nothing to steal at rest.** Only a SHA-256 hash of each token is stored; a database leak yields no redeemable tokens. Tokens carry 256 bits of entropy, so guessing is not feasible.
+* **Short exposure window.** 15-minute TTL, enforced server-side on Accelerate's clock.
+* **Disjoint auth planes.** End-user credentials cannot redeem; processor credentials cannot issue or touch any other endpoint.
+* **Defense in depth on redeem.** Processor identity (mTLS or HMAC with constant-time comparison) + processor↔merchant mapping + optional processor-level and merchant-level IP allowlists + per-processor rate limiting (60/min).
+
+### Notes
+
+* Amounts are always **minor units** (cents).
+* `currency` defaults to `USD` at issuance; it is informational for the processor at redemption.
+* Expiry is enforced on **Accelerate's clock** — don't gate on your own clock; handle `410` instead.
+* The redeem contract's field names were agreed for the first integration and can be adapted per processor — coordinate with your integration contact before depending on additional fields.

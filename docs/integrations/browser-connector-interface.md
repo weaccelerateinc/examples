@@ -121,4 +121,4 @@ If the provider reports that the browser stopped or expired, the SDK returns `br
 
 Under `customer_backend_trusted` custody, your backend keeps provider-owner access to the browser. Blocking ordinary agent tools does not revoke that access.
 
-For exact types, see the [SDK interface source](https://github.com/weaccelerateinc/accelerate/blob/agent-sdk-v0.17.0/products/agent-sdk/packages/sdk/browser-connector.d.ts).
+For exact types, see `browser-connector.d.ts` in the package (`node_modules/@weaccelerateinc/agent-sdk/browser-connector.d.ts`), or browse the [package files on npm](https://www.npmjs.com/package/@weaccelerateinc/agent-sdk/v/0.17.0?activeTab=code).
